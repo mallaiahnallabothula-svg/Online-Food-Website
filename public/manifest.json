@@ -1,0 +1,16 @@
+{
+  "name": "శ్రీ మల్లికార్జున జొన్న రొట్టెలు",
+  "short_name": "జొన్న రొట్టెలు",
+  "description": "కొల్లూరు మరియు పరిసర ప్రాంతాలలో తాజా జొన్న రొట్టెల ఆన్‌లైన్ ఆర్డరింగ్",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FDFBF7",
+  "theme_color": "#78350F",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ]
+}
