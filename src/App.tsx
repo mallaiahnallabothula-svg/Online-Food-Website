@@ -8,7 +8,7 @@ import { OrderConfirmation } from './components/OrderConfirmation';
 import { AdminLogin } from './components/OwnerPortal/AdminLogin';
 import { OwnerDashboard } from './components/OwnerPortal/OwnerDashboard';
 import { OrderingHoursStatus, Order, AdminRole } from './types';
-import { getISTTime } from './utils/time';
+import { getISTTime, getInitialOrderingStatus } from './utils/time';
 import { Phone, MapPin, Clock, ShieldCheck, Heart } from 'lucide-react';
 
 export default function App() {
@@ -17,8 +17,8 @@ export default function App() {
     return localStorage.getItem('smjr_theme') === 'dark';
   });
 
-  // Ordering Hours Status
-  const [hoursStatus, setHoursStatus] = useState<OrderingHoursStatus | null>(null);
+  // Ordering Hours Status - Initialized synchronously so OrderForm NEVER disappears in deployment
+  const [hoursStatus, setHoursStatus] = useState<OrderingHoursStatus>(getInitialOrderingStatus);
   const [allowOutsideHours, setAllowOutsideHours] = useState<boolean>(false);
 
   // Active view: 'CUSTOMER' | 'OWNER_LOGIN' | 'OWNER_DASHBOARD'
@@ -48,22 +48,15 @@ export default function App() {
       const res = await fetch('/api/status');
       if (res.ok) {
         const data = await res.json();
-        setHoursStatus(data);
+        if (data && typeof data.isOpen === 'boolean') {
+          setHoursStatus(data);
+          return;
+        }
       }
-    } catch {
-      // Fallback local calculation
-      const ist = getISTTime();
-      setHoursStatus({
-        isOpen: ist.isOpen,
-        currentTimeIST: ist.formattedTime,
-        currentHourIST: ist.hours,
-        currentMinuteIST: ist.minutes,
-        openTimeStr: '11:00 AM',
-        closeTimeStr: '04:00 PM',
-        nextOpenMessage: ist.nextOpenMessage,
-        deliveryWindowStr: 'సాయంత్రం 6:00 - 8:00 గంటలు',
-      });
-    }
+    } catch {}
+
+    // Synchronous fallback ensures ordering is never interrupted
+    setHoursStatus(getInitialOrderingStatus());
   };
 
   useEffect(() => {
@@ -148,24 +141,20 @@ export default function App() {
               <>
                 <HeroSection
                   onScrollToOrder={handleScrollToOrder}
-                  isOpen={hoursStatus ? (hoursStatus.isOpen || allowOutsideHours) : true}
+                  isOpen={hoursStatus.isOpen || allowOutsideHours}
                 />
 
-                {hoursStatus && (
-                  <OrderingHoursBanner
-                    status={hoursStatus}
-                    allowOutsideHoursForTesting={allowOutsideHours}
-                    onToggleAllowOutsideHours={(val) => setAllowOutsideHours(val)}
-                  />
-                )}
+                <OrderingHoursBanner
+                  status={hoursStatus}
+                  allowOutsideHoursForTesting={allowOutsideHours}
+                  onToggleAllowOutsideHours={(val) => setAllowOutsideHours(val)}
+                />
 
-                {hoursStatus && (
-                  <OrderForm
-                    hoursStatus={hoursStatus}
-                    allowOutsideHours={allowOutsideHours}
-                    onProceedToPayment={handleProceedToPayment}
-                  />
-                )}
+                <OrderForm
+                  hoursStatus={hoursStatus}
+                  allowOutsideHours={allowOutsideHours}
+                  onProceedToPayment={handleProceedToPayment}
+                />
               </>
             )}
           </div>

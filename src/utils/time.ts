@@ -54,21 +54,22 @@ export function getISTTime(mockOffsetMinutes: number = 0): ISTTimeInfo {
   const openMinutes = 11 * 60; // 660 mins
   const closeMinutes = 16 * 60; // 960 mins (4:00 PM)
 
-  const isOpen = totalMinutes >= openMinutes && totalMinutes < closeMinutes;
+  const isTodayDelivery = hours < 16;
+  const isLiveBatch = hours >= 11 && hours < 16;
+  const isOpen = true; // Always allow ordering 24/7
 
   let nextOpenMessage = '';
-  if (totalMinutes < openMinutes) {
-    const diffMins = openMinutes - totalMinutes;
-    const diffH = Math.floor(diffMins / 60);
-    const diffM = diffMins % 60;
-    nextOpenMessage = `ఈరోజు ఆర్డర్లు ఉదయం 11:00 AM కు ప్రారంభమవుతాయి (${diffH > 0 ? `${diffH} గం. ` : ''}${diffM} నిమిషాలలో).`;
-  } else if (totalMinutes >= closeMinutes) {
-    nextOpenMessage = 'ఈరోజు ఆర్డర్ల స్వీకరణ ముగిసింది (11:00 AM – 4:00 PM). రేపు ఉదయం 11:00 AM కు తిరిగి ప్రారంభమవుతాయి.';
+  if (isTodayDelivery) {
+    if (isLiveBatch) {
+      const remainingMins = 16 * 60 - totalMinutes;
+      const remH = Math.floor(remainingMins / 60);
+      const remM = remainingMins % 60;
+      nextOpenMessage = `నేటి సాయంత్రం డెలివరీ కోసం ఆర్డర్లు అందుబాటులో ఉన్నాయి! నేటి ఆర్డర్ల ముగింపుకు ఇంకా ${remH > 0 ? `${remH} గం. ` : ''}${remM} ని. సమయం ఉంది.`;
+    } else {
+      nextOpenMessage = 'నేటి సాయంత్రం 6:00 – 8:00 PM డెలివరీ కోసం ఆర్డర్లు స్వీకరించబడుతున్నాయి.';
+    }
   } else {
-    const remainingMins = closeMinutes - totalMinutes;
-    const remH = Math.floor(remainingMins / 60);
-    const remM = remainingMins % 60;
-    nextOpenMessage = `ఆర్డర్లు స్వీకరించబడుతున్నాయి! ముగింపుకు ఇంకా ${remH > 0 ? `${remH} గం. ` : ''}${remM} నిమిషాలు ఉంది.`;
+    nextOpenMessage = 'రేపటి సాయంత్రం 6:00 – 8:00 PM డెలివరీ కోసం ముందస్తు ఆర్డర్లు (Pre-orders) స్వీకరించబడుతున్నాయి.';
   }
 
   // Format 12-hour AM/PM
@@ -90,6 +91,31 @@ export function getISTTime(mockOffsetMinutes: number = 0): ISTTimeInfo {
     formattedDateTelugu,
     isOpen,
     nextOpenMessage,
+  };
+}
+
+/**
+ * Returns a complete OrderingHoursStatus object synchronously
+ * Ensuring OrderForm and OrderingHoursBanner NEVER fail to render in deployment
+ */
+export function getInitialOrderingStatus(): import('../types').OrderingHoursStatus {
+  const ist = getISTTime();
+  const isTodayDelivery = ist.hours < 16;
+  const deliveryDateLabel = isTodayDelivery ? `${ist.formattedDateTelugu} (నేడు)` : `${ist.formattedDateTelugu} (రేపు)`;
+
+  return {
+    isOpen: true,
+    isLiveBatchHours: ist.hours >= 11 && ist.hours < 16,
+    currentTimeIST: ist.formattedTime,
+    currentHourIST: ist.hours,
+    currentMinuteIST: ist.minutes,
+    openTimeStr: '24/7 ఆర్డరింగ్ అందుబాటులో ఉంది',
+    closeTimeStr: 'సాయంత్రం 04:00 PM (నేటి డెలివరీ కటాఫ్)',
+    nextOpenMessage: ist.nextOpenMessage,
+    deliveryWindowStr: 'సాయంత్రం 6:00 - 8:00 గంటలు',
+    deliveryWindow: 'సాయంత్రం 6:00 - 8:00 గంటలు',
+    deliveryDate: ist.formattedDateTelugu,
+    currentDateIST: deliveryDateLabel,
   };
 }
 

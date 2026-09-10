@@ -75,8 +75,12 @@ export interface OrderingHoursStatus {
   currentTimeIST: string;
   currentHourIST: number;
   currentMinuteIST: number;
-  openTimeStr: string; // "11:00 AM"
-  closeTimeStr: string; // "04:00 PM"
+  openTimeStr: string;
+  closeTimeStr: string;
   nextOpenMessage: string;
-  deliveryWindowStr: string; // "సాయంత్రం 6:00 - 8:00 గంటలు"
+  deliveryWindowStr: string;
+  deliveryDate?: string;
+  currentDateIST?: string;
+  deliveryWindow?: string;
+  isLiveBatchHours?: boolean;
 }
