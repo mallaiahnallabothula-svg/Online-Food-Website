@@ -25,7 +25,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder, isOpe
             <div className="space-y-2">
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#451A03] dark:text-amber-50 font-telugu tracking-tight leading-tight">
                 శ్రీ మల్లికార్జున <br className="hidden sm:inline" />
-                <span className="text-[#78350F] dark:text-amber-400">జొన్న రొట్టెలు</span>
+                <span className="text-[#78350F] dark:text-amber-400">పల్లె జొన్న రొట్టెలు</span>
               </h1>
               <p className="text-lg sm:text-xl font-semibold text-[#8C4A26] dark:text-amber-200/90 font-telugu">
                 పక్కా పల్లెటూరి స్వచ్ఛమైన ఇంటి రుచితో, వేడివేడి జొన్న రొట్టెలు

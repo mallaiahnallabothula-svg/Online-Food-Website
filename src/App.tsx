@@ -203,7 +203,7 @@ export default function App() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="text-center md:text-left space-y-1">
             <h4 className="font-bold text-sm text-[#451A03] dark:text-amber-100">
-              శ్రీ మల్లికార్జున జొన్న రొట్టెలు
+              శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు
             </h4>
             <p>
               పక్కా పల్లెటూరి స్వచ్ఛమైన ఇంటి రుచితో, వేడివేడి జొన్న రొట్టెలు

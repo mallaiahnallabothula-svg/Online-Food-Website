@@ -23,7 +23,7 @@ export function buildWhatsAppTicket(order: Order): string {
 
   // Build the message blocks
   const parts: string[] = [
-    '🧾 *శ్రీ మల్లికార్జున జొన్న రొట్టెలు*',
+    '🧾 *శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు*',
     '*ఆర్డర్ వివరాలు*',
     '',
     `🎫 *ఆర్డర్ నంబర్:* ${order.id}`,

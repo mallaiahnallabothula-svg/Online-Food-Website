@@ -174,7 +174,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
             </span>
           </div>
           <p className="text-xs text-stone-500 mt-1">
-            శ్రీ మల్లికార్జున జొన్న రొట్టెలు | కొల్లూరు గ్రామం | +91 8499865803
+            శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు | కొల్లూరు గ్రామం | +91 8499865803
           </p>
         </div>
 

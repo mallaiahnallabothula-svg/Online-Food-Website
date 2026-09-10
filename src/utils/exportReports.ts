@@ -70,7 +70,7 @@ export function exportOrdersToPDF(orders: Order[], filenamePrefix: string = 'SMJ
   // Brand Header
   doc.setFontSize(16);
   doc.setTextColor(120, 53, 15); // #78350F
-  doc.text('Sri Mallikarjuna Jonna Rottelu - Orders & Fulfillment Report', 14, 15);
+  doc.text('Sri Mallikarjuna Palle Jonna Rottelu - Orders & Fulfillment Report', 14, 15);
 
   doc.setFontSize(10);
   doc.setTextColor(80, 80, 80);

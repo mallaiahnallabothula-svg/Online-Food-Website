@@ -308,7 +308,7 @@ app.post('/api/payment/create-order', (req, res) => {
     amount: totalAmount,
     currency: 'INR',
     upiId,
-    merchantName: 'శ్రీ మల్లికార్జున జొన్న రొట్టెలు',
+    merchantName: 'శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు',
     upiUri,
     calculatedDetails: {
       quantity: qty,

@@ -1,4 +1,4 @@
-// Service Worker for Sri Mallikarjuna Jonna Rottelu (శ్రీ మల్లికార్జున జొన్న రొట్టెలు)
+// Service Worker for Sri Mallikarjuna Palle Jonna Rottelu (శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు)
 const CACHE_NAME = 'smjr-cache-v1';
 const STATIC_ASSETS = [
   '/',

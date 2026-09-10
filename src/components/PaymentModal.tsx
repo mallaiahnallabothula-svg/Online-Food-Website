@@ -149,7 +149,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               ఆన్‌లైన్ UPI చెల్లింపు (Online UPI Only)
             </span>
             <h3 className="text-lg font-extrabold text-[#451A03] dark:text-amber-100 leading-tight">
-              శ్రీ మల్లికార్జున జొన్న రొట్టెలు
+              శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు
             </h3>
           </div>
 

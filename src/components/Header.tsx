@@ -33,10 +33,10 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
           <div>
             <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[#451A03] dark:text-amber-100 font-telugu leading-tight">
-              శ్రీ మల్లికార్జున జొన్న రొట్టెలు
+              శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు
             </h1>
             <p className="text-xs text-amber-900/70 dark:text-stone-400 font-medium font-telugu hidden sm:block">
-              కొల్లూరు గ్రామం, హైదరాబాద్ | తాజా జొన్న రొట్టెలు & ఉచిత కారాలు
+              Sri Mallikarjuna Palle Jonna Rottelu • కొల్లూరు గ్రామం
             </p>
           </div>
         </div>
