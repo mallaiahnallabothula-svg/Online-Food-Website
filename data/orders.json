@@ -1,0 +1,94 @@
+[
+  {
+    "id": "SMJR-20260910-2338",
+    "createdAt": "2026-09-10T13:00:47.102Z",
+    "createdAtIST": "10 సెప్టెంబర్ 2026, 06:30:47 PM IST",
+    "quantity": 5,
+    "pricePerRoti": 30,
+    "totalPaid": 150,
+    "karamSelection": {
+      "karivepaku": true,
+      "aviseGinjalu": true
+    },
+    "karamQuantities": {
+      "karivepakuGrams": 50,
+      "aviseGinjaluGrams": 50
+    },
+    "customer": {
+      "name": "సురేష్ రెడ్డి",
+      "mobile": "8499865803",
+      "address": "కొల్లూరు మెయిన్ రోడ్, హనుమాన్ టెంపుల్ దగ్గర",
+      "landmark": "హనుమాన్ టెంపుల్"
+    },
+    "deliveryDate": "10 సెప్టెంబర్ 2026",
+    "deliveryWindow": "సాయంత్రం 6–8 గంటలు",
+    "paymentStatus": "VERIFIED",
+    "paymentReference": "UPI-REF-20260910-37131979",
+    "paymentVerifiedAt": "2026-09-10T13:00:47.102Z",
+    "fulfillmentStatus": "NEW"
+  },
+  {
+    "id": "SMJR-20260909-1021",
+    "createdAt": "2026-09-09T06:15:00.000Z",
+    "createdAtIST": "9 సెప్టెంబర్ 2026, 11:45 AM",
+    "quantity": 10,
+    "pricePerRoti": 30,
+    "totalPaid": 300,
+    "karamSelection": {
+      "karivepaku": true,
+      "aviseGinjalu": true
+    },
+    "karamQuantities": {
+      "karivepakuGrams": 100,
+      "aviseGinjaluGrams": 100
+    },
+    "customer": {
+      "name": "వెంకటేశ్వర్లు గారు",
+      "mobile": "9848022338",
+      "address": "ఫ్లాట్ 304, రాఘవేంద్ర నిలయం, కొల్లూరు గ్రామం",
+      "landmark": "గ్రామ పంచాయతీ ఎదురుగా",
+      "locationLink": "https://maps.google.com/?q=17.4782,78.2323",
+      "distanceKm": 0.8
+    },
+    "deliveryDate": "9 సెప్టెంబర్ 2026",
+    "deliveryWindow": "సాయంత్రం 6–8 గంటలు",
+    "paymentStatus": "VERIFIED",
+    "paymentReference": "UPI-REF-982471928371",
+    "paymentVerifiedAt": "2026-09-09T06:16:30.000Z",
+    "fulfillmentStatus": "DELIVERED",
+    "statusUpdatedAt": "2026-09-09T13:30:00.000Z",
+    "statusUpdatedBy": "ADMIN"
+  },
+  {
+    "id": "SMJR-20260909-1045",
+    "createdAt": "2026-09-09T08:30:00.000Z",
+    "createdAtIST": "9 సెప్టెంబర్ 2026, 02:00 PM",
+    "quantity": 15,
+    "pricePerRoti": 30,
+    "totalPaid": 450,
+    "karamSelection": {
+      "karivepaku": true,
+      "aviseGinjalu": false
+    },
+    "karamQuantities": {
+      "karivepakuGrams": 150,
+      "aviseGinjaluGrams": 0
+    },
+    "customer": {
+      "name": "లక్ష్మి ప్రసన్న",
+      "mobile": "9440182736",
+      "address": "బ్లాక్ బి-12, 2BHK డిగ్నిటీ కాలనీ, కొల్లూరు",
+      "landmark": "ప్రభుత్వ పాఠశాల దగ్గర",
+      "locationLink": "https://maps.google.com/?q=17.4720,78.2250",
+      "distanceKm": 1.4
+    },
+    "deliveryDate": "9 సెప్టెంబర్ 2026",
+    "deliveryWindow": "సాయంత్రం 6–8 గంటలు",
+    "paymentStatus": "VERIFIED",
+    "paymentReference": "UPI-REF-982489102834",
+    "paymentVerifiedAt": "2026-09-09T08:31:40.000Z",
+    "fulfillmentStatus": "DELIVERED",
+    "statusUpdatedAt": "2026-09-09T13:45:00.000Z",
+    "statusUpdatedBy": "ADMIN"
+  }
+]
