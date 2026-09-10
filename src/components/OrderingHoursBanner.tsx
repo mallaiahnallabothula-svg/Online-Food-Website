@@ -39,7 +39,7 @@ export const OrderingHoursBanner: React.FC<OrderingHoursBannerProps> = ({
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-bold text-base sm:text-lg font-telugu">
                   {status.isOpen
-                    ? 'నేటి ఆర్డర్లు ప్రస్తుతం స్వీకరించబడుతున్నాయి'
+                    ? 'ఆర్డర్లు స్వీకరించబడుతున్నాయి (24/7 ఆర్డరింగ్ అందుబాటులో ఉంది)'
                     : 'ఆర్డర్ల స్వీకరణ ప్రస్తుతం నిలిపివేయబడింది'}
                 </h3>
                 <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-stone-200/80 dark:bg-stone-800 text-stone-800 dark:text-stone-300">
@@ -52,8 +52,8 @@ export const OrderingHoursBanner: React.FC<OrderingHoursBannerProps> = ({
               </p>
 
               <div className="flex items-center gap-4 text-xs font-telugu text-stone-600 dark:text-stone-400 pt-0.5 flex-wrap">
-                <span>🕒 ఆర్డరింగ్ సమయం: <strong>11:00 AM – 4:00 PM IST</strong></span>
-                <span>🚚 డెలివరీ సమయం: <strong>సాయంత్రం 6:00 – 8:00 గంటలు</strong></span>
+                <span>🕒 <strong>సాయంత్రం 4:00 PM లోపు:</strong> నేటి సాయంత్రం 6:00 – 8:00 PM కి డెలివరీ</span>
+                <span>🚚 <strong>సాయంత్రం 4:00 PM దాటితే:</strong> రేపటి సాయంత్రం 6:00 – 8:00 PM కి డెలివరీ</span>
               </div>
             </div>
           </div>

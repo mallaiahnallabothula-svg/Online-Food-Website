@@ -113,35 +113,63 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const incrementQuantity = () => setQuantity(q => q + 1);
   const decrementQuantity = () => setQuantity(q => (q > 5 ? q - 1 : 5));
 
-  // Validation
+  // Validation & Auto-scroll
+  const handleQuickDemoFill = () => {
+    setCustomerName('మల్లయ్య గారు');
+    setMobileNumber('8499865803');
+    setSelectedPresetArea('కొల్లూరు గ్రామం (కేంద్రం)');
+    setCurrentDistanceKm(0.5);
+    setDeliveryEligibility({
+      isEligible: true,
+      distanceKm: 0.5,
+      messageTe: 'ఉచిత డెలివరీ అందుబాటులో ఉంది (కొల్లూరు నుండి దూరం: 0.5 కి.మీ.).',
+    });
+    setAddress('ఇంటి నెం. 2-45, రామాలయం వీధి, కొల్లూరు గ్రామం');
+    setLandmark('గ్రామ పంచాయతీ ఎదురుగా');
+    setCustomLocationLink('https://maps.google.com/?q=17.4782,78.2323');
+    setErrors({});
+  };
+
   const validateForm = (): boolean => {
     const errs: Record<string, string> = {};
+    let firstErrorElementId = '';
 
     if (!customerName.trim()) {
       errs.customerName = 'దయచేసి మీ పూర్తి పేరు నమోదు చేయండి.';
+      if (!firstErrorElementId) firstErrorElementId = 'customer-name-input';
     }
 
     const cleanMobile = mobileNumber.replace(/\D/g, '');
     if (!cleanMobile) {
       errs.mobileNumber = 'దయచేసి మొబైల్ నంబర్ నమోదు చేయండి.';
+      if (!firstErrorElementId) firstErrorElementId = 'customer-mobile-input';
     } else if (cleanMobile.length !== 10) {
-      errs.mobileNumber = 'సరైన 10 అంకెల మొబైల్ నంబర్ నమోదు చేయండి (ఉదా: 9848012345).';
+      errs.mobileNumber = 'సరైన 10 అంకెల మొబైల్ నంబర్ నమోదు చేయండి (ఉదా: 8499865803).';
+      if (!firstErrorElementId) firstErrorElementId = 'customer-mobile-input';
     }
 
     if (!address.trim()) {
       errs.address = 'దయచేసి పూర్తి డెలివరీ చిరునామా (ఇంటి నం, కాలనీ) నమోదు చేయండి.';
+      if (!firstErrorElementId) firstErrorElementId = 'customer-address-input';
     }
 
     if (!deliveryEligibility.isEligible) {
       errs.delivery = `కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధి దాటింది (${deliveryEligibility.distanceKm} కి.మీ.). ఉచిత డెలివరీ కేవలం 5 కి.మీ. లోపలే సాధ్యం.`;
-    }
-
-    const canOrder = hoursStatus.isOpen || allowOutsideHours;
-    if (!canOrder) {
-      errs.hours = 'ప్రస్తుతం ఆర్డర్లు స్వీకరించబడవు (సమయం: ఉదయం 11 AM - సాయంత్రం 4 PM).';
+      if (!firstErrorElementId) firstErrorElementId = 'locality-select';
     }
 
     setErrors(errs);
+
+    if (firstErrorElementId) {
+      setTimeout(() => {
+        const el = document.getElementById(firstErrorElementId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.focus();
+        }
+      }, 50);
+    }
+
     return Object.keys(errs).length === 0;
   };
 
@@ -378,18 +406,31 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
         {/* SECTION 3: Customer & Delivery Details with 5km Kollur Service Area Check */}
         <div className="bg-white dark:bg-[#211E1A] rounded-2xl p-6 sm:p-8 shadow-sm border border-amber-900/10 dark:border-stone-800">
-          <div className="flex items-center gap-3 pb-5 border-b border-stone-100 dark:border-stone-800">
-            <span className="w-8 h-8 rounded-full bg-[#8C4A26] text-amber-100 font-bold flex items-center justify-center text-sm">
-              3
-            </span>
-            <div>
-              <h2 className="text-xl font-bold text-[#451A03] dark:text-amber-100 font-telugu">
-                కస్టమర్ వివరాలు & డెలివరీ చిరునామా
-              </h2>
-              <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 font-telugu">
-                కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధిలో ఉచిత హోమ్ డెలివరీ
-              </p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-5 border-b border-stone-100 dark:border-stone-800">
+            <div className="flex items-center gap-3">
+              <span className="w-8 h-8 rounded-full bg-[#8C4A26] text-amber-100 font-bold flex items-center justify-center text-sm">
+                3
+              </span>
+              <div>
+                <h2 className="text-xl font-bold text-[#451A03] dark:text-amber-100 font-telugu">
+                  కస్టమర్ వివరాలు & డెలివరీ చిరునామా
+                </h2>
+                <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 font-telugu">
+                  కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధిలో ఉచిత హోమ్ డెలివరీ
+                </p>
+              </div>
             </div>
+
+            {/* Quick Demo Fill button */}
+            <button
+              type="button"
+              onClick={handleQuickDemoFill}
+              className="px-3.5 py-1.5 rounded-xl bg-amber-100 dark:bg-stone-800 hover:bg-amber-200 dark:hover:bg-stone-700 text-[#78350F] dark:text-amber-300 font-bold text-xs flex items-center gap-1.5 transition-all self-end sm:self-auto border border-amber-300 dark:border-stone-700 font-telugu"
+              title="టెస్ట్ చేయడానికి ఒకే క్లిక్‌తో నమూనా వివరాలను నింపండి"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>నమూనా వివరాలు నింపండి</span>
+            </button>
           </div>
 
           <div className="pt-6 space-y-5 font-telugu">
@@ -624,6 +665,24 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
           {/* Submit / Proceed Button */}
           <div className="pt-4 flex flex-col gap-3">
+            {/* Missing Info Prompt */}
+            {(!customerName.trim() || mobileNumber.replace(/\D/g, '').length !== 10 || !address.trim()) && (
+              <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-stone-900 border border-amber-300 dark:border-stone-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 font-telugu text-xs">
+                <div className="flex items-center gap-2 text-stone-700 dark:text-stone-300">
+                  <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                  <span>ఆర్డర్ చేయడానికి పైన పేరు, మొబైల్ నంబర్ మరియు చిరునామా నమోదు చేయండి.</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleQuickDemoFill}
+                  className="px-3 py-1.5 rounded-lg bg-[#78350F] hover:bg-[#8C4A26] text-white font-bold flex items-center gap-1 text-xs self-end sm:self-auto shadow-xs"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>నమూనా వివరాలు నింపండి</span>
+                </button>
+              </div>
+            )}
+
             <button
               type="submit"
               disabled={isOrderBlockedByHours || !deliveryEligibility.isEligible}

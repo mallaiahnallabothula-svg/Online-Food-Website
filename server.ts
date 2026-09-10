@@ -176,6 +176,19 @@ function getISTInfo() {
   ];
   const dateTelugu = `${date} ${TELUGU_MONTHS[month - 1]} ${year}`;
 
+  // Tomorrow's date for after 4 PM orders
+  const tomorrowTime = new Date(now.getTime() + (24 + 5.5) * 60 * 60 * 1000);
+  const tomorrowParts = formatter.formatToParts(new Date(now.getTime() + 24 * 60 * 60 * 1000));
+  const tFindPart = (t: string) => parseInt(tomorrowParts.find(p => p.type === t)?.value || '0', 10);
+  const tYear = tFindPart('year');
+  const tMonth = tFindPart('month');
+  const tDate = tFindPart('day');
+  const tomorrowDateTelugu = `${tDate} ${TELUGU_MONTHS[tMonth - 1]} ${tYear}`;
+
+  const isTodayDelivery = hours < 16; // Before 4:00 PM IST is today's delivery
+  const targetDeliveryDate = isTodayDelivery ? dateTelugu : tomorrowDateTelugu;
+  const targetDeliveryDateLabel = isTodayDelivery ? `${dateTelugu} (నేడు)` : `${tomorrowDateTelugu} (రేపు)`;
+
   return {
     year,
     month,
@@ -184,7 +197,11 @@ function getISTInfo() {
     minutes,
     seconds,
     totalMinutes,
-    isOpen,
+    isOpen: true, // Always allow customers to place orders (active or advance pre-order)
+    isLiveBatchHours: isOpen,
+    isTodayDelivery,
+    targetDeliveryDate,
+    targetDeliveryDateLabel,
     timeFormatted,
     dateTelugu,
   };
@@ -199,29 +216,30 @@ app.get('/api/status', (req, res) => {
   const ist = getISTInfo();
   
   let nextOpenMessage = '';
-  if (ist.totalMinutes < 11 * 60) {
-    const diff = 11 * 60 - ist.totalMinutes;
-    const h = Math.floor(diff / 60);
-    const m = diff % 60;
-    nextOpenMessage = `ఆర్డర్లు ఉదయం 11:00 AM కు ప్రారంభమవుతాయి (${h > 0 ? `${h} గంటల ` : ''}${m} నిమిషాలలో).`;
-  } else if (ist.totalMinutes >= 16 * 60) {
-    nextOpenMessage = 'ఈరోజు ఆర్డర్ల సమయం (11:00 AM – 4:00 PM) పూర్తయింది. రేపు ఉదయం 11:00 AM నుండి ఆర్డర్లు స్వీకరించబడతాయి.';
+  if (ist.isTodayDelivery) {
+    if (ist.hours >= 11) {
+      const rem = 16 * 60 - ist.totalMinutes;
+      const h = Math.floor(rem / 60);
+      const m = rem % 60;
+      nextOpenMessage = `నేటి సాయంత్రం డెలివరీ కోసం ఆర్డర్లు అందుబాటులో ఉన్నాయి! నేటి ఆర్డర్ల ముగింపుకు ఇంకా ${h > 0 ? `${h} గం. ` : ''}${m} ని. సమయం ఉంది.`;
+    } else {
+      nextOpenMessage = `నేటి సాయంత్రం 6:00 – 8:00 PM డెలివరీ కోసం ఆర్డర్లు స్వీకరించబడుతున్నాయి.`;
+    }
   } else {
-    const rem = 16 * 60 - ist.totalMinutes;
-    const h = Math.floor(rem / 60);
-    const m = rem % 60;
-    nextOpenMessage = `ఆర్డర్లు అందుబాటులో ఉన్నాయి! నేటి ఆర్డర్లకు ఇంకా ${h > 0 ? `${h} గం. ` : ''}${m} ని. సమయం ఉంది.`;
+    nextOpenMessage = `రేపటి సాయంత్రం 6:00 – 8:00 PM డెలివరీ కోసం ముందస్తు ఆర్డర్లు (Pre-orders) స్వీకరించబడుతున్నాయి.`;
   }
 
   res.json({
-    isOpen: ist.isOpen,
+    isOpen: true, // 24/7 ordering enabled
+    isLiveBatchHours: ist.isLiveBatchHours,
     currentTimeIST: ist.timeFormatted,
-    currentDateIST: ist.dateTelugu,
+    currentDateIST: ist.targetDeliveryDateLabel,
     hours: ist.hours,
     minutes: ist.minutes,
-    openTimeStr: '11:00 AM',
-    closeTimeStr: '04:00 PM',
+    openTimeStr: '24/7 ఆర్డరింగ్ అందుబాటులో ఉంది',
+    closeTimeStr: 'సాయంత్రం 04:00 PM (నేటి డెలివరీ కటాఫ్)',
     deliveryWindow: 'సాయంత్రం 6:00 - 8:00 గంటలు',
+    deliveryDate: ist.targetDeliveryDate,
     nextOpenMessage,
     serviceArea: 'కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధిలో ఉచిత డెలివరీ'
   });
@@ -245,16 +263,8 @@ app.post('/api/check-delivery', (req, res) => {
 
 // 3. Initiate payment order
 app.post('/api/payment/create-order', (req, res) => {
-  const { quantity, karamSelection, customer, forceAllowOutsideHours } = req.body;
+  const { quantity, karamSelection, customer } = req.body;
   const ist = getISTInfo();
-
-  // Enforce ordering hours (11:00 AM - 4:00 PM IST)
-  if (!ist.isOpen && !forceAllowOutsideHours) {
-    return res.status(400).json({
-      error: 'ORDERING_HOURS_CLOSED',
-      message: 'ఆర్డర్లు కేవలం ఉదయం 11:00 AM నుండి సాయంత్రం 04:00 PM వరకు మాత్రమే స్వీకరించబడతాయి.'
-    });
-  }
 
   // Validate quantity
   const qty = parseInt(quantity, 10);
