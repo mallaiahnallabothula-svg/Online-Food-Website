@@ -1,0 +1,660 @@
+import React, { useState, useEffect } from 'react';
+import { Plus, Minus, Check, MapPin, AlertCircle, Sparkles, ShieldCheck, ArrowRight, Navigation, Gift } from 'lucide-react';
+import { KaramSelection, CustomerDetails, OrderingHoursStatus } from '../types';
+import { PRESET_LOCALITIES, checkKollurDeliveryEligibility, KOLLUR_CENTER } from '../data/kollurAreas';
+
+interface OrderFormProps {
+  hoursStatus: OrderingHoursStatus;
+  allowOutsideHours: boolean;
+  onProceedToPayment: (orderPayload: {
+    quantity: number;
+    totalAmount: number;
+    karamSelection: KaramSelection;
+    karamQuantities: { karivepakuGrams: number; aviseGinjaluGrams: number };
+    customer: CustomerDetails;
+    deliveryDate: string;
+    deliveryWindow: string;
+  }) => void;
+}
+
+export const OrderForm: React.FC<OrderFormProps> = ({
+  hoursStatus,
+  allowOutsideHours,
+  onProceedToPayment,
+}) => {
+  // Quantity (minimum 5)
+  const [quantity, setQuantity] = useState<number>(5);
+
+  // Karam selections
+  const [karamSelection, setKaramSelection] = useState<KaramSelection>({
+    karivepaku: true,
+    aviseGinjalu: true,
+  });
+
+  // Customer inputs
+  const [customerName, setCustomerName] = useState<string>('');
+  const [mobileNumber, setMobileNumber] = useState<string>('');
+  const [address, setAddress] = useState<string>('');
+  const [landmark, setLandmark] = useState<string>('');
+  const [selectedPresetArea, setSelectedPresetArea] = useState<string>('కొల్లూరు గ్రామం (కేంద్రం)');
+  const [customLocationLink, setCustomLocationLink] = useState<string>('');
+  const [currentDistanceKm, setCurrentDistanceKm] = useState<number>(0.5);
+
+  // Delivery check state
+  const [deliveryEligibility, setDeliveryEligibility] = useState<{
+    isEligible: boolean;
+    distanceKm: number;
+    messageTe: string;
+  }>({
+    isEligible: true,
+    distanceKm: 0.5,
+    messageTe: 'ఉచిత డెలివరీ అందుబాటులో ఉంది (కొల్లూరు నుండి దూరం: 0.5 కి.మీ.).',
+  });
+
+  // Form errors
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isLocating, setIsLocating] = useState<boolean>(false);
+
+  // Calculations
+  const pricePerRoti = 30;
+  const totalAmount = quantity * pricePerRoti;
+  const setsOf5 = Math.floor(quantity / 5);
+  const gramsPerSelected = setsOf5 * 50;
+
+  const karivepakuGrams = karamSelection.karivepaku ? gramsPerSelected : 0;
+  const aviseGinjaluGrams = karamSelection.aviseGinjalu ? gramsPerSelected : 0;
+
+  // Delivery date & fixed window
+  const deliveryWindow = 'సాయంత్రం 6–8 గంటలు';
+  const deliveryDateStr = hoursStatus.currentDateIST || 'నేడు (Today)';
+
+  // Handle preset locality change
+  const handleLocalityChange = (areaName: string) => {
+    setSelectedPresetArea(areaName);
+    const matched = PRESET_LOCALITIES.find(p => p.nameTe === areaName);
+    if (matched) {
+      setCurrentDistanceKm(matched.distanceKm);
+      const res = checkKollurDeliveryEligibility(matched.lat, matched.lng, matched.distanceKm);
+      setDeliveryEligibility(res);
+      if (!customLocationLink) {
+        setCustomLocationLink(`https://maps.google.com/?q=${matched.lat},${matched.lng}`);
+      }
+    }
+  };
+
+  // Browser Geolocation support
+  const handleDetectGPSLocation = () => {
+    if (!navigator.geolocation) {
+      alert('మీ బ్రౌజర్‌లో లొకేషన్ సదుపాయం అందుబాటులో లేదు.');
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setIsLocating(false);
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const res = checkKollurDeliveryEligibility(lat, lng);
+        setCurrentDistanceKm(res.distanceKm);
+        setDeliveryEligibility(res);
+        setCustomLocationLink(`https://maps.google.com/?q=${lat.toFixed(6)},${lng.toFixed(6)}`);
+        setSelectedPresetArea('GPS ద్వారా గుర్తించబడిన లొకేషన్');
+      },
+      (err) => {
+        setIsLocating(false);
+        alert('లొకేషన్ పొందడం సాధ్యం కాలేదు. దయచేసి జాబితా నుండి ఎంచుకోండి.');
+      },
+      { timeout: 10000 }
+    );
+  };
+
+  // Quantity helpers
+  const incrementQuantity = () => setQuantity(q => q + 1);
+  const decrementQuantity = () => setQuantity(q => (q > 5 ? q - 1 : 5));
+
+  // Validation
+  const validateForm = (): boolean => {
+    const errs: Record<string, string> = {};
+
+    if (!customerName.trim()) {
+      errs.customerName = 'దయచేసి మీ పూర్తి పేరు నమోదు చేయండి.';
+    }
+
+    const cleanMobile = mobileNumber.replace(/\D/g, '');
+    if (!cleanMobile) {
+      errs.mobileNumber = 'దయచేసి మొబైల్ నంబర్ నమోదు చేయండి.';
+    } else if (cleanMobile.length !== 10) {
+      errs.mobileNumber = 'సరైన 10 అంకెల మొబైల్ నంబర్ నమోదు చేయండి (ఉదా: 9848012345).';
+    }
+
+    if (!address.trim()) {
+      errs.address = 'దయచేసి పూర్తి డెలివరీ చిరునామా (ఇంటి నం, కాలనీ) నమోదు చేయండి.';
+    }
+
+    if (!deliveryEligibility.isEligible) {
+      errs.delivery = `కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధి దాటింది (${deliveryEligibility.distanceKm} కి.మీ.). ఉచిత డెలివరీ కేవలం 5 కి.మీ. లోపలే సాధ్యం.`;
+    }
+
+    const canOrder = hoursStatus.isOpen || allowOutsideHours;
+    if (!canOrder) {
+      errs.hours = 'ప్రస్తుతం ఆర్డర్లు స్వీకరించబడవు (సమయం: ఉదయం 11 AM - సాయంత్రం 4 PM).';
+    }
+
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
+    onProceedToPayment({
+      quantity,
+      totalAmount,
+      karamSelection,
+      karamQuantities: {
+        karivepakuGrams,
+        aviseGinjaluGrams,
+      },
+      customer: {
+        name: customerName.trim(),
+        mobile: mobileNumber.replace(/\D/g, ''),
+        address: address.trim(),
+        landmark: landmark.trim(),
+        locationLink: customLocationLink.trim() || `https://maps.google.com/?q=${KOLLUR_CENTER.lat},${KOLLUR_CENTER.lng}`,
+        distanceKm: deliveryEligibility.distanceKm,
+      },
+      deliveryDate: deliveryDateStr,
+      deliveryWindow,
+    });
+  };
+
+  const isOrderBlockedByHours = !hoursStatus.isOpen && !allowOutsideHours;
+
+  return (
+    <div id="order-section" className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        
+        {/* SECTION 1: Product & Quantity */}
+        <div className="bg-white dark:bg-[#211E1A] rounded-2xl p-6 sm:p-8 shadow-sm border border-amber-900/10 dark:border-stone-800">
+          <div className="flex items-center gap-3 pb-5 border-b border-stone-100 dark:border-stone-800">
+            <span className="w-8 h-8 rounded-full bg-[#78350F] text-amber-100 font-bold flex items-center justify-center text-sm">
+              1
+            </span>
+            <div>
+              <h2 className="text-xl font-bold text-[#451A03] dark:text-amber-100 font-telugu">
+                జొన్న రొట్టెల సంఖ్య ఎంచుకోండి
+              </h2>
+              <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 font-telugu">
+                తాజా మధ్యస్థ పరిమాణపు జొన్న రొట్టె | ఒక్కొక్కటి ₹30 (కనీసం 5 రొట్టెలు)
+              </p>
+            </div>
+          </div>
+
+          <div className="pt-6 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+            {/* Quantity Selector Control */}
+            <div className="md:col-span-7 flex flex-col sm:flex-row items-center sm:items-start gap-4">
+              <div className="flex items-center gap-3 bg-[#FBF7EE] dark:bg-stone-900 p-2 rounded-2xl border border-amber-900/15 dark:border-stone-700">
+                <button
+                  type="button"
+                  onClick={decrementQuantity}
+                  disabled={quantity <= 5}
+                  id="qty-decrement-btn"
+                  className="w-12 h-12 rounded-xl bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 flex items-center justify-center hover:bg-amber-100 dark:hover:bg-stone-700 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs transition-all"
+                  aria-label="తగ్గించండి"
+                >
+                  <Minus className="w-5 h-5" />
+                </button>
+
+                <div className="w-20 text-center">
+                  <span className="text-3xl font-extrabold text-[#78350F] dark:text-amber-400 font-mono">
+                    {quantity}
+                  </span>
+                  <span className="block text-[11px] font-semibold text-stone-600 dark:text-stone-400 font-telugu">
+                    రొట్టెలు
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={incrementQuantity}
+                  id="qty-increment-btn"
+                  className="w-12 h-12 rounded-xl bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 flex items-center justify-center hover:bg-amber-100 dark:hover:bg-stone-700 active:scale-95 shadow-xs transition-all"
+                  aria-label="పెంచండి"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Quick Select Buttons */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {[5, 10, 15, 20].map((num) => (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => setQuantity(num)}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold font-mono transition-all ${
+                      quantity === num
+                        ? 'bg-[#78350F] text-white shadow-xs'
+                        : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-amber-100 dark:hover:bg-stone-700'
+                    }`}
+                  >
+                    {num} రొట్టెలు
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Live Subtotal Card */}
+            <div className="md:col-span-5 bg-amber-50/70 dark:bg-stone-900/60 p-4 rounded-xl border border-amber-200 dark:border-stone-800 flex flex-col justify-center text-right font-telugu">
+              <span className="text-xs text-stone-600 dark:text-stone-400">రొట్టెల ఉపమొత్తం (Subtotal):</span>
+              <div className="flex items-baseline justify-end gap-1.5 mt-0.5">
+                <span className="text-xs font-mono text-stone-500">{quantity} × ₹30 =</span>
+                <span className="text-2xl sm:text-3xl font-extrabold text-[#78350F] dark:text-amber-400 font-mono">
+                  ₹{totalAmount}
+                </span>
+              </div>
+              <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold mt-1">
+                ✓ కొల్లూరు పరిధిలో ఉచిత డెలివరీ
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 2: Free Karam Selection */}
+        <div className="bg-white dark:bg-[#211E1A] rounded-2xl p-6 sm:p-8 shadow-sm border border-amber-900/10 dark:border-stone-800">
+          <div className="flex items-center gap-3 pb-5 border-b border-stone-100 dark:border-stone-800">
+            <span className="w-8 h-8 rounded-full bg-emerald-700 text-emerald-50 font-bold flex items-center justify-center text-sm">
+              2
+            </span>
+            <div className="flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-xl font-bold text-[#451A03] dark:text-amber-100 font-telugu">
+                  ఉచిత కారాలు (Free Karam Offer)
+                </h2>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-telugu">
+                  ఉచిత ఆఫర్
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 font-telugu mt-0.5">
+                ప్రతి పూర్తి 5 రొట్టెల కొనుగోలుపై మీరు ఎంచుకున్న ప్రతి కారం <strong className="text-emerald-700 dark:text-emerald-400">50 గ్రాములు ఉచితం</strong>! మీకు నచ్చిన కారాన్ని ఎంచుకోవచ్చు లేదా తొలగించవచ్చు.
+              </p>
+            </div>
+          </div>
+
+          {/* Current Calculation Rule Box */}
+          <div className="my-5 p-3.5 rounded-xl bg-[#FBF7EE] dark:bg-stone-900/80 border border-amber-200/80 dark:border-stone-800 flex items-center gap-3 font-telugu">
+            <Gift className="w-5 h-5 text-[#78350F] dark:text-amber-400 flex-shrink-0" />
+            <div className="text-xs sm:text-sm text-stone-800 dark:text-stone-200">
+              మీరు ఎంచుకున్న రొట్టెలు: <strong>{quantity}</strong>. పూర్తి సెట్లు: <strong>{setsOf5}</strong> (ప్రతి సెట్‌కు 50 గ్రా.). 
+              కావున ప్రతి ఎంచుకున్న కారం: <strong className="text-emerald-700 dark:text-emerald-400 font-bold font-mono">{gramsPerSelected} గ్రాములు</strong> ఉచితం.
+            </div>
+          </div>
+
+          {/* Karam Selection Checkbox Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-telugu">
+            {/* Karivepaku Karam */}
+            <label
+              htmlFor="karam-karivepaku"
+              className={`relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                karamSelection.karivepaku
+                  ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-600 dark:border-emerald-500 shadow-xs'
+                  : 'bg-stone-50/60 dark:bg-stone-900/40 border-stone-200 dark:border-stone-800 opacity-70'
+              }`}
+            >
+              <input
+                type="checkbox"
+                id="karam-karivepaku"
+                checked={karamSelection.karivepaku}
+                onChange={(e) => setKaramSelection(k => ({ ...k, karivepaku: e.target.checked }))}
+                className="mt-1 w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+              />
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-base text-stone-900 dark:text-stone-100">
+                    కరివేపాకు కారం
+                  </span>
+                </div>
+                <p className="text-xs text-stone-600 dark:text-stone-400">
+                  స్వచ్ఛమైన తాజా కరివేపాకు మరియు సంప్రదాయ సుగంధ దినుసుల పొడి
+                </p>
+                <div className="pt-1.5 flex items-center gap-2">
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${
+                    karamSelection.karivepaku
+                      ? 'bg-emerald-600 text-white font-mono'
+                      : 'bg-stone-200 dark:bg-stone-800 text-stone-500'
+                  }`}>
+                    {karamSelection.karivepaku ? `${karivepakuGrams} గ్రా. ఉచితం` : 'ఎంపిక చేయలేదు'}
+                  </span>
+                  <span className="text-[11px] text-emerald-800 dark:text-emerald-300 font-medium">
+                    (విలువ: ₹0)
+                  </span>
+                </div>
+              </div>
+            </label>
+
+            {/* Avise Ginjala Karam */}
+            <label
+              htmlFor="karam-avise"
+              className={`relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                karamSelection.aviseGinjalu
+                  ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-600 dark:border-emerald-500 shadow-xs'
+                  : 'bg-stone-50/60 dark:bg-stone-900/40 border-stone-200 dark:border-stone-800 opacity-70'
+              }`}
+            >
+              <input
+                type="checkbox"
+                id="karam-avise"
+                checked={karamSelection.aviseGinjalu}
+                onChange={(e) => setKaramSelection(k => ({ ...k, aviseGinjalu: e.target.checked }))}
+                className="mt-1 w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+              />
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-base text-stone-900 dark:text-stone-100">
+                    అవిసె గింజల కారం
+                  </span>
+                </div>
+                <p className="text-xs text-stone-600 dark:text-stone-400">
+                  వేయించిన అవిసె గింజల (Flaxseeds) సంప్రదాయ ఘుమఘుమలాడే కారం
+                </p>
+                <div className="pt-1.5 flex items-center gap-2">
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${
+                    karamSelection.aviseGinjalu
+                      ? 'bg-emerald-600 text-white font-mono'
+                      : 'bg-stone-200 dark:bg-stone-800 text-stone-500'
+                  }`}>
+                    {karamSelection.aviseGinjalu ? `${aviseGinjaluGrams} గ్రా. ఉచితం` : 'ఎంపిక చేయలేదు'}
+                  </span>
+                  <span className="text-[11px] text-emerald-800 dark:text-emerald-300 font-medium">
+                    (విలువ: ₹0)
+                  </span>
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        {/* SECTION 3: Customer & Delivery Details with 5km Kollur Service Area Check */}
+        <div className="bg-white dark:bg-[#211E1A] rounded-2xl p-6 sm:p-8 shadow-sm border border-amber-900/10 dark:border-stone-800">
+          <div className="flex items-center gap-3 pb-5 border-b border-stone-100 dark:border-stone-800">
+            <span className="w-8 h-8 rounded-full bg-[#8C4A26] text-amber-100 font-bold flex items-center justify-center text-sm">
+              3
+            </span>
+            <div>
+              <h2 className="text-xl font-bold text-[#451A03] dark:text-amber-100 font-telugu">
+                కస్టమర్ వివరాలు & డెలివరీ చిరునామా
+              </h2>
+              <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 font-telugu">
+                కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధిలో ఉచిత హోమ్ డెలివరీ
+              </p>
+            </div>
+          </div>
+
+          <div className="pt-6 space-y-5 font-telugu">
+            
+            {/* Customer Name */}
+            <div>
+              <label htmlFor="customer-name-input" className="block text-sm font-bold text-stone-800 dark:text-stone-200 mb-1.5">
+                కస్టమర్ పూర్తి పేరు <span className="text-red-600">*</span>
+              </label>
+              <input
+                type="text"
+                id="customer-name-input"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="ఉదాహరణ: సురేష్ కుమార్"
+                className={`w-full px-4 py-3 rounded-xl border bg-[#FDFBF7] dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#78350F] transition-all ${
+                  errors.customerName ? 'border-red-500 ring-1 ring-red-500' : 'border-stone-300 dark:border-stone-700'
+                }`}
+              />
+              {errors.customerName && (
+                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  <span>{errors.customerName}</span>
+                </p>
+              )}
+            </div>
+
+            {/* Customer Mobile with Fixed +91 Prefix */}
+            <div>
+              <label htmlFor="customer-mobile-input" className="block text-sm font-bold text-stone-800 dark:text-stone-200 mb-1.5">
+                మొబైల్ సంఖ్య (10 అంకెలు) <span className="text-red-600">*</span>
+              </label>
+              <div className="flex rounded-xl overflow-hidden shadow-xs border border-stone-300 dark:border-stone-700 focus-within:ring-2 focus-within:ring-[#78350F]">
+                <div className="bg-stone-100 dark:bg-stone-800 px-4 py-3 flex items-center border-r border-stone-300 dark:border-stone-700 text-stone-700 dark:text-stone-300 font-mono font-bold text-sm">
+                  +91
+                </div>
+                <input
+                  type="tel"
+                  id="customer-mobile-input"
+                  maxLength={10}
+                  value={mobileNumber}
+                  onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, ''))}
+                  placeholder="8499865803"
+                  className="w-full px-4 py-3 bg-[#FDFBF7] dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-none font-mono text-sm sm:text-base"
+                />
+              </div>
+              {errors.mobileNumber && (
+                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  <span>{errors.mobileNumber}</span>
+                </p>
+              )}
+            </div>
+
+            {/* Delivery Locality Preset & 5km Radius Check */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
+                <label htmlFor="locality-select" className="text-sm font-bold text-stone-800 dark:text-stone-200">
+                  డెలివరీ ప్రాంతం (కొల్లూరు 5 కి.మీ. పరిధి) <span className="text-red-600">*</span>
+                </label>
+
+                {/* GPS current location button */}
+                <button
+                  type="button"
+                  onClick={handleDetectGPSLocation}
+                  disabled={isLocating}
+                  id="detect-gps-btn"
+                  className="inline-flex items-center gap-1 text-xs text-[#78350F] dark:text-amber-400 font-semibold hover:underline"
+                >
+                  <Navigation className={`w-3.5 h-3.5 ${isLocating ? 'animate-spin' : ''}`} />
+                  <span>{isLocating ? 'గుర్తిస్తోంది...' : 'నా ప్రస్తుత GPS లొకేషన్ గుర్తించండి'}</span>
+                </button>
+              </div>
+
+              <select
+                id="locality-select"
+                value={selectedPresetArea}
+                onChange={(e) => handleLocalityChange(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-[#FDFBF7] dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#78350F] text-sm"
+              >
+                {PRESET_LOCALITIES.map((loc) => (
+                  <option key={loc.nameTe} value={loc.nameTe}>
+                    {loc.nameTe} ({loc.distanceKm} కి.మీ. {loc.isEligible ? '— ఉచిత డెలివరీ' : '— 5 కి.మీ. దాటింది'})
+                  </option>
+                ))}
+              </select>
+
+              {/* Real-time 5km Service Area Status */}
+              <div className={`mt-2 p-3 rounded-xl text-xs flex items-start gap-2 ${
+                deliveryEligibility.isEligible
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800'
+                  : 'bg-red-50 dark:bg-red-950/40 text-red-900 dark:text-red-200 border border-red-200 dark:border-red-800'
+              }`}>
+                {deliveryEligibility.isEligible ? (
+                  <Check className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                )}
+                <span>{deliveryEligibility.messageTe}</span>
+              </div>
+            </div>
+
+            {/* Complete Address */}
+            <div>
+              <label htmlFor="customer-address-input" className="block text-sm font-bold text-stone-800 dark:text-stone-200 mb-1.5">
+                పూర్తి చిరునామా (ఫ్లాట్ / ఇంటి నంబర్, వీధి, కాలనీ) <span className="text-red-600">*</span>
+              </label>
+              <textarea
+                id="customer-address-input"
+                rows={2}
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="ఉదాహరణ: ఫ్లాట్ 202, శ్రీ సాయి రెసిడెన్సీ, మెయిన్ రోడ్, కొల్లూరు"
+                className={`w-full px-4 py-3 rounded-xl border bg-[#FDFBF7] dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#78350F] text-sm ${
+                  errors.address ? 'border-red-500 ring-1 ring-red-500' : 'border-stone-300 dark:border-stone-700'
+                }`}
+              />
+              {errors.address && (
+                <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5" />
+                  <span>{errors.address}</span>
+                </p>
+              )}
+            </div>
+
+            {/* Landmark & Optional Maps Link */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="customer-landmark-input" className="block text-sm font-bold text-stone-800 dark:text-stone-200 mb-1.5">
+                  ల్యాండ్మార్క్ (గుడి, పాఠశాల లేదా అపార్ట్‌మెంట్ పేరు)
+                </label>
+                <input
+                  type="text"
+                  id="customer-landmark-input"
+                  value={landmark}
+                  onChange={(e) => setLandmark(e.target.value)}
+                  placeholder="ఉదా: గ్రామ పంచాయతీ దగ్గర"
+                  className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-[#FDFBF7] dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#78350F] text-sm"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="customer-location-link" className="block text-sm font-bold text-stone-800 dark:text-stone-200 mb-1.5">
+                  లొకేషన్ లింక్ (ఐచ్ఛికం - Google Maps Link)
+                </label>
+                <input
+                  type="text"
+                  id="customer-location-link"
+                  value={customLocationLink}
+                  onChange={(e) => setCustomLocationLink(e.target.value)}
+                  placeholder="https://maps.google.com/?q=..."
+                  className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-[#FDFBF7] dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#78350F] text-sm"
+                />
+              </div>
+            </div>
+
+            {/* Delivery Date & Window (Fixed: 6:00 PM - 8:00 PM) */}
+            <div className="p-4 rounded-xl bg-amber-50/60 dark:bg-stone-900/60 border border-amber-900/10 dark:border-stone-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <span className="block text-xs font-semibold text-stone-600 dark:text-stone-400">డెలివరీ తేదీ:</span>
+                <span className="font-bold text-base text-stone-900 dark:text-stone-100 font-mono">
+                  {deliveryDateStr}
+                </span>
+              </div>
+
+              <div>
+                <span className="block text-xs font-semibold text-stone-600 dark:text-stone-400">డెలివరీ సమయం (Delivery Window):</span>
+                <span className="inline-flex items-center gap-1.5 font-bold text-base text-[#78350F] dark:text-amber-400">
+                  <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                  <span>సాయంత్రం 6–8 గంటలు</span>
+                </span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Global Error Banner */}
+        {Object.keys(errors).length > 0 && (
+          <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 text-sm font-telugu flex items-start gap-2">
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold">దయచేసి క్రింది వివరాలను సరిచూసుకోండి:</p>
+              <ul className="list-disc list-inside mt-1 text-xs space-y-0.5">
+                {Object.values(errors).map((err, i) => (
+                  <li key={i}>{err}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
+
+        {/* SECTION 4: Order Summary & Proceed to Payment */}
+        <div className="bg-[#FAF4EA] dark:bg-[#28241F] rounded-2xl p-6 sm:p-8 border-2 border-amber-300 dark:border-stone-700 shadow-md">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-amber-900/15 dark:border-stone-700 font-telugu">
+            <div>
+              <h3 className="text-lg font-bold text-[#451A03] dark:text-amber-100">
+                ఆర్డర్ సమీక్ష (Order Summary)
+              </h3>
+              <p className="text-xs text-stone-600 dark:text-stone-400">
+                {quantity} జొన్న రొట్టెలు + ఉచిత కారాలు
+              </p>
+            </div>
+
+            <div className="text-right">
+              <span className="text-xs text-stone-600 dark:text-stone-400 block">మొత్తం చెల్లించవలసినది:</span>
+              <span className="text-3xl font-extrabold text-[#78350F] dark:text-amber-400 font-mono">
+                ₹{totalAmount}
+              </span>
+            </div>
+          </div>
+
+          {/* Karam Summary Breakdown */}
+          <div className="py-3 text-xs sm:text-sm font-telugu text-stone-700 dark:text-stone-300 space-y-1">
+            <div className="flex justify-between">
+              <span>జొన్న రొట్టెలు ({quantity} × ₹30):</span>
+              <span className="font-mono font-bold">₹{totalAmount}</span>
+            </div>
+            <div className="flex justify-between text-emerald-800 dark:text-emerald-400 font-semibold">
+              <span>కరివేపాకు కారం:</span>
+              <span>{karamSelection.karivepaku ? `${karivepakuGrams} గ్రా. (ఉచితం ₹0)` : 'ఎంపిక చేయలేదు'}</span>
+            </div>
+            <div className="flex justify-between text-emerald-800 dark:text-emerald-400 font-semibold">
+              <span>అవిసె గింజల కారం:</span>
+              <span>{karamSelection.aviseGinjalu ? `${aviseGinjaluGrams} గ్రా. (ఉచితం ₹0)` : 'ఎంపిక చేయలేదు'}</span>
+            </div>
+            <div className="flex justify-between text-stone-600 dark:text-stone-400">
+              <span>హోమ్ డెలివరీ (కొల్లూరు 5 కి.మీ. పరిధి):</span>
+              <span className="font-bold text-emerald-700 dark:text-emerald-400 font-telugu">ఉచితం (₹0)</span>
+            </div>
+          </div>
+
+          {/* Submit / Proceed Button */}
+          <div className="pt-4 flex flex-col gap-3">
+            <button
+              type="submit"
+              disabled={isOrderBlockedByHours || !deliveryEligibility.isEligible}
+              id="proceed-to-payment-btn"
+              className="w-full py-4 px-6 rounded-xl font-bold text-base sm:text-lg text-amber-50 bg-[#78350F] hover:bg-[#8C4A26] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-950/20 flex items-center justify-center gap-3 transition-all font-telugu"
+            >
+              <span>UPI చెల్లింపుకు కొనసాగించండి (₹{totalAmount})</span>
+              <ArrowRight className="w-5 h-5" />
+            </button>
+
+            {isOrderBlockedByHours && (
+              <p className="text-center text-xs text-amber-800 dark:text-amber-300 font-telugu font-semibold">
+                ⚠️ ఆర్డర్ల సమయం (11:00 AM – 4:00 PM IST) ముగిసినందున చెకౌట్ డిసేబుల్ చేయబడింది.
+              </p>
+            )}
+
+            {!deliveryEligibility.isEligible && (
+              <p className="text-center text-xs text-red-600 dark:text-red-400 font-telugu font-semibold">
+                ⚠️ దయచేసి కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధిలోని చిరునామాను ఎంచుకోండి.
+              </p>
+            )}
+
+            <div className="flex items-center justify-center gap-2 text-xs text-stone-500 dark:text-stone-400 font-telugu pt-1">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span>ఆన్‌లైన్ UPI ద్వారా మాత్రమే చెల్లింపు. క్యాష్ ఆన్ డెలివరీ లేదు. సర్వర్ ద్వారా ధృవీకరించబడుతుంది.</span>
+            </div>
+          </div>
+
+        </div>
+
+      </form>
+    </div>
+  );
+};
