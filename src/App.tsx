@@ -11,7 +11,7 @@ import { AdminLogin } from './components/OwnerPortal/AdminLogin';
 import { OwnerDashboard } from './components/OwnerPortal/OwnerDashboard';
 import { OrderingHoursStatus, Order, AdminRole } from './types';
 import { getISTTime, getInitialOrderingStatus } from './utils/time';
-import { Phone, MapPin, Clock, ShieldCheck, Heart, Camera, Download } from 'lucide-react';
+import { Phone, MapPin, Clock, ShieldCheck, Heart, Camera } from 'lucide-react';
 
 export default function App() {
   // Dark mode state
@@ -227,14 +227,14 @@ export default function App() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-4 text-center md:text-right">
-            {/* Direct button to open Photos & Download */}
+            {/* Direct button to open Photos */}
             <button
               onClick={() => handleOpenGallery()}
               id="footer-open-photos-btn"
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-100/90 hover:bg-amber-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-[#78350F] dark:text-amber-300 font-bold border border-amber-300 dark:border-stone-700 transition-colors cursor-pointer"
             >
               <Camera className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
-              <span>అసలైన ఫోటోలు & డౌన్‌లోడ్</span>
+              <span>అసలైన ఫోటోలు</span>
             </button>
 
             <a

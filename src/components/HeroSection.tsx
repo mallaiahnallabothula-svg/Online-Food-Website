@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowDown, CheckCircle2, Sparkles, MapPin, Clock, ShieldCheck, Download, Camera, Eye } from 'lucide-react';
+import { ArrowDown, CheckCircle2, Sparkles, MapPin, Clock, ShieldCheck, Camera, Eye } from 'lucide-react';
 import brandLogo from '../assets/images/mallikarjuna_rottelu_logo_1789103187340.jpg';
 import { ORIGINAL_PHOTOS } from '../data/originalPhotos';
 
@@ -102,7 +102,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder, isOpe
                 className="inline-flex items-center justify-center gap-2 px-5 py-4 rounded-xl text-sm sm:text-base font-bold text-[#78350F] dark:text-amber-200 bg-amber-100/90 dark:bg-stone-800 hover:bg-amber-200 dark:hover:bg-stone-700 border border-amber-300 dark:border-stone-700 transition-all font-telugu shadow-sm cursor-pointer"
               >
                 <Camera className="w-4.5 h-4.5 text-amber-700 dark:text-amber-400" />
-                <span>అసలైన ఫోటోలు & డౌన్‌లోడ్</span>
+                <span>అసలైన ఫోటోలు</span>
               </button>
             </div>
 
@@ -112,7 +112,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder, isOpe
             </div>
           </div>
 
-          {/* Right Column: Original HD Hero Image with Interactive Switcher & Download */}
+          {/* Right Column: Original HD Hero Image with Interactive Switcher */}
           <div className="lg:col-span-5 flex flex-col gap-3">
             <div 
               onClick={() => onOpenGallery(currentPhoto.id)}
@@ -131,10 +131,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder, isOpe
                 <span>100% అసలైన ఫోటో (Original HD)</span>
               </div>
 
-              {/* View/Download Prompt Badge */}
+              {/* View Prompt Badge */}
               <div className="absolute top-3 right-3 bg-black/75 hover:bg-black/90 backdrop-blur-md text-amber-200 text-[11px] font-medium px-2.5 py-1 rounded-md border border-white/20 font-telugu flex items-center gap-1 transition-colors">
-                <Download className="w-3 h-3 text-amber-300" />
-                <span>డౌన్‌లోడ్</span>
+                <Eye className="w-3 h-3 text-amber-300" />
+                <span>వీక్షించండి</span>
               </div>
 
               {/* Bottom Caption Overlay */}
@@ -178,7 +178,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder, isOpe
 
             {/* Quick Helper text */}
             <div className="flex items-center justify-between text-[11px] font-telugu text-stone-500 dark:text-stone-400 px-1">
-              <span>💡 ఫోటోపై క్లిక్ చేసి పెద్దదిగా చూడండి & డౌన్‌లోడ్ చేసుకోండి</span>
+              <span>💡 ఫోటోపై క్లిక్ చేసి పెద్దదిగా చూడండి</span>
               <button
                 type="button"
                 onClick={() => onOpenGallery()}

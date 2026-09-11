@@ -71,12 +71,12 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* View & Download Original Photos Button */}
+          {/* View Original Photos Button */}
           <button
             onClick={onOpenGallery}
             id="header-open-photos-btn"
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-amber-100/90 hover:bg-amber-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-[#78350F] dark:text-amber-300 border border-amber-300 dark:border-stone-700 transition-colors font-telugu cursor-pointer shadow-xs"
-            title="అసలైన ఫోటోలు చూడండి & డౌన్‌లోడ్ చేసుకోండి"
+            title="అసలైన ఫోటోలు చూడండి"
           >
             <Camera className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
             <span className="hidden sm:inline">అసలైన ఫోటోలు</span>

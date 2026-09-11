@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Download, ChevronLeft, ChevronRight, Check, Image as ImageIcon, Sparkles, ExternalLink } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Image as ImageIcon, Sparkles } from 'lucide-react';
 import { ORIGINAL_PHOTOS, OriginalPhoto } from '../data/originalPhotos';
 
 interface PhotoGalleryModalProps {
@@ -21,9 +21,6 @@ export const PhotoGalleryModal: React.FC<PhotoGalleryModalProps> = ({
     return 0;
   });
 
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
-  const [downloadAllProgress, setDownloadAllProgress] = useState<boolean>(false);
-
   if (!isOpen) return null;
 
   const currentPhoto: OriginalPhoto = ORIGINAL_PHOTOS[currentIndex] || ORIGINAL_PHOTOS[0];
@@ -34,58 +31,6 @@ export const PhotoGalleryModal: React.FC<PhotoGalleryModalProps> = ({
 
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev - 1 + ORIGINAL_PHOTOS.length) % ORIGINAL_PHOTOS.length);
-  };
-
-  const downloadSinglePhoto = async (photo: OriginalPhoto) => {
-    try {
-      setDownloadingId(photo.id);
-      const response = await fetch(photo.src);
-      const blob = await response.blob();
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = blobUrl;
-      link.download = photo.filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (err) {
-      console.error('Download error:', err);
-      // Fallback direct link
-      const link = document.createElement('a');
-      link.href = photo.src;
-      link.download = photo.filename;
-      link.target = '_blank';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } finally {
-      setTimeout(() => setDownloadingId(null), 800);
-    }
-  };
-
-  const downloadAllPhotos = async () => {
-    setDownloadAllProgress(true);
-    for (let i = 0; i < ORIGINAL_PHOTOS.length; i++) {
-      const photo = ORIGINAL_PHOTOS[i];
-      try {
-        const response = await fetch(photo.src);
-        const blob = await response.blob();
-        const blobUrl = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = blobUrl;
-        link.download = photo.filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(blobUrl);
-        // Stagger downloads to avoid browser block
-        await new Promise((resolve) => setTimeout(resolve, 350));
-      } catch (err) {
-        console.error('Download error for', photo.filename, err);
-      }
-    }
-    setDownloadAllProgress(false);
   };
 
   return (
@@ -103,7 +48,7 @@ export const PhotoGalleryModal: React.FC<PhotoGalleryModalProps> = ({
             </div>
             <div>
               <h3 className="font-bold text-base sm:text-lg text-[#451A03] dark:text-amber-100 font-telugu">
-                అసలైన ఫోటోల గ్యాలరీ & డౌన్‌లోడ్
+                అసలైన ఫోటోల గ్యాలరీ
               </h3>
               <p className="text-xs text-stone-500 dark:text-stone-400 font-telugu">
                 శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు • ఒరిజినల్ హై-క్వాలిటీ చిత్రాలు
@@ -113,19 +58,9 @@ export const PhotoGalleryModal: React.FC<PhotoGalleryModalProps> = ({
 
           <div className="flex items-center gap-2">
             <button
-              onClick={downloadAllPhotos}
-              disabled={downloadAllProgress}
-              id="download-all-photos-modal-btn"
-              className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-amber-50 bg-[#78350F] hover:bg-[#8C4A26] disabled:opacity-50 transition-all font-telugu shadow-sm cursor-pointer"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>{downloadAllProgress ? 'డౌన్‌లోడ్ అవుతున్నాయి...' : `అన్ని ఫోటోలు డౌన్‌లోడ్ (${ORIGINAL_PHOTOS.length})`}</span>
-            </button>
-
-            <button
               onClick={onClose}
               id="close-gallery-modal-btn"
-              className="p-2 rounded-xl text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors"
+              className="p-2 rounded-xl text-stone-600 dark:text-stone-300 hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors cursor-pointer"
               aria-label="Close modal"
             >
               <X className="w-5 h-5" />
@@ -181,7 +116,7 @@ export const PhotoGalleryModal: React.FC<PhotoGalleryModalProps> = ({
             </div>
           </div>
 
-          {/* Details & Download Options */}
+          {/* Details & Navigation Controls */}
           <div className="lg:col-span-4 flex flex-col justify-between space-y-4">
             <div className="space-y-3">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold text-emerald-800 bg-emerald-100 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 font-telugu">
@@ -201,39 +136,35 @@ export const PhotoGalleryModal: React.FC<PhotoGalleryModalProps> = ({
               </div>
 
               <div className="text-xs text-stone-500 font-mono space-y-1 pt-1">
-                <div>ఫైల్ పేరు: <span className="text-stone-700 dark:text-stone-300 font-bold">{currentPhoto.filename}</span></div>
+                <div>విభాగం: <span className="text-stone-700 dark:text-stone-300 font-bold">{currentPhoto.tag}</span></div>
                 <div>రిజల్యూషన్: <span className="text-stone-700 dark:text-stone-300 font-bold">{currentPhoto.resolution}</span></div>
-                <div>ఫార్మాట్: <span className="text-stone-700 dark:text-stone-300 font-bold">JPG (High Quality)</span></div>
               </div>
             </div>
 
-            {/* Download Button for current photo */}
+            {/* Navigation buttons */}
             <div className="pt-3 border-t border-stone-200 dark:border-stone-800 space-y-2">
-              <button
-                onClick={() => downloadSinglePhoto(currentPhoto)}
-                id="download-single-photo-btn"
-                className="w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-bold text-amber-50 bg-[#78350F] hover:bg-[#8C4A26] transition-all shadow-md font-telugu cursor-pointer"
-              >
-                {downloadingId === currentPhoto.id ? (
-                  <>
-                    <Check className="w-4 h-4 text-emerald-300 animate-bounce" />
-                    <span>డౌన్‌లోడ్ అవుతోంది...</span>
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-4 h-4" />
-                    <span>ఈ ఫోటో డౌన్‌లోడ్ చేసుకోండి</span>
-                  </>
-                )}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrev}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-[#78350F] dark:text-amber-200 bg-amber-100/90 dark:bg-stone-800 hover:bg-amber-200 dark:hover:bg-stone-700 border border-amber-300 dark:border-stone-700 transition-all font-telugu cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>మునుపటిది</span>
+                </button>
+                <button
+                  onClick={handleNext}
+                  className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-amber-50 bg-[#78350F] hover:bg-[#8C4A26] transition-all font-telugu shadow-sm cursor-pointer"
+                >
+                  <span>తదుపరిది</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
 
               <button
-                onClick={downloadAllPhotos}
-                disabled={downloadAllProgress}
-                className="sm:hidden w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold text-[#78350F] dark:text-amber-200 bg-amber-100 dark:bg-stone-800 border border-amber-300 dark:border-stone-700 font-telugu"
+                onClick={onClose}
+                className="w-full text-center py-2 text-xs font-bold text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 font-telugu cursor-pointer"
               >
-                <Download className="w-3.5 h-3.5" />
-                <span>అన్ని {ORIGINAL_PHOTOS.length} ఫోటోలు డౌన్‌లోడ్</span>
+                గ్యాలరీ మూసివేయండి
               </button>
             </div>
           </div>
