@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Minus, Check, MapPin, AlertCircle, Sparkles, ShieldCheck, ArrowRight, Navigation, Gift, Eye } from 'lucide-react';
+import { Plus, Minus, Check, MapPin, AlertCircle, Sparkles, ShieldCheck, ArrowRight, Navigation, Gift, CheckCircle2, ExternalLink } from 'lucide-react';
 import { KaramSelection, CustomerDetails, OrderingHoursStatus } from '../types';
 import { PRESET_LOCALITIES, checkKollurDeliveryEligibility, KOLLUR_CENTER } from '../data/kollurAreas';
 import karivepakuKaramImg from '../assets/images/karivepaku_karam_podi_1789125808536.jpg';
@@ -17,14 +17,12 @@ interface OrderFormProps {
     deliveryDate: string;
     deliveryWindow: string;
   }) => void;
-  onOpenPhotoGallery?: (photoId?: string) => void;
 }
 
 export const OrderForm: React.FC<OrderFormProps> = ({
   hoursStatus,
   allowOutsideHours,
   onProceedToPayment,
-  onOpenPhotoGallery,
 }) => {
   // Quantity (minimum 5)
   const [quantity, setQuantity] = useState<number>(5);
@@ -117,6 +115,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   // Form errors
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLocating, setIsLocating] = useState<boolean>(false);
+  const [locationFeedback, setLocationFeedback] = useState<string>('');
+  const [showManualLocationInput, setShowManualLocationInput] = useState<boolean>(false);
 
   // Calculations
   const pricePerRoti = 30;
@@ -145,14 +145,16 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     }
   };
 
-  // Browser Geolocation support
+  // 1-Click Auto-Receive GPS Location
   const handleDetectGPSLocation = () => {
     if (!navigator.geolocation) {
-      alert('మీ బ్రౌజర్‌లో లొకేషన్ సదుపాయం అందుబాటులో లేదు.');
+      setLocationFeedback('మీ డివైస్‌లో లొకేషన్ సదుపాయం అందుబాటులో లేదు. దయచేసి జాబితా నుండి ఎంచుకోండి.');
       return;
     }
 
     setIsLocating(true);
+    setLocationFeedback('మీ ప్రస్తుత GPS లొకేషన్‌ను గుర్తిస్తోంది...');
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setIsLocating(false);
@@ -161,14 +163,16 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         const res = checkKollurDeliveryEligibility(lat, lng);
         setCurrentDistanceKm(res.distanceKm);
         setDeliveryEligibility(res);
-        setCustomLocationLink(`https://maps.google.com/?q=${lat.toFixed(6)},${lng.toFixed(6)}`);
+        const generatedLink = `https://www.google.com/maps?q=${lat.toFixed(6)},${lng.toFixed(6)}`;
+        setCustomLocationLink(generatedLink);
         setSelectedPresetArea('GPS ద్వారా గుర్తించబడిన లొకేషన్');
+        setLocationFeedback(`లొకేషన్ విజయవంతంగా స్వీకరించబడింది (${res.distanceKm} కి.మీ.)`);
       },
       (err) => {
         setIsLocating(false);
-        alert('లొకేషన్ పొందడం సాధ్యం కాలేదు. దయచేసి జాబితా నుండి ఎంచుకోండి.');
+        setLocationFeedback('లొకేషన్ అనుమతి లభించలేదు. దయచేసి జాబితా నుండి ఎంచుకోండి లేదా మాన్యువల్ గా నమోదు చేయండి.');
       },
-      { timeout: 10000 }
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
     );
   };
 
@@ -457,17 +461,14 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   )}
                 </div>
 
-                {/* Original Photo Thumbnail */}
-                <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 border border-emerald-900/20 shadow-xs group/img">
+                {/* Photo Thumbnail */}
+                <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 border border-emerald-900/20 shadow-xs">
                   <img
                     src={karivepakuKaramImg}
                     alt="స్వచ్ఛమైన కరివేపాకు కారం"
-                    className="w-full h-full object-cover group-hover/img:scale-105 transition-transform"
+                    className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute bottom-0 inset-x-0 bg-black/70 text-[8px] sm:text-[9px] text-emerald-200 font-bold text-center py-0.5 font-telugu">
-                    అసలైన ఫోటో
-                  </div>
                 </div>
               </div>
 
@@ -493,20 +494,6 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   }`}>
                     {karamSelection.karivepaku ? `${karivepakuGrams} గ్రా. ఉచితం` : 'ఎంపిక కాలేదు'}
                   </span>
-
-                  {onOpenPhotoGallery && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onOpenPhotoGallery('karivepaku-karam');
-                      }}
-                      className="text-[11px] text-[#78350F] dark:text-amber-400 font-bold hover:underline flex items-center gap-1"
-                    >
-                      <Eye className="w-3 h-3" />
-                      <span>ఫోటో చూడండి</span>
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
@@ -543,17 +530,14 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   )}
                 </div>
 
-                {/* Original Photo Thumbnail */}
-                <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 border border-amber-900/20 shadow-xs group/img">
+                {/* Photo Thumbnail */}
+                <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 border border-amber-900/20 shadow-xs">
                   <img
                     src={aviseKaramImg}
                     alt="అవిసె గింజల కారం"
-                    className="w-full h-full object-cover group-hover/img:scale-105 transition-transform"
+                    className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute bottom-0 inset-x-0 bg-black/70 text-[8px] sm:text-[9px] text-amber-200 font-bold text-center py-0.5 font-telugu">
-                    అసలైన ఫోటో
-                  </div>
                 </div>
               </div>
 
@@ -579,20 +563,6 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   }`}>
                     {karamSelection.aviseGinjalu ? `${aviseGinjaluGrams} గ్రా. ఉచితం` : 'ఎంపిక కాలేదు'}
                   </span>
-
-                  {onOpenPhotoGallery && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onOpenPhotoGallery('avise-ginjala-karam');
-                      }}
-                      className="text-[11px] text-[#78350F] dark:text-amber-400 font-bold hover:underline flex items-center gap-1"
-                    >
-                      <Eye className="w-3 h-3" />
-                      <span>ఫోటో చూడండి</span>
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
@@ -751,34 +721,113 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               )}
             </div>
 
-            {/* Landmark & Optional Maps Link */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="customer-landmark-input" className="block text-sm font-bold text-stone-800 dark:text-stone-200 mb-1.5">
-                  ల్యాండ్మార్క్ (గుడి, పాఠశాల లేదా అపార్ట్‌మెంట్ పేరు)
-                </label>
-                <input
-                  type="text"
-                  id="customer-landmark-input"
-                  value={landmark}
-                  onChange={(e) => setLandmark(e.target.value)}
-                  placeholder="ఉదా: గ్రామ పంచాయతీ దగ్గర"
-                  className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-[#FDFBF7] dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#78350F] text-sm"
-                />
+            {/* Landmark Input */}
+            <div>
+              <label htmlFor="customer-landmark-input" className="block text-sm font-bold text-stone-800 dark:text-stone-200 mb-1.5">
+                ల్యాండ్మార్క్ (గుడి, పాఠశాల లేదా అపార్ట్‌మెంట్ పేరు)
+              </label>
+              <input
+                type="text"
+                id="customer-landmark-input"
+                value={landmark}
+                onChange={(e) => setLandmark(e.target.value)}
+                placeholder="ఉదా: గ్రామ పంచాయతీ దగ్గర లేదా రామాలయం ఎదురుగా"
+                className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-[#FDFBF7] dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#78350F] text-sm"
+              />
+            </div>
+
+            {/* 1-Click Auto-Receive Location Link Component */}
+            <div className="p-4 sm:p-5 rounded-2xl border-2 border-dashed border-amber-800/25 dark:border-stone-700 bg-amber-50/40 dark:bg-stone-900/40 space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <span className="font-bold text-sm text-stone-900 dark:text-stone-100 flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-[#78350F] dark:text-amber-400 flex-shrink-0" />
+                    <span>ఖచ్చితమైన డెలివరీ లొకేషన్ లింక్ (Live GPS Location)</span>
+                  </span>
+                  <p className="text-xs text-stone-600 dark:text-stone-400 mt-0.5">
+                    లింక్ వెతకడం లేదా కాపీ చేయనవసరం లేదు — ఒకే క్లిక్‌తో మీ లొకేషన్ పొందండి
+                  </p>
+                </div>
+
+                {/* Big 1-Click Receive Button */}
+                <button
+                  type="button"
+                  onClick={handleDetectGPSLocation}
+                  disabled={isLocating}
+                  id="click-to-receive-location-btn"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#78350F] hover:bg-[#8C4A26] active:scale-95 text-white font-bold text-xs sm:text-sm shadow-sm transition-all cursor-pointer disabled:opacity-60 flex-shrink-0"
+                >
+                  <Navigation className={`w-4 h-4 ${isLocating ? 'animate-spin' : ''}`} />
+                  <span>{isLocating ? 'లొకేషన్ స్వీకరిస్తోంది...' : '📍 క్లిక్ చేసి లొకేషన్ పొందండి'}</span>
+                </button>
               </div>
 
-              <div>
-                <label htmlFor="customer-location-link" className="block text-sm font-bold text-stone-800 dark:text-stone-200 mb-1.5">
-                  లొకేషన్ లింక్ (ఐచ్ఛికం - Google Maps Link)
-                </label>
-                <input
-                  type="text"
-                  id="customer-location-link"
-                  value={customLocationLink}
-                  onChange={(e) => setCustomLocationLink(e.target.value)}
-                  placeholder="https://maps.google.com/?q=..."
-                  className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-[#FDFBF7] dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#78350F] text-sm"
-                />
+              {/* Status feedback & link preview */}
+              {customLocationLink ? (
+                <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2 text-emerald-950 dark:text-emerald-200">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
+                    <div>
+                      <span className="font-bold block">
+                        GPS లొకేషన్ లింక్ విజయవంతంగా స్వీకరించబడింది!
+                      </span>
+                      <span className="text-[11px] font-mono text-emerald-800 dark:text-emerald-300 truncate max-w-xs sm:max-w-md block">
+                        {customLocationLink}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <a
+                      href={customLocationLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 dark:text-emerald-300 hover:underline bg-emerald-100 dark:bg-emerald-900/60 px-2.5 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      <span>మ్యాప్‌లో సరిచూడండి</span>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={handleDetectGPSLocation}
+                      className="text-[11px] text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 underline cursor-pointer"
+                    >
+                      రీఫ్రెష్
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-[11px] text-stone-600 dark:text-stone-400 bg-white/70 dark:bg-stone-800/70 p-2.5 rounded-xl border border-stone-200 dark:border-stone-700">
+                  {locationFeedback ? (
+                    <span className="font-semibold text-amber-900 dark:text-amber-300">{locationFeedback}</span>
+                  ) : (
+                    <span>💡 పై బటన్ నొక్కగానే మీ ఫోన్ లేదా బ్రౌజర్ నుండి ఖచ్చితమైన Google Maps లొకేషన్ లింక్ స్వయంచాలకంగా ఇక్కడ నమోదవుతుంది.</span>
+                  )}
+                </div>
+              )}
+
+              {/* Optional manual toggle */}
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowManualLocationInput(prev => !prev)}
+                  className="text-[11px] text-stone-500 hover:text-stone-800 dark:hover:text-stone-300 underline"
+                >
+                  {showManualLocationInput ? '− మాన్యువల్ లింక్ బాక్స్ దాచండి' : '+ లేదా లింక్ మాన్యువల్ గా పేస్ట్ చేయండి'}
+                </button>
+
+                {showManualLocationInput && (
+                  <div className="mt-2">
+                    <input
+                      type="text"
+                      id="customer-location-link"
+                      value={customLocationLink}
+                      onChange={(e) => setCustomLocationLink(e.target.value)}
+                      placeholder="https://maps.google.com/?q=..."
+                      className="w-full px-3 py-2 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 text-xs font-mono"
+                    />
+                  </div>
+                )}
               </div>
             </div>
 

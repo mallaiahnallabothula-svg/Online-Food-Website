@@ -3,8 +3,6 @@ import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
 import { OrderingHoursBanner } from './components/OrderingHoursBanner';
 import { OrderForm } from './components/OrderForm';
-import { PhotoGallerySection } from './components/PhotoGallerySection';
-import { PhotoGalleryModal } from './components/PhotoGalleryModal';
 import { PaymentModal } from './components/PaymentModal';
 import { OrderConfirmation } from './components/OrderConfirmation';
 import { AdminLogin } from './components/OwnerPortal/AdminLogin';
@@ -15,7 +13,7 @@ import { OfflineIndicator } from './components/OfflineIndicator';
 import { usePWAInstall } from './hooks/usePWAInstall';
 import { OrderingHoursStatus, Order, AdminRole } from './types';
 import { getISTTime, getInitialOrderingStatus } from './utils/time';
-import { Phone, MapPin, Clock, ShieldCheck, Heart, Camera, Smartphone } from 'lucide-react';
+import { Phone, Clock, Lock, Smartphone } from 'lucide-react';
 
 export default function App() {
   // Dark mode state
@@ -37,18 +35,25 @@ export default function App() {
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false);
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
 
-  // Photo gallery modal state
-  const [isGalleryOpen, setIsGalleryOpen] = useState<boolean>(false);
-  const [selectedPhotoId, setSelectedPhotoId] = useState<string | undefined>(undefined);
-
   // PWA Install state
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
   const [isInstallModalOpen, setIsInstallModalOpen] = useState<boolean>(false);
 
-  const handleOpenGallery = (photoId?: string) => {
-    setSelectedPhotoId(photoId);
-    setIsGalleryOpen(true);
-  };
+  // Listen to #owner or #admin in URL for owner direct access
+  useEffect(() => {
+    const checkHash = () => {
+      if (window.location.hash === '#owner' || window.location.hash === '#admin') {
+        if (adminToken) {
+          setCurrentView('OWNER_DASHBOARD');
+        } else {
+          setCurrentView('OWNER_LOGIN');
+        }
+      }
+    };
+    checkHash();
+    window.addEventListener('hashchange', checkHash);
+    return () => window.removeEventListener('hashchange', checkHash);
+  }, [adminToken]);
 
   // Sync dark mode class with html root
   useEffect(() => {
@@ -150,7 +155,6 @@ export default function App() {
         }}
         isOwnerView={currentView !== 'CUSTOMER'}
         onBackToCustomerView={() => setCurrentView('CUSTOMER')}
-        onOpenGallery={() => handleOpenGallery()}
         onOpenInstallModal={() => setIsInstallModalOpen(true)}
         isInstalled={isInstalled}
       />
@@ -170,7 +174,6 @@ export default function App() {
                 <HeroSection
                   onScrollToOrder={handleScrollToOrder}
                   isOpen={hoursStatus.isOpen || allowOutsideHours}
-                  onOpenGallery={handleOpenGallery}
                   onOpenInstallModal={() => setIsInstallModalOpen(true)}
                   isInstalled={isInstalled}
                 />
@@ -185,11 +188,7 @@ export default function App() {
                   hoursStatus={hoursStatus}
                   allowOutsideHours={allowOutsideHours}
                   onProceedToPayment={handleProceedToPayment}
-                  onOpenPhotoGallery={handleOpenGallery}
                 />
-
-                {/* Original Authentic Food & Woodfire Kitchen Photo Gallery Section */}
-                <PhotoGallerySection onOpenModal={handleOpenGallery} />
               </>
             )}
           </div>
@@ -211,13 +210,6 @@ export default function App() {
           />
         )}
       </main>
-
-      {/* Photo Gallery & Download Modal */}
-      <PhotoGalleryModal
-        isOpen={isGalleryOpen}
-        onClose={() => setIsGalleryOpen(false)}
-        initialPhotoId={selectedPhotoId}
-      />
 
       {/* Payment Modal */}
       {isPaymentModalOpen && pendingOrderData && (
@@ -245,14 +237,21 @@ export default function App() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-4 text-center md:text-right">
-            {/* Direct button to open Photos */}
+            {/* Discreet Owner Access Link (Non-public) */}
             <button
-              onClick={() => handleOpenGallery()}
-              id="footer-open-photos-btn"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-100/90 hover:bg-amber-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-[#78350F] dark:text-amber-300 font-bold border border-amber-300 dark:border-stone-700 transition-colors cursor-pointer"
+              onClick={() => {
+                if (adminToken) {
+                  setCurrentView('OWNER_DASHBOARD');
+                } else {
+                  setCurrentView('OWNER_LOGIN');
+                }
+              }}
+              id="footer-owner-access-btn"
+              title="అధీకృత యజమాని యాక్సెస్ మాత్రమే"
+              className="inline-flex items-center gap-1 text-[11px] text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors cursor-pointer"
             >
-              <Camera className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
-              <span>అసలైన ఫోటోలు</span>
+              <Lock className="w-3 h-3 text-stone-400" />
+              <span>యజమాని పోర్టల్</span>
             </button>
 
             {/* Android App Install CTA in Footer */}

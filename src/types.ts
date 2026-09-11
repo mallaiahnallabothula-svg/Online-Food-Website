@@ -3,7 +3,7 @@
  */
 
 export type FulfillmentStatus = 'NEW' | 'PREPARING' | 'OUT_FOR_DELIVERY' | 'DELIVERED';
-export type PaymentStatus = 'PENDING' | 'VERIFIED' | 'FAILED' | 'CANCELLED';
+export type PaymentStatus = 'PENDING' | 'VERIFIED' | 'FAILED' | 'CANCELLED' | 'PAY_ON_DELIVERY';
 export type AdminRole = 'ADMIN' | 'STAFF';
 
 export interface KaramSelection {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, Clock, Moon, Sun, ShieldCheck, ShoppingBag, Camera, Smartphone, Download } from 'lucide-react';
+import { Phone, Moon, Sun, ShoppingBag, Smartphone } from 'lucide-react';
 import { OrderingHoursStatus } from '../types';
 import brandLogo from '../assets/images/mallikarjuna_rottelu_logo_1789103187340.jpg';
 
@@ -10,7 +10,6 @@ interface HeaderProps {
   onOpenOwnerPortal: () => void;
   isOwnerView: boolean;
   onBackToCustomerView: () => void;
-  onOpenGallery: () => void;
   onOpenInstallModal?: () => void;
   isInstalled?: boolean;
 }
@@ -22,7 +21,6 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenOwnerPortal,
   isOwnerView,
   onBackToCustomerView,
-  onOpenGallery,
   onOpenInstallModal,
   isInstalled = false,
 }) => {
@@ -89,18 +87,6 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-          {/* View Original Photos Button */}
-          <button
-            onClick={onOpenGallery}
-            id="header-open-photos-btn"
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-amber-100/90 hover:bg-amber-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-[#78350F] dark:text-amber-300 border border-amber-300 dark:border-stone-700 transition-colors font-telugu cursor-pointer shadow-xs"
-            title="అసలైన ఫోటోలు చూడండి"
-          >
-            <Camera className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
-            <span className="hidden sm:inline">అసలైన ఫోటోలు</span>
-            <span className="sm:hidden">ఫోటోలు</span>
-          </button>
-
           {/* Owner Phone quick call */}
           <a
             href="tel:+918499865803"
@@ -124,25 +110,15 @@ export const Header: React.FC<HeaderProps> = ({
             {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-stone-700" />}
           </button>
 
-          {/* Owner Portal / Customer View Toggle */}
-          {isOwnerView ? (
+          {/* Owner Portal Return Button (Only shown when owner is currently in owner view) */}
+          {isOwnerView && (
             <button
               onClick={onBackToCustomerView}
               id="back-to-shop-btn"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#78350F] text-amber-50 hover:bg-[#8C4A26] shadow-sm transition-colors font-telugu"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-[#78350F] text-amber-50 hover:bg-[#8C4A26] shadow-sm transition-colors font-telugu cursor-pointer"
             >
               <ShoppingBag className="w-3.5 h-3.5" />
               <span>ఆర్డరింగ్ పేజీ</span>
-            </button>
-          ) : (
-            <button
-              onClick={onOpenOwnerPortal}
-              id="owner-portal-btn"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-stone-200/80 dark:bg-stone-800 text-stone-800 dark:text-stone-200 hover:bg-stone-300/80 dark:hover:bg-stone-700 border border-stone-300 dark:border-stone-700 transition-colors font-telugu"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
-              <span className="hidden sm:inline">యజమాని లాగిన్</span>
-              <span className="sm:hidden">లాగిన్</span>
             </button>
           )}
         </div>

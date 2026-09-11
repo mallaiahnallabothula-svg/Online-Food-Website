@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { ArrowDown, CheckCircle2, Sparkles, MapPin, Clock, ShieldCheck, Camera, Eye, Smartphone, Download } from 'lucide-react';
+import { ArrowDown, CheckCircle2, Sparkles, MapPin, Clock, ShieldCheck, Smartphone } from 'lucide-react';
 import brandLogo from '../assets/images/mallikarjuna_rottelu_logo_1789103187340.jpg';
 import { ORIGINAL_PHOTOS } from '../data/originalPhotos';
 
 interface HeroSectionProps {
   onScrollToOrder: () => void;
   isOpen: boolean;
-  onOpenGallery: (initialPhotoId?: string) => void;
   onOpenInstallModal?: () => void;
   isInstalled?: boolean;
 }
@@ -14,7 +13,6 @@ interface HeroSectionProps {
 export const HeroSection: React.FC<HeroSectionProps> = ({ 
   onScrollToOrder, 
   isOpen, 
-  onOpenGallery,
   onOpenInstallModal,
   isInstalled = false,
 }) => {
@@ -93,7 +91,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               </div>
             </div>
 
-            {/* Prominent Telugu CTA & Original Photos & Android App Action Buttons */}
+            {/* Prominent Telugu CTA & Android App Action Buttons */}
             <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
               <button
                 onClick={onScrollToOrder}
@@ -102,15 +100,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               >
                 <span>ఆర్డర్ చేయండి</span>
                 <ArrowDown className="w-5 h-5 animate-bounce" />
-              </button>
-
-              <button
-                onClick={() => onOpenGallery(currentPhoto.id)}
-                id="hero-view-photos-btn"
-                className="inline-flex items-center justify-center gap-2 px-5 py-4 rounded-xl text-sm sm:text-base font-bold text-[#78350F] dark:text-amber-200 bg-amber-100/90 dark:bg-stone-800 hover:bg-amber-200 dark:hover:bg-stone-700 border border-amber-300 dark:border-stone-700 transition-all font-telugu shadow-sm cursor-pointer"
-              >
-                <Camera className="w-4.5 h-4.5 text-amber-700 dark:text-amber-400" />
-                <span>అసలైన ఫోటోలు</span>
               </button>
 
               {!isInstalled && onOpenInstallModal && (
@@ -131,30 +120,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
             </div>
           </div>
 
-          {/* Right Column: Original HD Hero Image with Interactive Switcher */}
+          {/* Right Column: Hero Image with Switcher */}
           <div className="lg:col-span-5 flex flex-col gap-3">
-            <div 
-              onClick={() => onOpenGallery(currentPhoto.id)}
-              className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-[#F5EBE1] dark:border-stone-800 group cursor-pointer"
-            >
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-[#F5EBE1] dark:border-stone-800 group">
               <img
                 src={currentPhoto.src}
                 alt={currentPhoto.titleTe}
-                className="w-full h-auto object-cover aspect-[4/3] group-hover:scale-102 transition-transform duration-500"
+                className="w-full h-auto object-cover aspect-[4/3] transition-transform duration-500"
                 referrerPolicy="no-referrer"
               />
-              
-              {/* Authentic Original Badge */}
-              <div className="absolute top-3 left-3 bg-emerald-800/85 backdrop-blur-md text-emerald-100 text-[11px] font-bold px-3 py-1 rounded-md border border-emerald-500/40 font-telugu flex items-center gap-1.5 shadow-sm">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
-                <span>100% అసలైన ఫోటో (Original HD)</span>
-              </div>
-
-              {/* View Prompt Badge */}
-              <div className="absolute top-3 right-3 bg-black/75 hover:bg-black/90 backdrop-blur-md text-amber-200 text-[11px] font-medium px-2.5 py-1 rounded-md border border-white/20 font-telugu flex items-center gap-1 transition-colors">
-                <Eye className="w-3 h-3 text-amber-300" />
-                <span>వీక్షించండి</span>
-              </div>
 
               {/* Bottom Caption Overlay */}
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4 text-white">
@@ -167,7 +141,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               </div>
             </div>
 
-            {/* Interactive Original Photos Thumbnails */}
+            {/* Interactive Photo Switcher Thumbnails */}
             <div className="grid grid-cols-4 gap-2">
               {ORIGINAL_PHOTOS.slice(0, 4).map((photo, idx) => (
                 <button
@@ -193,19 +167,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   </div>
                 </button>
               ))}
-            </div>
-
-            {/* Quick Helper text */}
-            <div className="flex items-center justify-between text-[11px] font-telugu text-stone-500 dark:text-stone-400 px-1">
-              <span>💡 ఫోటోపై క్లిక్ చేసి పెద్దదిగా చూడండి</span>
-              <button
-                type="button"
-                onClick={() => onOpenGallery()}
-                className="text-[#78350F] dark:text-amber-400 font-bold hover:underline flex items-center gap-1"
-              >
-                <Eye className="w-3 h-3" />
-                <span>అన్ని 5 ఫోటోలు చూడండి</span>
-              </button>
             </div>
           </div>
 

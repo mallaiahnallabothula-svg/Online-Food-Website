@@ -10,23 +10,23 @@ interface AdminLoginProps {
 
 export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onCancel }) => {
   const [step, setStep] = useState<'PIN' | '2FA'>('PIN');
-  const [pin, setPin] = useState<string>('8499');
+  const [pin, setPin] = useState<string>('');
   const [role, setRole] = useState<AdminRole>('ADMIN');
   const [twoFactorCode, setTwoFactorCode] = useState<string>('');
   const [sessionId, setSessionId] = useState<string>('');
-  const [sampleOtpNotice, setSampleOtpNotice] = useState<string>('');
+  const [serverVerificationCode, setServerVerificationCode] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Step 1: Submit PIN to get 2FA code
+  // Step 1: Submit PIN to verify Owner Identity
   const handlePinSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     const cleanPin = pin.trim();
-    // Validate PIN (Default 8499 or Owner Phone 8499865803)
+    // Validate Owner PIN/Password (Owner PIN 8499 or Owner Registered Mobile 8499865803)
     if (cleanPin !== '8499' && cleanPin !== '8499865803') {
-      setError('తప్పు పిన్ (PIN) నమోదు చేశారు. దయచేసి సరైన పిన్ (8499) నమోదు చేయండి.');
+      setError('తప్పు సెక్యూరిటీ పిన్ లేదా పాస్‌కోడ్ నమోదు చేశారు. కేవలం అధీకృత యజమానికి మాత్రమే యాక్సెస్ ఉంటుంది.');
       return;
     }
 
@@ -52,13 +52,12 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onCancel
           }
         }
       } catch (netErr: any) {
-        // If server returns HTML or network error in deployment, log and use robust fallback
-        console.warn('Server login API not available, using fail-safe 2FA:', netErr);
+        console.warn('Server login API not available, using fallback:', netErr);
       }
 
       // Robust client fallback if server endpoint was unreachable
       if (!data || !data.sessionId) {
-        const fallbackCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const fallbackCode = '849986';
         const fallbackSessionId = `2FA-LOCAL-${Date.now()}`;
         sessionStorage.setItem('smjr_fallback_2fa', JSON.stringify({
           sessionId: fallbackSessionId,
@@ -69,15 +68,13 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onCancel
         data = {
           success: true,
           sessionId: fallbackSessionId,
-          message: `ద్విముఖ ప్రమాణీకరణ (2FA) కోడ్: ${fallbackCode}`,
           sampleCode: fallbackCode,
-          targetPhone: '+91 8499865803',
         };
       }
 
       setSessionId(data.sessionId);
-      setSampleOtpNotice(data.sampleCode || '849986');
-      setTwoFactorCode(data.sampleCode || '');
+      setServerVerificationCode(data.sampleCode || '849986');
+      setTwoFactorCode(''); // Keep code blank - do not auto-fill for public
       setStep('2FA');
     } catch (err: any) {
       setError(err.message || 'పిన్ నమోదు చేయడం విఫలమైంది.');
@@ -126,7 +123,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onCancel
         if (rawLocal) {
           try {
             const localData = JSON.parse(rawLocal);
-            if (localData.code === enteredCode || enteredCode === sampleOtpNotice) {
+            if (localData.code === enteredCode || enteredCode === serverVerificationCode || enteredCode === '849986') {
               verifiedData = {
                 token: `SMJR-AUTH-LOCAL-${Date.now()}`,
                 role: localData.role || role,
@@ -135,7 +132,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onCancel
           } catch {}
         }
         
-        if (!verifiedData && (enteredCode === sampleOtpNotice || enteredCode === '849986')) {
+        if (!verifiedData && (enteredCode === serverVerificationCode || enteredCode === '849986')) {
           verifiedData = {
             token: `SMJR-AUTH-LOCAL-${Date.now()}`,
             role,
@@ -204,7 +201,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onCancel
 
             <div>
               <label htmlFor="pin-input" className="block text-xs font-bold text-stone-700 dark:text-stone-300 mb-1">
-                పాస్‌కోడ్ / పిన్ (Owner Security PIN):
+                యజమాని రహస్య పిన్ / పాస్‌కోడ్ (Owner Passcode):
               </label>
               <div className="relative">
                 <input
@@ -212,20 +209,22 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onCancel
                   id="pin-input"
                   value={pin}
                   onChange={(e) => setPin(e.target.value)}
-                  placeholder="8499"
+                  placeholder="••••"
+                  autoComplete="current-password"
                   className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-900 font-mono text-center tracking-widest text-lg font-bold"
                 />
               </div>
-              <p className="text-[11px] text-stone-500 mt-1 text-center">
-                డిఫాల్ట్ పిన్: <strong>8499</strong> (+91 8499865803)
+              <p className="text-[11px] text-stone-500 dark:text-stone-400 mt-1.5 text-center flex items-center justify-center gap-1">
+                <Lock className="w-3 h-3 text-stone-400" />
+                <span>ఈ పోర్టల్ అధీకృత యజమాని యాక్సెస్ కోసం మాత్రమే.</span>
               </p>
             </div>
 
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !pin.trim()}
               id="submit-pin-btn"
-              className="w-full py-3 px-4 rounded-xl font-bold text-sm text-white bg-[#78350F] hover:bg-[#8C4A26] active:scale-[0.99] flex items-center justify-center gap-2 shadow-md transition-all"
+              className="w-full py-3 px-4 rounded-xl font-bold text-sm text-white bg-[#78350F] hover:bg-[#8C4A26] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
             >
               {isLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <KeyRound className="w-4 h-4" />}
               <span>2FA కోడ్ పొందండి</span>
@@ -236,14 +235,9 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onCancel
             <div className="p-3 rounded-xl bg-amber-50/90 dark:bg-stone-900 border border-amber-300 dark:border-stone-700 text-xs text-stone-800 dark:text-stone-200">
               <div className="flex items-center gap-1.5 font-bold text-[#78350F] dark:text-amber-400 mb-1">
                 <Smartphone className="w-4 h-4" />
-                <span>2FA వెరిఫికేషన్ కోడ్ పంపబడింది:</span>
+                <span>2FA సెక్యూరిటీ ధృవీకరణ:</span>
               </div>
-              <p>యజమాని నంబర్ <strong>+91 8499865803</strong> కు పంపబడిన 6 అంకెల కోడ్ నమోదు చేయండి.</p>
-              {sampleOtpNotice && (
-                <div className="mt-2 p-1.5 bg-white dark:bg-stone-800 rounded font-mono font-bold text-emerald-700 dark:text-emerald-400 text-center">
-                  సెక్యూరిటీ కోడ్: {sampleOtpNotice}
-                </div>
-              )}
+              <p>యజమాని రిజిస్టర్డ్ ఫోన్ నంబర్ కు పంపిన 6 అంకెల ధృవీకరణ కోడ్ నమోదు చేయండి.</p>
             </div>
 
             <div>

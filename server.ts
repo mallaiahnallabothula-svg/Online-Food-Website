@@ -324,10 +324,10 @@ app.post('/api/payment/create-order', (req, res) => {
   const nowStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   const paymentReference = `UPI-REF-${nowStr}-${Date.now().toString().slice(-4)}${randomSuffix}`;
 
-  // UPI intent string
+  // UPI intent string - Clean standard URI without tr= that triggers bank security decline
   const upiId = 'nmallaiah12@axl';
-  const merchantName = encodeURIComponent('Sri Mallikarjuna Jonna Rottelu');
-  const upiUri = `upi://pay?pa=${upiId}&pn=${merchantName}&am=${totalAmount}&cu=INR&tn=${encodeURIComponent(`Order ${qty} Rottelu`)}&tr=${paymentReference}`;
+  const merchantName = encodeURIComponent('Mallaiah Nallabothula');
+  const upiUri = `upi://pay?pa=${upiId}&pn=${merchantName}&am=${totalAmount}&cu=INR`;
 
   res.json({
     success: true,
@@ -335,7 +335,8 @@ app.post('/api/payment/create-order', (req, res) => {
     amount: totalAmount,
     currency: 'INR',
     upiId,
-    merchantName: 'శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు',
+    merchantName: 'శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు (నల్లబోతుల మల్లయ్య)',
+    ownerPhone: '8499865803',
     upiUri,
     calculatedDetails: {
       quantity: qty,
@@ -374,11 +375,14 @@ app.post('/api/payment/verify', (req, res) => {
   }
 
   // Server-side payment validation
-  // Verification requires valid reference format and verified payload
-  if (!paymentReference.startsWith('UPI-REF-') && !paymentReference.startsWith('PAY-')) {
+  // Accepts standard UPI-REF, UTR numbers, or Pay on Delivery
+  const cleanRef = String(paymentReference).trim();
+  const isPayOnDelivery = cleanRef.startsWith('POD-') || cleanRef.startsWith('COD-') || cleanRef.includes('DELIVERY');
+  
+  if (cleanRef.length < 4) {
     return res.status(400).json({
       error: 'INVALID_PAYMENT_PROOF',
-      message: 'చెల్లుబాటు అయ్యే UPI పేమెంట్ రిఫరెన్స్ లభించలేదు.'
+      message: 'చెల్లుబాటు అయ్యే UPI పేమెంట్ రిఫరెన్స్ లేదా UTR నంబర్ నమోదు చేయండి.'
     });
   }
 
@@ -399,8 +403,8 @@ app.post('/api/payment/verify', (req, res) => {
     customer: orderData.customer,
     deliveryDate: orderData.deliveryDate || ist.dateTelugu,
     deliveryWindow: 'సాయంత్రం 6–8 గంటలు',
-    paymentStatus: 'VERIFIED',
-    paymentReference: paymentReference,
+    paymentStatus: isPayOnDelivery ? 'PAY_ON_DELIVERY' : 'VERIFIED',
+    paymentReference: cleanRef,
     paymentVerifiedAt: new Date().toISOString(),
     fulfillmentStatus: 'NEW'
   };
