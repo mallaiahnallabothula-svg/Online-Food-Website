@@ -279,7 +279,7 @@ app.post('/api/payment/create-order', (req, res) => {
   const pricePerRoti = 30;
   const totalAmount = qty * pricePerRoti;
   const setsOf5 = Math.floor(qty / 5);
-  const gramsPerSelected = setsOf5 * 50;
+  const gramsPerSelected = setsOf5 * 20;
 
   // Business Rule:
   // - If qty <= 10: only ONE karam option allowed (either Karivepaku OR Avise Ginjalu).
@@ -325,7 +325,7 @@ app.post('/api/payment/create-order', (req, res) => {
   const paymentReference = `UPI-REF-${nowStr}-${Date.now().toString().slice(-4)}${randomSuffix}`;
 
   // UPI intent string
-  const upiId = '8499865803@ybl';
+  const upiId = 'nmallaiah12@axl';
   const merchantName = encodeURIComponent('Sri Mallikarjuna Jonna Rottelu');
   const upiUri = `upi://pay?pa=${upiId}&pn=${merchantName}&am=${totalAmount}&cu=INR&tn=${encodeURIComponent(`Order ${qty} Rottelu`)}&tr=${paymentReference}`;
 

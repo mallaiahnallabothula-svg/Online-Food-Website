@@ -64,7 +64,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder, isOpe
                 <Sparkles className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
                 <div>
                   <h4 className="text-xs sm:text-sm font-bold text-stone-900 dark:text-stone-100">ఉచిత కారాలు</h4>
-                  <p className="text-xs text-stone-600 dark:text-stone-400">ప్రతి 5 రొట్టెలకు 50 గ్రా. ఉచితం</p>
+                  <p className="text-xs text-stone-600 dark:text-stone-400">ప్రతి 5 రొట్టెలకు 20 గ్రా. ఉచితం</p>
                 </div>
               </div>
 

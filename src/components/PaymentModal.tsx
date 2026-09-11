@@ -34,7 +34,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [copiedUpi, setCopiedUpi] = useState<boolean>(false);
   const [activeStep, setActiveStep] = useState<'PAY' | 'VERIFYING' | 'FAILED'>('PAY');
 
-  const upiId = '8499865803@ybl';
+  const upiId = 'nmallaiah12@axl';
 
   // Initialize payment order with server
   useEffect(() => {
@@ -80,7 +80,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         // Resilient client-side fallback (ensures UPI payment modal works even if server API is unavailable in deployment)
         if (isMounted) {
           const fallbackRef = `UPI-REF-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
-          const fallbackUri = `upi://pay?pa=8499865803@ybl&pn=Sri%20Mallikarjuna%20Jonna%20Rottelu&am=${orderData.totalAmount}&cu=INR&tn=Order%20${orderData.quantity}%20Rottelu&tr=${fallbackRef}`;
+          const fallbackUri = `upi://pay?pa=nmallaiah12@axl&pn=Sri%20Mallikarjuna%20Jonna%20Rottelu&am=${orderData.totalAmount}&cu=INR&tn=Order%20${orderData.quantity}%20Rottelu&tr=${fallbackRef}`;
           setPaymentReference(fallbackRef);
           setUpiIntentUri(fallbackUri);
           setCustomerUtrInput(fallbackRef.replace('UPI-REF-', ''));

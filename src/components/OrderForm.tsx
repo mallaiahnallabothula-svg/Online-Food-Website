@@ -122,7 +122,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const pricePerRoti = 30;
   const totalAmount = quantity * pricePerRoti;
   const setsOf5 = Math.floor(quantity / 5);
-  const gramsPerSelected = setsOf5 * 50;
+  const gramsPerSelected = setsOf5 * 20;
 
   const karivepakuGrams = karamSelection.karivepaku ? gramsPerSelected : 0;
   const aviseGinjaluGrams = karamSelection.aviseGinjalu ? gramsPerSelected : 0;
