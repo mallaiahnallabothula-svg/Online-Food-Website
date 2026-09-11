@@ -3,13 +3,15 @@ import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
 import { OrderingHoursBanner } from './components/OrderingHoursBanner';
 import { OrderForm } from './components/OrderForm';
+import { PhotoGallerySection } from './components/PhotoGallerySection';
+import { PhotoGalleryModal } from './components/PhotoGalleryModal';
 import { PaymentModal } from './components/PaymentModal';
 import { OrderConfirmation } from './components/OrderConfirmation';
 import { AdminLogin } from './components/OwnerPortal/AdminLogin';
 import { OwnerDashboard } from './components/OwnerPortal/OwnerDashboard';
 import { OrderingHoursStatus, Order, AdminRole } from './types';
 import { getISTTime, getInitialOrderingStatus } from './utils/time';
-import { Phone, MapPin, Clock, ShieldCheck, Heart } from 'lucide-react';
+import { Phone, MapPin, Clock, ShieldCheck, Heart, Camera, Download } from 'lucide-react';
 
 export default function App() {
   // Dark mode state
@@ -30,6 +32,15 @@ export default function App() {
   const [pendingOrderData, setPendingOrderData] = useState<any | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false);
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
+
+  // Photo gallery modal state
+  const [isGalleryOpen, setIsGalleryOpen] = useState<boolean>(false);
+  const [selectedPhotoId, setSelectedPhotoId] = useState<string | undefined>(undefined);
+
+  const handleOpenGallery = (photoId?: string) => {
+    setSelectedPhotoId(photoId);
+    setIsGalleryOpen(true);
+  };
 
   // Sync dark mode class with html root
   useEffect(() => {
@@ -125,6 +136,7 @@ export default function App() {
         }}
         isOwnerView={currentView !== 'CUSTOMER'}
         onBackToCustomerView={() => setCurrentView('CUSTOMER')}
+        onOpenGallery={() => handleOpenGallery()}
       />
 
       {/* MAIN VIEWPORT */}
@@ -142,6 +154,7 @@ export default function App() {
                 <HeroSection
                   onScrollToOrder={handleScrollToOrder}
                   isOpen={hoursStatus.isOpen || allowOutsideHours}
+                  onOpenGallery={handleOpenGallery}
                 />
 
                 <OrderingHoursBanner
@@ -154,7 +167,11 @@ export default function App() {
                   hoursStatus={hoursStatus}
                   allowOutsideHours={allowOutsideHours}
                   onProceedToPayment={handleProceedToPayment}
+                  onOpenPhotoGallery={handleOpenGallery}
                 />
+
+                {/* Original Authentic Food & Woodfire Kitchen Photo Gallery Section */}
+                <PhotoGallerySection onOpenModal={handleOpenGallery} />
               </>
             )}
           </div>
@@ -176,6 +193,13 @@ export default function App() {
           />
         )}
       </main>
+
+      {/* Photo Gallery & Download Modal */}
+      <PhotoGalleryModal
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
+        initialPhotoId={selectedPhotoId}
+      />
 
       {/* Payment Modal */}
       {isPaymentModalOpen && pendingOrderData && (
@@ -203,6 +227,16 @@ export default function App() {
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-4 text-center md:text-right">
+            {/* Direct button to open Photos & Download */}
+            <button
+              onClick={() => handleOpenGallery()}
+              id="footer-open-photos-btn"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-100/90 hover:bg-amber-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-[#78350F] dark:text-amber-300 font-bold border border-amber-300 dark:border-stone-700 transition-colors cursor-pointer"
+            >
+              <Camera className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
+              <span>అసలైన ఫోటోలు & డౌన్‌లోడ్</span>
+            </button>
+
             <a
               href="tel:+918499865803"
               className="font-mono font-bold text-stone-800 dark:text-stone-200 hover:text-[#78350F] flex items-center gap-1.5"

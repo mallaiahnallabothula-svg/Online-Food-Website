@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, Clock, Moon, Sun, ShieldCheck, ShoppingBag } from 'lucide-react';
+import { Phone, Clock, Moon, Sun, ShieldCheck, ShoppingBag, Camera } from 'lucide-react';
 import { OrderingHoursStatus } from '../types';
 import brandLogo from '../assets/images/mallikarjuna_rottelu_logo_1789103187340.jpg';
 
@@ -10,6 +10,7 @@ interface HeaderProps {
   onOpenOwnerPortal: () => void;
   isOwnerView: boolean;
   onBackToCustomerView: () => void;
+  onOpenGallery: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -19,6 +20,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenOwnerPortal,
   isOwnerView,
   onBackToCustomerView,
+  onOpenGallery,
 }) => {
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-md transition-colors duration-200 border-b border-amber-900/10 dark:border-stone-800 bg-[#FDFBF7]/95 dark:bg-[#1A1816]/95">
@@ -69,6 +71,18 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* View & Download Original Photos Button */}
+          <button
+            onClick={onOpenGallery}
+            id="header-open-photos-btn"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-amber-100/90 hover:bg-amber-200 dark:bg-stone-800 dark:hover:bg-stone-700 text-[#78350F] dark:text-amber-300 border border-amber-300 dark:border-stone-700 transition-colors font-telugu cursor-pointer shadow-xs"
+            title="అసలైన ఫోటోలు చూడండి & డౌన్‌లోడ్ చేసుకోండి"
+          >
+            <Camera className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
+            <span className="hidden sm:inline">అసలైన ఫోటోలు</span>
+            <span className="sm:hidden">ఫోటోలు</span>
+          </button>
+
           {/* Owner Phone quick call */}
           <a
             href="tel:+918499865803"

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Minus, Check, MapPin, AlertCircle, Sparkles, ShieldCheck, ArrowRight, Navigation, Gift } from 'lucide-react';
+import { Plus, Minus, Check, MapPin, AlertCircle, Sparkles, ShieldCheck, ArrowRight, Navigation, Gift, Eye } from 'lucide-react';
 import { KaramSelection, CustomerDetails, OrderingHoursStatus } from '../types';
 import { PRESET_LOCALITIES, checkKollurDeliveryEligibility, KOLLUR_CENTER } from '../data/kollurAreas';
+import karivepakuKaramImg from '../assets/images/karivepaku_karam_podi_1789125808536.jpg';
+import aviseKaramImg from '../assets/images/avise_ginjala_karam_1789125831933.jpg';
 
 interface OrderFormProps {
   hoursStatus: OrderingHoursStatus;
@@ -15,12 +17,14 @@ interface OrderFormProps {
     deliveryDate: string;
     deliveryWindow: string;
   }) => void;
+  onOpenPhotoGallery?: (photoId?: string) => void;
 }
 
 export const OrderForm: React.FC<OrderFormProps> = ({
   hoursStatus,
   allowOutsideHours,
   onProceedToPayment,
+  onOpenPhotoGallery,
 }) => {
   // Quantity (minimum 5)
   const [quantity, setQuantity] = useState<number>(5);
@@ -419,37 +423,52 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             </div>
           )}
 
-          {/* Karam Selection Cards */}
+          {/* Karam Selection Cards with Authentic Photos */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-telugu">
             {/* Option 1: Karivepaku Karam */}
             <div
               onClick={handleSelectKarivepaku}
               id="karam-card-karivepaku"
-              className={`relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+              className={`relative flex flex-col sm:flex-row items-start gap-3.5 p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 karamSelection.karivepaku
                   ? 'bg-emerald-50/80 dark:bg-emerald-950/35 border-emerald-600 dark:border-emerald-500 shadow-sm'
-                  : 'bg-stone-50/70 dark:bg-stone-900/40 border-stone-200 dark:border-stone-800 opacity-75 hover:opacity-100'
+                  : 'bg-stone-50/70 dark:bg-stone-900/40 border-stone-200 dark:border-stone-800 opacity-80 hover:opacity-100'
               }`}
             >
-              {/* Radio for <= 10, Checkbox for > 10 */}
-              <div className="pt-0.5">
-                {!canSelectBoth ? (
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                    karamSelection.karivepaku
-                      ? 'border-emerald-600 bg-emerald-600 text-white'
-                      : 'border-stone-400 bg-white dark:bg-stone-800'
-                  }`}>
-                    {karamSelection.karivepaku && <div className="w-2 h-2 rounded-full bg-white" />}
-                  </div>
-                ) : (
-                  <input
-                    type="checkbox"
-                    id="checkbox-karivepaku"
-                    checked={karamSelection.karivepaku}
-                    onChange={handleSelectKarivepaku}
-                    className="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+              <div className="flex items-center sm:items-start gap-3">
+                {/* Radio for <= 10, Checkbox for > 10 */}
+                <div className="pt-0.5">
+                  {!canSelectBoth ? (
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      karamSelection.karivepaku
+                        ? 'border-emerald-600 bg-emerald-600 text-white'
+                        : 'border-stone-400 bg-white dark:bg-stone-800'
+                    }`}>
+                      {karamSelection.karivepaku && <div className="w-2 h-2 rounded-full bg-white" />}
+                    </div>
+                  ) : (
+                    <input
+                      type="checkbox"
+                      id="checkbox-karivepaku"
+                      checked={karamSelection.karivepaku}
+                      onChange={handleSelectKarivepaku}
+                      className="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                    />
+                  )}
+                </div>
+
+                {/* Original Photo Thumbnail */}
+                <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 border border-emerald-900/20 shadow-xs group/img">
+                  <img
+                    src={karivepakuKaramImg}
+                    alt="స్వచ్ఛమైన కరివేపాకు కారం"
+                    className="w-full h-full object-cover group-hover/img:scale-105 transition-transform"
+                    referrerPolicy="no-referrer"
                   />
-                )}
+                  <div className="absolute bottom-0 inset-x-0 bg-black/70 text-[8px] sm:text-[9px] text-emerald-200 font-bold text-center py-0.5 font-telugu">
+                    అసలైన ఫోటో
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-1 flex-1">
@@ -463,10 +482,10 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-stone-600 dark:text-stone-400">
-                  స్వచ్ఛమైన తాజా కరివేపాకు మరియు సంప్రదాయ సుగంధ దినుసుల పొడి
+                <p className="text-xs text-stone-600 dark:text-stone-400 leading-tight">
+                  స్వచ్ఛమైన తాజా కరివేపాకు, ఎండుమిర్చి, వెల్లుల్లితో రోట్లో దంచినట్లు సిద్ధం చేసిన కారం
                 </p>
-                <div className="pt-1.5 flex items-center gap-2">
+                <div className="pt-1.5 flex items-center justify-between flex-wrap gap-1">
                   <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${
                     karamSelection.karivepaku
                       ? 'bg-emerald-600 text-white font-mono'
@@ -474,9 +493,20 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   }`}>
                     {karamSelection.karivepaku ? `${karivepakuGrams} గ్రా. ఉచితం` : 'ఎంపిక కాలేదు'}
                   </span>
-                  <span className="text-[11px] text-emerald-800 dark:text-emerald-300 font-medium">
-                    (విలువ: ₹0)
-                  </span>
+
+                  {onOpenPhotoGallery && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenPhotoGallery('karivepaku-karam');
+                      }}
+                      className="text-[11px] text-[#78350F] dark:text-amber-400 font-bold hover:underline flex items-center gap-1"
+                    >
+                      <Eye className="w-3 h-3" />
+                      <span>ఫోటో చూడండి</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -485,31 +515,46 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             <div
               onClick={handleSelectAviseGinjalu}
               id="karam-card-avise"
-              className={`relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
+              className={`relative flex flex-col sm:flex-row items-start gap-3.5 p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 karamSelection.aviseGinjalu
                   ? 'bg-emerald-50/80 dark:bg-emerald-950/35 border-emerald-600 dark:border-emerald-500 shadow-sm'
-                  : 'bg-stone-50/70 dark:bg-stone-900/40 border-stone-200 dark:border-stone-800 opacity-75 hover:opacity-100'
+                  : 'bg-stone-50/70 dark:bg-stone-900/40 border-stone-200 dark:border-stone-800 opacity-80 hover:opacity-100'
               }`}
             >
-              {/* Radio for <= 10, Checkbox for > 10 */}
-              <div className="pt-0.5">
-                {!canSelectBoth ? (
-                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                    karamSelection.aviseGinjalu
-                      ? 'border-emerald-600 bg-emerald-600 text-white'
-                      : 'border-stone-400 bg-white dark:bg-stone-800'
-                  }`}>
-                    {karamSelection.aviseGinjalu && <div className="w-2 h-2 rounded-full bg-white" />}
-                  </div>
-                ) : (
-                  <input
-                    type="checkbox"
-                    id="checkbox-avise"
-                    checked={karamSelection.aviseGinjalu}
-                    onChange={handleSelectAviseGinjalu}
-                    className="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+              <div className="flex items-center sm:items-start gap-3">
+                {/* Radio for <= 10, Checkbox for > 10 */}
+                <div className="pt-0.5">
+                  {!canSelectBoth ? (
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                      karamSelection.aviseGinjalu
+                        ? 'border-emerald-600 bg-emerald-600 text-white'
+                        : 'border-stone-400 bg-white dark:bg-stone-800'
+                    }`}>
+                      {karamSelection.aviseGinjalu && <div className="w-2 h-2 rounded-full bg-white" />}
+                    </div>
+                  ) : (
+                    <input
+                      type="checkbox"
+                      id="checkbox-avise"
+                      checked={karamSelection.aviseGinjalu}
+                      onChange={handleSelectAviseGinjalu}
+                      className="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                    />
+                  )}
+                </div>
+
+                {/* Original Photo Thumbnail */}
+                <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 border border-amber-900/20 shadow-xs group/img">
+                  <img
+                    src={aviseKaramImg}
+                    alt="అవిసె గింజల కారం"
+                    className="w-full h-full object-cover group-hover/img:scale-105 transition-transform"
+                    referrerPolicy="no-referrer"
                   />
-                )}
+                  <div className="absolute bottom-0 inset-x-0 bg-black/70 text-[8px] sm:text-[9px] text-amber-200 font-bold text-center py-0.5 font-telugu">
+                    అసలైన ఫోటో
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-1 flex-1">
@@ -523,10 +568,10 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-stone-600 dark:text-stone-400">
-                  వేయించిన అవిసె గింజల (Flaxseeds) సంప్రదాయ ఘుమఘుమలాడే కారం
+                <p className="text-xs text-stone-600 dark:text-stone-400 leading-tight">
+                  వేయించిన నాణ్యమైన అవిసె గింజలు (Flaxseeds), ఎండుమిర్చిల సంప్రదాయ ఘుమఘుమలాడే కారం
                 </p>
-                <div className="pt-1.5 flex items-center gap-2">
+                <div className="pt-1.5 flex items-center justify-between flex-wrap gap-1">
                   <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${
                     karamSelection.aviseGinjalu
                       ? 'bg-emerald-600 text-white font-mono'
@@ -534,9 +579,20 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   }`}>
                     {karamSelection.aviseGinjalu ? `${aviseGinjaluGrams} గ్రా. ఉచితం` : 'ఎంపిక కాలేదు'}
                   </span>
-                  <span className="text-[11px] text-emerald-800 dark:text-emerald-300 font-medium">
-                    (విలువ: ₹0)
-                  </span>
+
+                  {onOpenPhotoGallery && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenPhotoGallery('avise-ginjala-karam');
+                      }}
+                      className="text-[11px] text-[#78350F] dark:text-amber-400 font-bold hover:underline flex items-center gap-1"
+                    >
+                      <Eye className="w-3 h-3" />
+                      <span>ఫోటో చూడండి</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
