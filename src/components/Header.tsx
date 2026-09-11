@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, Clock, Moon, Sun, ShieldCheck, ShoppingBag, Camera } from 'lucide-react';
+import { Phone, Clock, Moon, Sun, ShieldCheck, ShoppingBag, Camera, Smartphone, Download } from 'lucide-react';
 import { OrderingHoursStatus } from '../types';
 import brandLogo from '../assets/images/mallikarjuna_rottelu_logo_1789103187340.jpg';
 
@@ -11,6 +11,8 @@ interface HeaderProps {
   isOwnerView: boolean;
   onBackToCustomerView: () => void;
   onOpenGallery: () => void;
+  onOpenInstallModal?: () => void;
+  isInstalled?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -21,6 +23,8 @@ export const Header: React.FC<HeaderProps> = ({
   isOwnerView,
   onBackToCustomerView,
   onOpenGallery,
+  onOpenInstallModal,
+  isInstalled = false,
 }) => {
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-md transition-colors duration-200 border-b border-amber-900/10 dark:border-stone-800 bg-[#FDFBF7]/95 dark:bg-[#1A1816]/95">
@@ -71,6 +75,20 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Right Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
+          {/* Download / Install Android App Button */}
+          {!isInstalled && onOpenInstallModal && (
+            <button
+              onClick={onOpenInstallModal}
+              id="header-install-app-btn"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs transition-all font-telugu cursor-pointer"
+              title="Android యాప్ డౌన్‌లోడ్ / ఇన్‌స్టాల్ చేసుకోండి"
+            >
+              <Smartphone className="w-3.5 h-3.5 text-emerald-200" />
+              <span className="hidden sm:inline">Android యాప్</span>
+              <span className="sm:hidden">యాప్</span>
+            </button>
+          )}
+
           {/* View Original Photos Button */}
           <button
             onClick={onOpenGallery}

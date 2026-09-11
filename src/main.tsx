@@ -2,18 +2,19 @@ import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
+import { registerSW } from 'virtual:pwa-register';
 
-// Register service worker for offline caching
-if ('serviceWorker' in navigator && (import.meta.env.PROD || (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production'))) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
-      console.warn('Service Worker registration error:', err);
-    });
-  });
-}
+// Register PWA Service Worker for offline capability & instant loading
+registerSW({
+  immediate: true,
+  onOfflineReady() {
+    console.log('Sri Mallikarjuna Jonna Rottelu App is ready to work offline');
+  },
+});
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <App />
   </StrictMode>,
 );
+

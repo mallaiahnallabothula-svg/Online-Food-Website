@@ -9,9 +9,13 @@ import { PaymentModal } from './components/PaymentModal';
 import { OrderConfirmation } from './components/OrderConfirmation';
 import { AdminLogin } from './components/OwnerPortal/AdminLogin';
 import { OwnerDashboard } from './components/OwnerPortal/OwnerDashboard';
+import { AndroidInstallBanner } from './components/AndroidInstallBanner';
+import { AndroidInstallModal } from './components/AndroidInstallModal';
+import { OfflineIndicator } from './components/OfflineIndicator';
+import { usePWAInstall } from './hooks/usePWAInstall';
 import { OrderingHoursStatus, Order, AdminRole } from './types';
 import { getISTTime, getInitialOrderingStatus } from './utils/time';
-import { Phone, MapPin, Clock, ShieldCheck, Heart, Camera } from 'lucide-react';
+import { Phone, MapPin, Clock, ShieldCheck, Heart, Camera, Smartphone } from 'lucide-react';
 
 export default function App() {
   // Dark mode state
@@ -36,6 +40,10 @@ export default function App() {
   // Photo gallery modal state
   const [isGalleryOpen, setIsGalleryOpen] = useState<boolean>(false);
   const [selectedPhotoId, setSelectedPhotoId] = useState<string | undefined>(undefined);
+
+  // PWA Install state
+  const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState<boolean>(false);
 
   const handleOpenGallery = (photoId?: string) => {
     setSelectedPhotoId(photoId);
@@ -122,6 +130,12 @@ export default function App() {
   return (
     <div className="min-h-screen flex flex-col bg-[#FDFBF7] dark:bg-[#1A1816] text-[#292524] dark:text-[#E7E5E4] transition-colors duration-200">
       
+      {/* Android Install Announcement Banner */}
+      <AndroidInstallBanner
+        isInstalled={isInstalled}
+        onOpenModal={() => setIsInstallModalOpen(true)}
+      />
+
       {/* Header */}
       <Header
         hoursStatus={hoursStatus}
@@ -137,6 +151,8 @@ export default function App() {
         isOwnerView={currentView !== 'CUSTOMER'}
         onBackToCustomerView={() => setCurrentView('CUSTOMER')}
         onOpenGallery={() => handleOpenGallery()}
+        onOpenInstallModal={() => setIsInstallModalOpen(true)}
+        isInstalled={isInstalled}
       />
 
       {/* MAIN VIEWPORT */}
@@ -155,6 +171,8 @@ export default function App() {
                   onScrollToOrder={handleScrollToOrder}
                   isOpen={hoursStatus.isOpen || allowOutsideHours}
                   onOpenGallery={handleOpenGallery}
+                  onOpenInstallModal={() => setIsInstallModalOpen(true)}
+                  isInstalled={isInstalled}
                 />
 
                 <OrderingHoursBanner
@@ -237,6 +255,18 @@ export default function App() {
               <span>అసలైన ఫోటోలు</span>
             </button>
 
+            {/* Android App Install CTA in Footer */}
+            {!isInstalled && (
+              <button
+                onClick={() => setIsInstallModalOpen(true)}
+                id="footer-install-app-btn"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-bold transition-colors cursor-pointer shadow-xs"
+              >
+                <Smartphone className="w-3.5 h-3.5 text-emerald-200" />
+                <span>Android యాప్ డౌన్‌లోడ్</span>
+              </button>
+            )}
+
             <a
               href="tel:+918499865803"
               className="font-mono font-bold text-stone-800 dark:text-stone-200 hover:text-[#78350F] flex items-center gap-1.5"
@@ -252,6 +282,18 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* Android PWA Install Modal */}
+      <AndroidInstallModal
+        isOpen={isInstallModalOpen}
+        onClose={() => setIsInstallModalOpen(false)}
+        isInstallable={isInstallable}
+        onInstall={install}
+        isIOS={isIOS}
+      />
+
+      {/* Offline Status Toast Indicator */}
+      <OfflineIndicator />
 
     </div>
   );

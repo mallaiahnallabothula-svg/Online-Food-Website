@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowDown, CheckCircle2, Sparkles, MapPin, Clock, ShieldCheck, Camera, Eye } from 'lucide-react';
+import { ArrowDown, CheckCircle2, Sparkles, MapPin, Clock, ShieldCheck, Camera, Eye, Smartphone, Download } from 'lucide-react';
 import brandLogo from '../assets/images/mallikarjuna_rottelu_logo_1789103187340.jpg';
 import { ORIGINAL_PHOTOS } from '../data/originalPhotos';
 
@@ -7,9 +7,17 @@ interface HeroSectionProps {
   onScrollToOrder: () => void;
   isOpen: boolean;
   onOpenGallery: (initialPhotoId?: string) => void;
+  onOpenInstallModal?: () => void;
+  isInstalled?: boolean;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder, isOpen, onOpenGallery }) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({ 
+  onScrollToOrder, 
+  isOpen, 
+  onOpenGallery,
+  onOpenInstallModal,
+  isInstalled = false,
+}) => {
   const [activePhotoIndex, setActivePhotoIndex] = useState<number>(0);
   const currentPhoto = ORIGINAL_PHOTOS[activePhotoIndex] || ORIGINAL_PHOTOS[0];
 
@@ -85,8 +93,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder, isOpe
               </div>
             </div>
 
-            {/* Prominent Telugu CTA & Original Photos Action Buttons */}
-            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {/* Prominent Telugu CTA & Original Photos & Android App Action Buttons */}
+            <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-wrap">
               <button
                 onClick={onScrollToOrder}
                 id="hero-order-now-btn"
@@ -104,6 +112,17 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder, isOpe
                 <Camera className="w-4.5 h-4.5 text-amber-700 dark:text-amber-400" />
                 <span>అసలైన ఫోటోలు</span>
               </button>
+
+              {!isInstalled && onOpenInstallModal && (
+                <button
+                  onClick={onOpenInstallModal}
+                  id="hero-install-app-btn"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-4 rounded-xl text-sm sm:text-base font-bold text-emerald-800 dark:text-emerald-200 bg-emerald-100/90 dark:bg-emerald-950/60 hover:bg-emerald-200 dark:hover:bg-emerald-900/80 border border-emerald-300 dark:border-emerald-700 transition-all font-telugu shadow-sm cursor-pointer"
+                >
+                  <Smartphone className="w-4.5 h-4.5 text-emerald-700 dark:text-emerald-400" />
+                  <span>Android యాప్</span>
+                </button>
+              )}
             </div>
 
             <div className="flex items-center gap-2 text-xs text-stone-600 dark:text-stone-400 font-telugu">
