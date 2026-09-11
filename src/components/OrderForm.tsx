@@ -25,11 +25,70 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   // Quantity (minimum 5)
   const [quantity, setQuantity] = useState<number>(5);
 
-  // Karam selections
+  // Business Rule:
+  // - If quantity <= 10: only ONE karam option is allowed at a time (either Karivepaku OR Avise Ginjalu).
+  // - If quantity > 10: BOTH options are available and can be selected simultaneously.
+  const canSelectBoth = quantity > 10;
+
+  // Karam selections: defaults to single option (Karivepaku) for starting quantity 5
   const [karamSelection, setKaramSelection] = useState<KaramSelection>({
     karivepaku: true,
-    aviseGinjalu: true,
+    aviseGinjalu: false,
   });
+
+  // Whenever quantity drops to <= 10, if both were previously selected, enforce single choice
+  useEffect(() => {
+    if (quantity <= 10) {
+      if (karamSelection.karivepaku && karamSelection.aviseGinjalu) {
+        setKaramSelection({
+          karivepaku: true,
+          aviseGinjalu: false,
+        });
+      }
+    }
+  }, [quantity]);
+
+  // Handlers for single vs dual karam choices
+  const handleSelectKarivepaku = () => {
+    if (!canSelectBoth) {
+      // Single choice mode: either this or that
+      setKaramSelection({
+        karivepaku: true,
+        aviseGinjalu: false,
+      });
+    } else {
+      // Dual choice mode (> 10 rotis)
+      setKaramSelection(prev => ({
+        ...prev,
+        karivepaku: !prev.karivepaku,
+      }));
+    }
+  };
+
+  const handleSelectAviseGinjalu = () => {
+    if (!canSelectBoth) {
+      // Single choice mode: either this or that
+      setKaramSelection({
+        karivepaku: false,
+        aviseGinjalu: true,
+      });
+    } else {
+      // Dual choice mode (> 10 rotis)
+      setKaramSelection(prev => ({
+        ...prev,
+        aviseGinjalu: !prev.aviseGinjalu,
+      }));
+    }
+  };
+
+  const handleSelectBothKarams = () => {
+    if (canSelectBoth) {
+      setKaramSelection({
+        karivepaku: true,
+        aviseGinjalu: true,
+      });
+    }
+  };
 
   // Customer inputs
   const [customerName, setCustomerName] = useState<string>('');
@@ -156,6 +215,11 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     if (!deliveryEligibility.isEligible) {
       errs.delivery = `కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధి దాటింది (${deliveryEligibility.distanceKm} కి.మీ.). ఉచిత డెలివరీ కేవలం 5 కి.మీ. లోపలే సాధ్యం.`;
       if (!firstErrorElementId) firstErrorElementId = 'locality-select';
+    }
+
+    if (!karamSelection.karivepaku && !karamSelection.aviseGinjalu) {
+      errs.karam = 'దయచేసి కనీసం ఒక ఉచిత కారాన్ని ఎంచుకోండి (కరివేపాకు లేదా అవిసె గింజల కారం).';
+      if (!firstErrorElementId) firstErrorElementId = 'karam-card-karivepaku';
     }
 
     setErrors(errs);
@@ -299,50 +363,105 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-xl font-bold text-[#451A03] dark:text-amber-100 font-telugu">
-                  ఉచిత కారాలు (Free Karam Offer)
+                  ఉచిత కారాలు (Free Karam Selection)
                 </h2>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-telugu">
-                  ఉచిత ఆఫర్
-                </span>
+                {canSelectBoth ? (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-telugu">
+                    🎉 రెండు కారాలూ ఎంచుకోవచ్చు! (10+ రొట్టెలు)
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-telugu">
+                    ఏదైనా ఒకటి మాత్రమే (10 రొట్టెల వరకు)
+                  </span>
+                )}
               </div>
               <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 font-telugu mt-0.5">
-                ప్రతి పూర్తి 5 రొట్టెల కొనుగోలుపై మీరు ఎంచుకున్న ప్రతి కారం <strong className="text-emerald-700 dark:text-emerald-400">50 గ్రాములు ఉచితం</strong>! మీకు నచ్చిన కారాన్ని ఎంచుకోవచ్చు లేదా తొలగించవచ్చు.
+                {canSelectBoth
+                  ? 'మీరు 10 కంటే ఎక్కువ రొట్టెలు ఆర్డర్ చేస్తున్నారు! కరివేపాకు మరియు అవిసె గింజల కారం రెండింటినీ ఉచితంగా ఎంచుకోవచ్చు.'
+                  : '10 రొట్టెల వరకు ఒక కారం మాత్రమే (కరివేపాకు లేదా అవిసె గింజల కారం) ఉచితంగా ఎంచుకోవచ్చు.'}
               </p>
             </div>
           </div>
 
-          {/* Current Calculation Rule Box */}
-          <div className="my-5 p-3.5 rounded-xl bg-[#FBF7EE] dark:bg-stone-900/80 border border-amber-200/80 dark:border-stone-800 flex items-center gap-3 font-telugu">
-            <Gift className="w-5 h-5 text-[#78350F] dark:text-amber-400 flex-shrink-0" />
-            <div className="text-xs sm:text-sm text-stone-800 dark:text-stone-200">
-              మీరు ఎంచుకున్న రొట్టెలు: <strong>{quantity}</strong>. పూర్తి సెట్లు: <strong>{setsOf5}</strong> (ప్రతి సెట్‌కు 50 గ్రా.). 
-              కావున ప్రతి ఎంచుకున్న కారం: <strong className="text-emerald-700 dark:text-emerald-400 font-bold font-mono">{gramsPerSelected} గ్రాములు</strong> ఉచితం.
+          {/* Karam Selection Rule Box */}
+          {canSelectBoth ? (
+            <div className="my-5 p-4 rounded-xl bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 font-telugu space-y-2">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-200 font-bold text-sm">
+                  <Gift className="w-5 h-5 text-emerald-700 dark:text-emerald-400 flex-shrink-0" />
+                  <span>🎉 10 రొట్టెల కంటే ఎక్కువ ({quantity}) ఆర్డర్ చేస్తున్నారు - రెండు కారాలూ ఉచితం!</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSelectBothKarams}
+                  id="select-both-karams-btn"
+                  className="px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs transition-colors cursor-pointer"
+                >
+                  రెండు కారాలనూ ఎంచుకోండి (Select Both)
+                </button>
+              </div>
+              <div className="text-xs text-emerald-800 dark:text-emerald-300">
+                మీరు ఎంచుకున్న ప్రతి కారం: <strong className="font-mono font-bold">{gramsPerSelected} గ్రాములు</strong> ఉచితం. (రెండూ కలిపి మొత్తం <strong className="font-mono">{gramsPerSelected * 2} గ్రాములు</strong>).
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="my-5 p-4 rounded-xl bg-amber-50/90 dark:bg-stone-900/90 border border-amber-300 dark:border-stone-700 font-telugu space-y-1.5">
+              <div className="flex items-center gap-2 text-[#78350F] dark:text-amber-300 font-bold text-xs sm:text-sm">
+                <Gift className="w-4 h-4 flex-shrink-0" />
+                <span>ఒక కారం మాత్రమే ఉచితం (కరివేపాకు లేదా అవిసె గింజల కారం)</span>
+              </div>
+              <p className="text-xs text-stone-700 dark:text-stone-300">
+                మీరు <strong>{quantity}</strong> రొట్టెలు ఎంచుకున్నారు (10 లేదా అంతకంటే తక్కువ). కావున ఏదైనా ఒక కారాన్ని మాత్రమే ఎంచుకోవచ్చు (<strong className="font-mono">{gramsPerSelected} గ్రాములు</strong> ఉచితం).
+                <span className="block text-[#78350F] dark:text-amber-400 font-bold mt-1">
+                  💡 సలహా: 10 కంటే ఎక్కువ (11+) రొట్టెలు ఆర్డర్ చేస్తే రెండు కారాలనూ ఉచితంగా పొందవచ్చు!
+                </span>
+              </p>
+            </div>
+          )}
 
-          {/* Karam Selection Checkbox Cards */}
+          {/* Karam Selection Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-telugu">
-            {/* Karivepaku Karam */}
-            <label
-              htmlFor="karam-karivepaku"
+            {/* Option 1: Karivepaku Karam */}
+            <div
+              onClick={handleSelectKarivepaku}
+              id="karam-card-karivepaku"
               className={`relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 karamSelection.karivepaku
-                  ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-600 dark:border-emerald-500 shadow-xs'
-                  : 'bg-stone-50/60 dark:bg-stone-900/40 border-stone-200 dark:border-stone-800 opacity-70'
+                  ? 'bg-emerald-50/80 dark:bg-emerald-950/35 border-emerald-600 dark:border-emerald-500 shadow-sm'
+                  : 'bg-stone-50/70 dark:bg-stone-900/40 border-stone-200 dark:border-stone-800 opacity-75 hover:opacity-100'
               }`}
             >
-              <input
-                type="checkbox"
-                id="karam-karivepaku"
-                checked={karamSelection.karivepaku}
-                onChange={(e) => setKaramSelection(k => ({ ...k, karivepaku: e.target.checked }))}
-                className="mt-1 w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-              />
-              <div className="space-y-1">
+              {/* Radio for <= 10, Checkbox for > 10 */}
+              <div className="pt-0.5">
+                {!canSelectBoth ? (
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                    karamSelection.karivepaku
+                      ? 'border-emerald-600 bg-emerald-600 text-white'
+                      : 'border-stone-400 bg-white dark:bg-stone-800'
+                  }`}>
+                    {karamSelection.karivepaku && <div className="w-2 h-2 rounded-full bg-white" />}
+                  </div>
+                ) : (
+                  <input
+                    type="checkbox"
+                    id="checkbox-karivepaku"
+                    checked={karamSelection.karivepaku}
+                    onChange={handleSelectKarivepaku}
+                    className="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                  />
+                )}
+              </div>
+
+              <div className="space-y-1 flex-1">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-stone-900 dark:text-stone-100">
                     కరివేపాకు కారం
                   </span>
+                  {!canSelectBoth && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-stone-800 text-amber-900 dark:text-amber-200">
+                      ఆప్షన్ A
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs text-stone-600 dark:text-stone-400">
                   స్వచ్ఛమైన తాజా కరివేపాకు మరియు సంప్రదాయ సుగంధ దినుసుల పొడి
@@ -353,36 +472,56 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                       ? 'bg-emerald-600 text-white font-mono'
                       : 'bg-stone-200 dark:bg-stone-800 text-stone-500'
                   }`}>
-                    {karamSelection.karivepaku ? `${karivepakuGrams} గ్రా. ఉచితం` : 'ఎంపిక చేయలేదు'}
+                    {karamSelection.karivepaku ? `${karivepakuGrams} గ్రా. ఉచితం` : 'ఎంపిక కాలేదు'}
                   </span>
                   <span className="text-[11px] text-emerald-800 dark:text-emerald-300 font-medium">
                     (విలువ: ₹0)
                   </span>
                 </div>
               </div>
-            </label>
+            </div>
 
-            {/* Avise Ginjala Karam */}
-            <label
-              htmlFor="karam-avise"
+            {/* Option 2: Avise Ginjala Karam */}
+            <div
+              onClick={handleSelectAviseGinjalu}
+              id="karam-card-avise"
               className={`relative flex items-start gap-4 p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 karamSelection.aviseGinjalu
-                  ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-600 dark:border-emerald-500 shadow-xs'
-                  : 'bg-stone-50/60 dark:bg-stone-900/40 border-stone-200 dark:border-stone-800 opacity-70'
+                  ? 'bg-emerald-50/80 dark:bg-emerald-950/35 border-emerald-600 dark:border-emerald-500 shadow-sm'
+                  : 'bg-stone-50/70 dark:bg-stone-900/40 border-stone-200 dark:border-stone-800 opacity-75 hover:opacity-100'
               }`}
             >
-              <input
-                type="checkbox"
-                id="karam-avise"
-                checked={karamSelection.aviseGinjalu}
-                onChange={(e) => setKaramSelection(k => ({ ...k, aviseGinjalu: e.target.checked }))}
-                className="mt-1 w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-              />
-              <div className="space-y-1">
+              {/* Radio for <= 10, Checkbox for > 10 */}
+              <div className="pt-0.5">
+                {!canSelectBoth ? (
+                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
+                    karamSelection.aviseGinjalu
+                      ? 'border-emerald-600 bg-emerald-600 text-white'
+                      : 'border-stone-400 bg-white dark:bg-stone-800'
+                  }`}>
+                    {karamSelection.aviseGinjalu && <div className="w-2 h-2 rounded-full bg-white" />}
+                  </div>
+                ) : (
+                  <input
+                    type="checkbox"
+                    id="checkbox-avise"
+                    checked={karamSelection.aviseGinjalu}
+                    onChange={handleSelectAviseGinjalu}
+                    className="w-5 h-5 rounded text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                  />
+                )}
+              </div>
+
+              <div className="space-y-1 flex-1">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-stone-900 dark:text-stone-100">
                     అవిసె గింజల కారం
                   </span>
+                  {!canSelectBoth && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-stone-800 text-amber-900 dark:text-amber-200">
+                      ఆప్షన్ B
+                    </span>
+                  )}
                 </div>
                 <p className="text-xs text-stone-600 dark:text-stone-400">
                   వేయించిన అవిసె గింజల (Flaxseeds) సంప్రదాయ ఘుమఘుమలాడే కారం
@@ -393,14 +532,14 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                       ? 'bg-emerald-600 text-white font-mono'
                       : 'bg-stone-200 dark:bg-stone-800 text-stone-500'
                   }`}>
-                    {karamSelection.aviseGinjalu ? `${aviseGinjaluGrams} గ్రా. ఉచితం` : 'ఎంపిక చేయలేదు'}
+                    {karamSelection.aviseGinjalu ? `${aviseGinjaluGrams} గ్రా. ఉచితం` : 'ఎంపిక కాలేదు'}
                   </span>
                   <span className="text-[11px] text-emerald-800 dark:text-emerald-300 font-medium">
                     (విలువ: ₹0)
                   </span>
                 </div>
               </div>
-            </label>
+            </div>
           </div>
         </div>
 

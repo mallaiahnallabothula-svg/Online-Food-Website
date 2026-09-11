@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowDown, CheckCircle2, Sparkles, MapPin, Clock, ShieldCheck } from 'lucide-react';
 import heroImage from '../assets/images/jowar_roti_karam_hero_1789044812092.jpg';
+import brandLogo from '../assets/images/mallikarjuna_rottelu_logo_1789103187340.jpg';
 
 interface HeroSectionProps {
   onScrollToOrder: () => void;
@@ -21,20 +22,28 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder, isOpe
               <span>స్వచ్ఛమైన గ్రామీణ సంప్రదాయ ఆహారం</span>
             </div>
 
-            {/* Brand Heading */}
-            <div className="space-y-2">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#451A03] dark:text-amber-50 font-telugu tracking-tight leading-tight">
-                శ్రీ మల్లికార్జున <br className="hidden sm:inline" />
-                <span className="text-[#78350F] dark:text-amber-400">పల్లె జొన్న రొట్టెలు</span>
-              </h1>
-              <p className="text-lg sm:text-xl font-semibold text-[#8C4A26] dark:text-amber-200/90 font-telugu">
-                పక్కా పల్లెటూరి స్వచ్ఛమైన ఇంటి రుచితో, వేడివేడి జొన్న రొట్టెలు
-              </p>
+            {/* Brand Heading with Logo */}
+            <div className="flex items-center gap-3 sm:gap-4">
+              <img
+                src={brandLogo}
+                alt="Sri Mallikarjuna Palle Jonna Rottelu Official Logo"
+                referrerPolicy="no-referrer"
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-amber-700/40 shadow-md flex-shrink-0"
+              />
+              <div className="space-y-1">
+                <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold text-[#451A03] dark:text-amber-50 font-telugu tracking-tight leading-tight">
+                  శ్రీ మల్లికార్జున <br className="hidden sm:inline" />
+                  <span className="text-[#78350F] dark:text-amber-400">పల్లె జొన్న రొట్టెలు</span>
+                </h1>
+                <p className="text-sm sm:text-lg font-semibold text-[#8C4A26] dark:text-amber-200/90 font-telugu">
+                  పక్కా పల్లెటూరి స్వచ్ఛమైన ఇంటి రుచితో, వేడివేడి జొన్న రొట్టెలు
+                </p>
+              </div>
             </div>
 
             {/* Short authentic description strictly truthful to business details */}
             <p className="text-sm sm:text-base text-stone-700 dark:text-stone-300 font-telugu leading-relaxed">
-              రోజూ తాజాగా సిద్ధం చేసే మధ్యస్థ పరిమాణపు జొన్న రొట్టెలు. ప్రతి రొట్టె కేవలం <strong className="text-[#78350F] dark:text-amber-300 font-bold">₹30</strong> మాత్రమే. ప్రతి 5 రొట్టెలకు కరివేపాకు కారం మరియు అవిసె గింజల కారం ఉచితంగా అందించబడతాయి!
+              రోజూ తాజాగా సిద్ధం చేసే మధ్యస్థ పరిమాణపు జొన్న రొట్టెలు. ప్రతి రొట్టె కేవలం <strong className="text-[#78350F] dark:text-amber-300 font-bold">₹30</strong> మాత్రమే. ప్రతి పూర్తి 5 రొట్టెలకు 50 గ్రా. ఉచిత కారం (10 రొట్టెల వరకు ఒక కారం, 10 కంటే ఎక్కువ ఆర్డర్‌లకు రెండు కారాలూ ఉచితం)!
             </p>
 
             {/* Key Feature Highlights Grid */}

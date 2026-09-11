@@ -1,6 +1,7 @@
 import React from 'react';
 import { Phone, Clock, Moon, Sun, ShieldCheck, ShoppingBag } from 'lucide-react';
 import { OrderingHoursStatus } from '../types';
+import brandLogo from '../assets/images/mallikarjuna_rottelu_logo_1789103187340.jpg';
 
 interface HeaderProps {
   hoursStatus: OrderingHoursStatus | null;
@@ -28,8 +29,13 @@ export const Header: React.FC<HeaderProps> = ({
           className="flex items-center gap-3 cursor-pointer group"
           id="brand-header-link"
         >
-          <div className="w-11 h-11 rounded-xl bg-[#78350F] flex items-center justify-center text-amber-100 shadow-md shadow-amber-950/20 group-hover:scale-105 transition-transform flex-shrink-0">
-            <span className="font-bold text-xl font-telugu">మ</span>
+          <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-amber-600/40 shadow-md shadow-amber-950/20 group-hover:scale-105 transition-transform flex-shrink-0 bg-amber-100 dark:bg-stone-800">
+            <img
+              src={brandLogo}
+              alt="శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు Official Logo"
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-cover"
+            />
           </div>
           <div>
             <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[#451A03] dark:text-amber-100 font-telugu leading-tight">

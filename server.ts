@@ -281,9 +281,26 @@ app.post('/api/payment/create-order', (req, res) => {
   const setsOf5 = Math.floor(qty / 5);
   const gramsPerSelected = setsOf5 * 50;
 
+  // Business Rule:
+  // - If qty <= 10: only ONE karam option allowed (either Karivepaku OR Avise Ginjalu).
+  // - If qty > 10: BOTH options are allowed.
+  const canSelectBoth = qty > 10;
+  let normalizedKaram = {
+    karivepaku: !!karamSelection?.karivepaku,
+    aviseGinjalu: !!karamSelection?.aviseGinjalu,
+  };
+
+  if (!canSelectBoth && normalizedKaram.karivepaku && normalizedKaram.aviseGinjalu) {
+    // Keep only one if qty <= 10
+    normalizedKaram.aviseGinjalu = false;
+  }
+  if (!normalizedKaram.karivepaku && !normalizedKaram.aviseGinjalu) {
+    normalizedKaram.karivepaku = true;
+  }
+
   const karamQuantities = {
-    karivepakuGrams: karamSelection?.karivepaku ? gramsPerSelected : 0,
-    aviseGinjaluGrams: karamSelection?.aviseGinjalu ? gramsPerSelected : 0,
+    karivepakuGrams: normalizedKaram.karivepaku ? gramsPerSelected : 0,
+    aviseGinjaluGrams: normalizedKaram.aviseGinjalu ? gramsPerSelected : 0,
   };
 
   // Validate customer details

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
 import { X, CheckCircle2, AlertTriangle, ShieldCheck, Copy, Check, ExternalLink, RefreshCw, Smartphone } from 'lucide-react';
 import { Order } from '../types';
+import brandLogo from '../assets/images/mallikarjuna_rottelu_logo_1789103187340.jpg';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -177,13 +178,21 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         
         {/* Modal Header */}
         <div className="bg-[#FAF4EA] dark:bg-[#28241F] px-6 py-4 border-b border-amber-900/10 dark:border-stone-800 flex items-center justify-between">
-          <div>
-            <span className="text-xs font-bold text-[#78350F] dark:text-amber-400">
-              ఆన్‌లైన్ UPI చెల్లింపు (Online UPI Only)
-            </span>
-            <h3 className="text-lg font-extrabold text-[#451A03] dark:text-amber-100 leading-tight">
-              శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు
-            </h3>
+          <div className="flex items-center gap-3">
+            <img
+              src={brandLogo}
+              alt="Sri Mallikarjuna Palle Jonna Rottelu Logo"
+              referrerPolicy="no-referrer"
+              className="w-11 h-11 rounded-full object-cover border border-amber-600/30 shadow-xs flex-shrink-0"
+            />
+            <div>
+              <span className="text-[11px] font-bold text-[#78350F] dark:text-amber-400 block leading-tight">
+                ఆన్‌లైన్ UPI చెల్లింపు (Online UPI Only)
+              </span>
+              <h3 className="text-base sm:text-lg font-extrabold text-[#451A03] dark:text-amber-100 leading-tight">
+                శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు
+              </h3>
+            </div>
           </div>
 
           <button
