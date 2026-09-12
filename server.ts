@@ -16,6 +16,7 @@ if (!fs.existsSync(DATA_DIR)) {
 
 const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
 const AUDIT_FILE = path.join(DATA_DIR, 'audit.json');
+const FEEDBACK_FILE = path.join(DATA_DIR, 'feedback.json');
 
 // Helper to read/write JSON files safely
 function readJsonFile<T>(filePath: string, fallback: T): T {
@@ -126,6 +127,33 @@ if (!fs.existsSync(AUDIT_FILE)) {
   ]);
 }
 
+if (!fs.existsSync(FEEDBACK_FILE)) {
+  writeJsonFile(FEEDBACK_FILE, [
+    {
+      id: 'FDBK-INIT-01',
+      orderId: 'SMJR-20260909-1021',
+      rating: 5,
+      comments: 'రొట్టెలు వేడివేడిగా చాలా మెత్తగా ఉన్నాయి. కరివేపాకు కారం అదిరిపోయింది!',
+      aspects: ['TASTE_SOFTNESS', 'KARIVEPAKU_KARAM', 'HOT_AND_FRESH', 'PACKAGING'],
+      customerName: 'వెంకటేశ్వర్లు గారు',
+      customerMobile: '9848022338',
+      createdAt: '2026-09-09T14:15:00.000Z',
+      createdAtIST: '9 సెప్టెంబర్ 2026, 07:45 PM'
+    },
+    {
+      id: 'FDBK-INIT-02',
+      orderId: 'SMJR-20260909-1045',
+      rating: 5,
+      comments: 'సాయంత్రం సరైన సమయానికి డెలివరీ చేశారు. ఆరోగ్యకరమైన స్వచ్ఛమైన జొన్న రొట్టెలు.',
+      aspects: ['TASTE_SOFTNESS', 'ON_TIME_DELIVERY', 'HOT_AND_FRESH'],
+      customerName: 'లక్ష్మి ప్రసన్న',
+      customerMobile: '9440182736',
+      createdAt: '2026-09-09T14:30:00.000Z',
+      createdAtIST: '9 సెప్టెంబర్ 2026, 08:00 PM'
+    }
+  ]);
+}
+
 // Global 2FA sessions store
 interface ActiveSession {
   token: string;
@@ -210,6 +238,11 @@ function getISTInfo() {
 // -------------------------------------------------------------
 // API ROUTES
 // -------------------------------------------------------------
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
 
 // 1. Get ordering hours status
 app.get('/api/status', (req, res) => {
@@ -561,6 +594,152 @@ app.patch('/api/orders/:id/status', (req, res) => {
   });
 });
 
+// 7b. Customer marks order as received
+app.post('/api/orders/:id/received', (req, res) => {
+  const { id } = req.params;
+  const orders = readJsonFile<any[]>(ORDERS_FILE, []);
+  const orderIndex = orders.findIndex(o => o.id.toLowerCase() === id.toLowerCase() || o.id === id);
+
+  if (orderIndex === -1) {
+    return res.status(404).json({ error: 'ORDER_NOT_FOUND', message: 'ఆర్డర్ కనుగొనబడలేదు.' });
+  }
+
+  const ist = getISTInfo();
+  const order = orders[orderIndex];
+  order.isCustomerReceived = true;
+  order.receivedAt = new Date().toISOString();
+  order.receivedAtIST = `${ist.dateTelugu}, ${ist.timeFormatted}`;
+  order.fulfillmentStatus = 'DELIVERED';
+  order.statusUpdatedAt = new Date().toISOString();
+  order.statusUpdatedBy = 'CUSTOMER';
+
+  writeJsonFile(ORDERS_FILE, orders);
+
+  // Add audit record
+  const auditLogs = readJsonFile<any[]>(AUDIT_FILE, []);
+  auditLogs.unshift({
+    id: `AUD-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    timestampIST: `${ist.dateTelugu}, ${ist.timeFormatted}`,
+    type: 'ORDER_RECEIVED',
+    orderId: order.id,
+    details: `కస్టమర్ ${order.customer?.name || ''} (+91 ${order.customer?.mobile || ''}) ఆర్డర్ అందినట్లుగా ధృవీకరించారు.`,
+    actor: 'Customer'
+  });
+  writeJsonFile(AUDIT_FILE, auditLogs);
+
+  res.json({
+    success: true,
+    message: 'ఆర్డర్ విజయవంతంగా అందినట్లు నమోదు చేయబడింది.',
+    order
+  });
+});
+
+// 7c. Customer submits post-order feedback and experience rating
+app.post('/api/orders/:id/feedback', (req, res) => {
+  const { id } = req.params;
+  const { rating, comments, aspects, customerName, customerMobile } = req.body;
+
+  const numRating = Number(rating);
+  if (!numRating || numRating < 1 || numRating > 5) {
+    return res.status(400).json({ error: 'INVALID_RATING', message: 'దయచేసి 1 నుండి 5 నక్షత్రాల రేటింగ్ ఎంచుకోండి.' });
+  }
+
+  const orders = readJsonFile<any[]>(ORDERS_FILE, []);
+  const orderIndex = orders.findIndex(o => o.id.toLowerCase() === id.toLowerCase() || o.id === id);
+
+  if (orderIndex === -1) {
+    return res.status(404).json({ error: 'ORDER_NOT_FOUND', message: 'ఆర్డర్ కనుగొనబడలేదు.' });
+  }
+
+  const targetOrder = orders[orderIndex];
+  const ist = getISTInfo();
+  const feedbackId = `FDBK-${Date.now()}`;
+  const newFeedback = {
+    id: feedbackId,
+    orderId: targetOrder.id,
+    rating: Math.round(numRating),
+    comments: (comments || '').trim(),
+    aspects: Array.isArray(aspects) ? aspects : [],
+    customerName: customerName || targetOrder.customer?.name || 'గౌరవనీయ కస్టమర్',
+    customerMobile: customerMobile || targetOrder.customer?.mobile || '',
+    createdAt: new Date().toISOString(),
+    createdAtIST: `${ist.dateTelugu}, ${ist.timeFormatted}`
+  };
+
+  targetOrder.feedback = newFeedback;
+  if (!targetOrder.isCustomerReceived) {
+    targetOrder.isCustomerReceived = true;
+    targetOrder.receivedAt = new Date().toISOString();
+    targetOrder.receivedAtIST = `${ist.dateTelugu}, ${ist.timeFormatted}`;
+    targetOrder.fulfillmentStatus = 'DELIVERED';
+  }
+
+  writeJsonFile(ORDERS_FILE, orders);
+
+  // Append to feedback list
+  const feedbackList = readJsonFile<any[]>(FEEDBACK_FILE, []);
+  const filtered = feedbackList.filter(f => f.orderId !== targetOrder.id);
+  filtered.unshift(newFeedback);
+  writeJsonFile(FEEDBACK_FILE, filtered);
+
+  // Add audit record
+  const auditLogs = readJsonFile<any[]>(AUDIT_FILE, []);
+  auditLogs.unshift({
+    id: `AUD-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    timestampIST: `${ist.dateTelugu}, ${ist.timeFormatted}`,
+    type: 'FEEDBACK_SUBMITTED',
+    orderId: targetOrder.id,
+    details: `కస్టమర్ ${newFeedback.customerName} ${numRating} నక్షత్రాల రేటింగ్ మరియు అభిప్రాయాన్ని సమర్పించారు: "${(newFeedback.comments || 'అద్భుతమైన అనుభవం').slice(0, 60)}"`,
+    actor: 'Customer'
+  });
+  writeJsonFile(AUDIT_FILE, auditLogs);
+
+  res.json({
+    success: true,
+    message: 'ధన్యవాదాలు! మీ విలువైన అభిప్రాయం విజయవంతంగా నమోదైంది.',
+    feedback: newFeedback,
+    order: targetOrder
+  });
+});
+
+// 7d. Get single order by ID
+app.get('/api/orders/:id', (req, res) => {
+  const { id } = req.params;
+  const orders = readJsonFile<any[]>(ORDERS_FILE, []);
+  const order = orders.find(o => o.id.toLowerCase() === id.toLowerCase() || o.id === id);
+
+  if (!order) {
+    return res.status(404).json({ error: 'ORDER_NOT_FOUND', message: 'ఆర్డర్ కనుగొనబడలేదు.' });
+  }
+
+  res.json({ success: true, order });
+});
+
+// 7e. Get all customer feedback list & rating overview
+app.get('/api/feedback', (req, res) => {
+  const feedbackList = readJsonFile<any[]>(FEEDBACK_FILE, []);
+  const total = feedbackList.length;
+  const avg = total > 0 ? (feedbackList.reduce((acc, f) => acc + (f.rating || 0), 0) / total).toFixed(1) : '5.0';
+  
+  const ratingDistribution: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  feedbackList.forEach(f => {
+    const r = f.rating ? Math.round(f.rating) : 5;
+    if (ratingDistribution[r] !== undefined) {
+      ratingDistribution[r] += 1;
+    }
+  });
+
+  res.json({
+    success: true,
+    feedbacks: feedbackList,
+    total,
+    averageRating: parseFloat(avg),
+    ratingDistribution
+  });
+});
+
 // 8. Get audit logs
 app.get('/api/audit-logs', (req, res) => {
   const logs = readJsonFile<any[]>(AUDIT_FILE, []);
@@ -617,6 +796,21 @@ app.get('/api/analytics', (req, res) => {
     { date: 'ఈరోజు (Today)', orders: todayOrders.length, revenue: todayRevenue, rotis: todayOrders.reduce((s, o) => s + (o.quantity || 0), 0) }
   ];
 
+  // Feedback metrics
+  const feedbackList = readJsonFile<any[]>(FEEDBACK_FILE, []);
+  const totalFeedbacks = feedbackList.length;
+  const averageRating = totalFeedbacks > 0
+    ? parseFloat((feedbackList.reduce((acc, f) => acc + (f.rating || 0), 0) / totalFeedbacks).toFixed(1))
+    : 5.0;
+
+  const ratingDistribution: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  feedbackList.forEach(f => {
+    const r = f.rating ? Math.round(f.rating) : 5;
+    if (ratingDistribution[r] !== undefined) {
+      ratingDistribution[r] += 1;
+    }
+  });
+
   res.json({
     totalRevenue,
     totalOrders: orders.length,
@@ -627,7 +821,10 @@ app.get('/api/analytics', (req, res) => {
     todayRevenue,
     ordersByStatus,
     hourlyOrderDistribution: hourlySlots,
-    dailyTrends
+    dailyTrends,
+    averageRating,
+    totalFeedbacks,
+    ratingDistribution
   });
 });
 
@@ -637,7 +834,10 @@ app.get('/api/analytics', (req, res) => {
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: process.env.DISABLE_HMR === 'true' ? false : undefined,
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);

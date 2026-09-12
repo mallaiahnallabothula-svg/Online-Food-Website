@@ -2,21 +2,29 @@ import React, { useState } from 'react';
 import { CheckCircle2, MessageSquare, Copy, Check, ArrowRight, ShieldCheck, MapPin, Calendar, Clock } from 'lucide-react';
 import { Order } from '../types';
 import { buildWhatsAppTicket, getWhatsAppUrl, OWNER_PHONE_DISPLAY } from '../utils/whatsapp';
+import { PostOrderFeedback } from './PostOrderFeedback';
 
 interface OrderConfirmationProps {
   order: Order;
   onNewOrder: () => void;
+  onOrderUpdated?: (updated: Order) => void;
 }
 
-export const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ order, onNewOrder }) => {
+export const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ order, onNewOrder, onOrderUpdated }) => {
+  const [currentOrder, setCurrentOrder] = useState<Order>(order);
   const [copied, setCopied] = useState<boolean>(false);
-  const ticketText = buildWhatsAppTicket(order);
-  const whatsappUrl = getWhatsAppUrl(order);
+  const ticketText = buildWhatsAppTicket(currentOrder);
+  const whatsappUrl = getWhatsAppUrl(currentOrder);
 
   const handleCopyTicket = () => {
     navigator.clipboard.writeText(ticketText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleOrderChange = (updated: Order) => {
+    setCurrentOrder(updated);
+    onOrderUpdated?.(updated);
   };
 
   return (
@@ -165,6 +173,12 @@ export const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ order, onN
               </button>
             </div>
           </div>
+
+          {/* Post-Order Feedback & Delivery Confirmation Component */}
+          <PostOrderFeedback
+            order={currentOrder}
+            onOrderUpdated={handleOrderChange}
+          />
 
           {/* Ticket Preview Box */}
           <div className="rounded-xl border border-stone-200 dark:border-stone-800 p-4 bg-stone-50 dark:bg-stone-900/50">

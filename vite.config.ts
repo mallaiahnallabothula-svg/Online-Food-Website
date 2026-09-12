@@ -145,8 +145,7 @@ export default defineConfig(() => {
           ],
         },
         devOptions: {
-          enabled: process.env.DISABLE_HMR !== 'true',
-          type: 'module',
+          enabled: false,
         },
       }),
     ],

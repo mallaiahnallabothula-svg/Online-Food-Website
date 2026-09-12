@@ -6,6 +6,18 @@ export type FulfillmentStatus = 'NEW' | 'PREPARING' | 'OUT_FOR_DELIVERY' | 'DELI
 export type PaymentStatus = 'PENDING' | 'VERIFIED' | 'FAILED' | 'CANCELLED' | 'PAY_ON_DELIVERY';
 export type AdminRole = 'ADMIN' | 'STAFF';
 
+export interface OrderFeedback {
+  id: string;
+  orderId: string;
+  rating: number; // 1 to 5
+  comments: string;
+  aspects?: string[]; // e.g. 'TASTE_SOFTNESS', 'KARIVEPAKU_KARAM', 'AVISE_KARAM', 'ON_TIME_DELIVERY', 'PACKAGING', 'HOT_AND_FRESH'
+  customerName?: string;
+  customerMobile?: string;
+  createdAt: string;
+  createdAtIST: string;
+}
+
 export interface KaramSelection {
   karivepaku: boolean; // కరివేపాకు కారం
   aviseGinjalu: boolean; // అవిసె గింజల కారం
@@ -43,13 +55,17 @@ export interface Order {
   fulfillmentStatus: FulfillmentStatus;
   statusUpdatedAt?: string;
   statusUpdatedBy?: string;
+  isCustomerReceived?: boolean;
+  receivedAt?: string;
+  receivedAtIST?: string;
+  feedback?: OrderFeedback;
 }
 
 export interface AuditLog {
   id: string;
   timestamp: string;
   timestampIST: string;
-  type: 'PAYMENT_VERIFIED' | 'ORDER_CREATED' | 'STATUS_UPDATED' | 'PAYMENT_FAILED' | 'LOGIN_ATTEMPT' | 'EXPORT_GENERATED';
+  type: 'PAYMENT_VERIFIED' | 'ORDER_CREATED' | 'STATUS_UPDATED' | 'PAYMENT_FAILED' | 'LOGIN_ATTEMPT' | 'EXPORT_GENERATED' | 'ORDER_RECEIVED' | 'FEEDBACK_SUBMITTED';
   orderId?: string;
   amount?: number;
   paymentReference?: string;
@@ -68,6 +84,9 @@ export interface AnalyticsData {
   ordersByStatus: Record<FulfillmentStatus, number>;
   hourlyOrderDistribution: { hour: number; label: string; count: number; revenue: number }[];
   dailyTrends: { date: string; orders: number; revenue: number; rotis: number }[];
+  averageRating?: number;
+  totalFeedbacks?: number;
+  ratingDistribution?: Record<number, number>;
 }
 
 export interface OrderingHoursStatus {

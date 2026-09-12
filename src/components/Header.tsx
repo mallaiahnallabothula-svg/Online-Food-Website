@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, Moon, Sun, ShoppingBag, Smartphone } from 'lucide-react';
+import { Phone, Moon, Sun, ShoppingBag, Smartphone, MessageSquareHeart } from 'lucide-react';
 import { OrderingHoursStatus } from '../types';
 import brandLogo from '../assets/images/mallikarjuna_rottelu_logo_1789103187340.jpg';
 
@@ -11,6 +11,7 @@ interface HeaderProps {
   isOwnerView: boolean;
   onBackToCustomerView: () => void;
   onOpenInstallModal?: () => void;
+  onOpenOrderTracker?: () => void;
   isInstalled?: boolean;
 }
 
@@ -22,6 +23,7 @@ export const Header: React.FC<HeaderProps> = ({
   isOwnerView,
   onBackToCustomerView,
   onOpenInstallModal,
+  onOpenOrderTracker,
   isInstalled = false,
 }) => {
   return (
@@ -84,6 +86,20 @@ export const Header: React.FC<HeaderProps> = ({
               <Smartphone className="w-3.5 h-3.5 text-emerald-200" />
               <span className="hidden sm:inline">Android యాప్</span>
               <span className="sm:hidden">యాప్</span>
+            </button>
+          )}
+
+          {/* Track Order & Feedback button */}
+          {!isOwnerView && onOpenOrderTracker && (
+            <button
+              onClick={onOpenOrderTracker}
+              id="header-track-order-btn"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg text-[#78350F] dark:text-amber-300 bg-amber-50 hover:bg-amber-100 dark:bg-stone-800 dark:hover:bg-stone-700 border border-amber-300/80 dark:border-stone-700 transition-colors font-telugu cursor-pointer"
+              title="ఆర్డర్ స్థితి & ఫీడ్‌బ్యాక్"
+            >
+              <MessageSquareHeart className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
+              <span className="hidden sm:inline">ఆర్డర్ ఫీడ్‌బ్యాక్</span>
+              <span className="sm:hidden">ఫీడ్‌బ్యాక్</span>
             </button>
           )}
 

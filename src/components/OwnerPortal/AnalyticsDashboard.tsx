@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, DollarSign, Package, Gift, Clock, BarChart3, PieChart, Activity } from 'lucide-react';
+import { TrendingUp, DollarSign, Package, Gift, Clock, BarChart3, PieChart, Activity, Star } from 'lucide-react';
 import { AnalyticsData } from '../../types';
 
 interface AnalyticsDashboardProps {
@@ -24,16 +24,16 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
     <div className="space-y-6 font-telugu">
       
       {/* KPI Cards Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         {/* Total Revenue */}
-        <div className="bg-white dark:bg-[#211E1A] p-5 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-xs">
+        <div className="bg-white dark:bg-[#211E1A] p-4 sm:p-5 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-xs">
           <div className="flex items-center justify-between text-stone-500 dark:text-stone-400 mb-2">
             <span className="text-xs font-semibold">మొత్తం ఆదాయం</span>
-            <span className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">
+            <span className="p-1.5 sm:p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">
               ₹
             </span>
           </div>
-          <div className="text-2xl sm:text-3xl font-extrabold text-stone-900 dark:text-stone-100 font-mono">
+          <div className="text-xl sm:text-2xl font-extrabold text-stone-900 dark:text-stone-100 font-mono">
             ₹{analytics.totalRevenue}
           </div>
           <div className="text-[11px] text-emerald-600 font-semibold mt-1">
@@ -42,14 +42,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
         </div>
 
         {/* Total Rotis Sold */}
-        <div className="bg-white dark:bg-[#211E1A] p-5 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-xs">
+        <div className="bg-white dark:bg-[#211E1A] p-4 sm:p-5 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-xs">
           <div className="flex items-center justify-between text-stone-500 dark:text-stone-400 mb-2">
             <span className="text-xs font-semibold">విక్రయించిన రొట్టెలు</span>
-            <span className="p-2 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400">
+            <span className="p-1.5 sm:p-2 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400">
               <Package className="w-4 h-4" />
             </span>
           </div>
-          <div className="text-2xl sm:text-3xl font-extrabold text-stone-900 dark:text-stone-100 font-mono">
+          <div className="text-xl sm:text-2xl font-extrabold text-stone-900 dark:text-stone-100 font-mono">
             {analytics.totalRotisSold}
           </div>
           <div className="text-[11px] text-stone-500 mt-1">
@@ -57,15 +57,32 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
           </div>
         </div>
 
+        {/* Customer Rating & Satisfaction */}
+        <div className="bg-white dark:bg-[#211E1A] p-4 sm:p-5 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-xs">
+          <div className="flex items-center justify-between text-stone-500 dark:text-stone-400 mb-2">
+            <span className="text-xs font-semibold">సగటు రేటింగ్</span>
+            <span className="p-1.5 sm:p-2 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400">
+              <Star className="w-4 h-4 fill-amber-400 text-amber-500" />
+            </span>
+          </div>
+          <div className="text-xl sm:text-2xl font-extrabold text-[#78350F] dark:text-amber-400 font-mono flex items-baseline gap-1">
+            {analytics.averageRating ? analytics.averageRating.toFixed(1) : '5.0'}
+            <span className="text-xs text-stone-400 font-normal">/ 5.0</span>
+          </div>
+          <div className="text-[11px] text-stone-500 mt-1">
+            {analytics.totalFeedbacks || 0} కస్టమర్ సమీక్షలు
+          </div>
+        </div>
+
         {/* Karivepaku Karam Provided */}
-        <div className="bg-white dark:bg-[#211E1A] p-5 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-xs">
+        <div className="bg-white dark:bg-[#211E1A] p-4 sm:p-5 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-xs">
           <div className="flex items-center justify-between text-stone-500 dark:text-stone-400 mb-2">
             <span className="text-xs font-semibold">కరివేపాకు కారం</span>
-            <span className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">
+            <span className="p-1.5 sm:p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">
               <Gift className="w-4 h-4" />
             </span>
           </div>
-          <div className="text-2xl sm:text-3xl font-extrabold text-emerald-700 dark:text-emerald-400 font-mono">
+          <div className="text-xl sm:text-2xl font-extrabold text-emerald-700 dark:text-emerald-400 font-mono">
             {analytics.totalKarivepakuGrams} <span className="text-xs font-normal">గ్రా.</span>
           </div>
           <div className="text-[11px] text-stone-500 mt-1">
@@ -74,14 +91,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
         </div>
 
         {/* Avise Karam Provided */}
-        <div className="bg-white dark:bg-[#211E1A] p-5 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-xs">
+        <div className="bg-white dark:bg-[#211E1A] p-4 sm:p-5 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-xs">
           <div className="flex items-center justify-between text-stone-500 dark:text-stone-400 mb-2">
             <span className="text-xs font-semibold">అవిసె గింజల కారం</span>
-            <span className="p-2 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400">
+            <span className="p-1.5 sm:p-2 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400">
               <Gift className="w-4 h-4" />
             </span>
           </div>
-          <div className="text-2xl sm:text-3xl font-extrabold text-[#78350F] dark:text-amber-400 font-mono">
+          <div className="text-xl sm:text-2xl font-extrabold text-[#78350F] dark:text-amber-400 font-mono">
             {analytics.totalAviseGrams} <span className="text-xs font-normal">గ్రా.</span>
           </div>
           <div className="text-[11px] text-stone-500 mt-1">

@@ -19,13 +19,16 @@ import {
   AlertCircle,
   Play,
   ExternalLink,
-  ShieldCheck
+  ShieldCheck,
+  Star,
+  MessageSquareHeart
 } from 'lucide-react';
-import { Order, FulfillmentStatus, AdminRole, AnalyticsData, AuditLog } from '../../types';
+import { Order, FulfillmentStatus, AdminRole, AnalyticsData, AuditLog, OrderFeedback } from '../../types';
 import { playOrderNotificationSound } from '../../utils/audio';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { AuditLogs } from './AuditLogs';
 import { ExportReportsModal } from './ExportReportsModal';
+import { CustomerFeedbackView } from './CustomerFeedbackView';
 
 interface OwnerDashboardProps {
   role: AdminRole;
@@ -36,7 +39,11 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
   const [orders, setOrders] = useState<Order[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
-  const [activeTab, setActiveTab] = useState<'ORDERS' | 'ANALYTICS' | 'AUDIT'>('ORDERS');
+  const [feedbacks, setFeedbacks] = useState<OrderFeedback[]>([]);
+  const [averageRating, setAverageRating] = useState<number>(5.0);
+  const [totalFeedbacks, setTotalFeedbacks] = useState<number>(0);
+  const [ratingDistribution, setRatingDistribution] = useState<Record<number, number>>({ 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 });
+  const [activeTab, setActiveTab] = useState<'ORDERS' | 'ANALYTICS' | 'FEEDBACK' | 'AUDIT'>('ORDERS');
   
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -88,6 +95,18 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
       if (auditRes.ok) {
         const aLogs = await auditRes.json();
         setAuditLogs(aLogs.logs || []);
+      }
+
+      // 4. Customer Feedbacks & Ratings
+      const feedbackRes = await fetch('/api/feedback');
+      if (feedbackRes.ok) {
+        const fData = await feedbackRes.json();
+        setFeedbacks(fData.feedbacks || []);
+        setAverageRating(fData.averageRating || 5.0);
+        setTotalFeedbacks(fData.total || 0);
+        if (fData.ratingDistribution) {
+          setRatingDistribution(fData.ratingDistribution);
+        }
       }
     } catch (err) {
       console.error('Error fetching owner data:', err);
@@ -271,6 +290,24 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
 
         <button
           type="button"
+          onClick={() => setActiveTab('FEEDBACK')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+            activeTab === 'FEEDBACK'
+              ? 'bg-[#78350F] text-white shadow-sm'
+              : 'text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800'
+          }`}
+        >
+          <MessageSquareHeart className="w-4 h-4" />
+          <span>కస్టమర్ సమీక్షలు ({feedbacks.length})</span>
+          {feedbacks.length > 0 && (
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] bg-amber-200 dark:bg-amber-900/60 text-amber-950 dark:text-amber-200 font-bold">
+              ★ {averageRating.toFixed(1)}
+            </span>
+          )}
+        </button>
+
+        <button
+          type="button"
           onClick={() => setActiveTab('AUDIT')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
             activeTab === 'AUDIT'
@@ -359,6 +396,12 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                         <CheckCircle2 className="w-3 h-3" />
                         <span>UPI ధృవీకరించబడింది</span>
                       </span>
+                      {order.isCustomerReceived && (
+                        <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 font-semibold">
+                          <CheckCircle2 className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                          <span>కస్టమర్ అందుకున్నారు</span>
+                        </span>
+                      )}
                     </div>
 
                     <div className="text-xs text-stone-500 dark:text-stone-400 font-mono">
@@ -463,6 +506,34 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                     </div>
 
                   </div>
+
+                  {/* Customer Post-Order Feedback */}
+                  {order.feedback && (
+                    <div className="pt-3 border-t border-stone-100 dark:border-stone-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs bg-amber-50/60 dark:bg-stone-900/60 p-3 rounded-xl border border-amber-200/80 dark:border-stone-800">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-bold text-[#78350F] dark:text-amber-400 flex items-center gap-1">
+                            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
+                            కస్టమర్ రేటింగ్: {order.feedback.rating}/5
+                          </span>
+                          {order.feedback.aspects && order.feedback.aspects.length > 0 && (
+                            <span className="text-[11px] text-stone-500 font-medium">
+                              ({order.feedback.aspects.length} అంశాలు ఎంపికయ్యాయి)
+                            </span>
+                          )}
+                        </div>
+                        {order.feedback.comments && (
+                          <p className="italic text-stone-800 dark:text-stone-200 text-xs">
+                            "{order.feedback.comments}"
+                          </p>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-stone-400 font-mono whitespace-nowrap">
+                        {order.feedback.createdAtIST}
+                      </span>
+                    </div>
+                  )}
+
                 </div>
               ))
             )}
@@ -475,7 +546,19 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
         <AnalyticsDashboard analytics={analytics} />
       )}
 
-      {/* TAB 3: AUDIT LOGS */}
+      {/* TAB 3: CUSTOMER FEEDBACK & REVIEWS */}
+      {activeTab === 'FEEDBACK' && (
+        <CustomerFeedbackView
+          feedbacks={feedbacks}
+          averageRating={averageRating}
+          totalFeedbacks={totalFeedbacks}
+          ratingDistribution={ratingDistribution}
+          onRefresh={() => fetchDashboardData(true)}
+          isRefreshing={isRefreshing}
+        />
+      )}
+
+      {/* TAB 4: AUDIT LOGS */}
       {activeTab === 'AUDIT' && (
         <AuditLogs logs={auditLogs} />
       )}

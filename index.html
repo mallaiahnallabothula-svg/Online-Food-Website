@@ -4,13 +4,33 @@
     <meta charset="UTF-8" />
     <script>
       (function() {
+        const isViteLog = function(item) {
+          if (!item) return false;
+          const str = typeof item === 'string' ? item : (item.message || String(item));
+          return str.includes('[vite]');
+        };
         const origError = console.error;
         console.error = function(...args) {
-          if (typeof args[0] === 'string' && args[0].includes('[vite]')) {
-            return;
-          }
+          if (args.some(isViteLog)) return;
           origError.apply(console, args);
         };
+        const origWarn = console.warn;
+        console.warn = function(...args) {
+          if (args.some(isViteLog)) return;
+          origWarn.apply(console, args);
+        };
+        window.addEventListener('error', function(e) {
+          if (isViteLog(e.message) || isViteLog(e.error)) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+          }
+        }, true);
+        window.addEventListener('unhandledrejection', function(e) {
+          if (isViteLog(e.reason)) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+          }
+        }, true);
       })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />

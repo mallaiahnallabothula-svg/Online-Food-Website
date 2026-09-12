@@ -10,6 +10,7 @@ import { OwnerDashboard } from './components/OwnerPortal/OwnerDashboard';
 import { AndroidInstallBanner } from './components/AndroidInstallBanner';
 import { AndroidInstallModal } from './components/AndroidInstallModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
+import { OrderTrackingModal } from './components/OrderTrackingModal';
 import { usePWAInstall } from './hooks/usePWAInstall';
 import { OrderingHoursStatus, Order, AdminRole } from './types';
 import { getISTTime, getInitialOrderingStatus } from './utils/time';
@@ -34,6 +35,10 @@ export default function App() {
   const [pendingOrderData, setPendingOrderData] = useState<any | null>(null);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false);
   const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
+
+  // Customer Order Tracking & Post-Order Feedback Modal
+  const [isOrderTrackingOpen, setIsOrderTrackingOpen] = useState<boolean>(false);
+  const [trackingOrderId, setTrackingOrderId] = useState<string>('');
 
   // PWA Install state
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
@@ -109,6 +114,22 @@ export default function App() {
     setIsPaymentModalOpen(false);
     setConfirmedOrder(newConfirmedOrder);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Store in customer local orders list for tracking & feedback
+    try {
+      const stored = localStorage.getItem('smjr_customer_orders');
+      const list = stored ? JSON.parse(stored) : [];
+      const updatedList = [
+        {
+          id: newConfirmedOrder.id,
+          date: newConfirmedOrder.deliveryDate || newConfirmedOrder.createdAtIST,
+          qty: newConfirmedOrder.quantity,
+          status: newConfirmedOrder.fulfillmentStatus
+        },
+        ...list.filter((item: any) => item.id !== newConfirmedOrder.id)
+      ].slice(0, 10);
+      localStorage.setItem('smjr_customer_orders', JSON.stringify(updatedList));
+    } catch {}
   };
 
   // Reset to order new rotis
@@ -156,6 +177,7 @@ export default function App() {
         isOwnerView={currentView !== 'CUSTOMER'}
         onBackToCustomerView={() => setCurrentView('CUSTOMER')}
         onOpenInstallModal={() => setIsInstallModalOpen(true)}
+        onOpenOrderTracker={() => setIsOrderTrackingOpen(true)}
         isInstalled={isInstalled}
       />
 
@@ -168,6 +190,7 @@ export default function App() {
               <OrderConfirmation
                 order={confirmedOrder}
                 onNewOrder={handleNewOrder}
+                onOrderUpdated={(updated) => setConfirmedOrder(updated)}
               />
             ) : (
               <>
@@ -289,6 +312,13 @@ export default function App() {
         isInstallable={isInstallable}
         onInstall={install}
         isIOS={isIOS}
+      />
+
+      {/* Customer Order Tracking & Feedback Modal */}
+      <OrderTrackingModal
+        isOpen={isOrderTrackingOpen}
+        onClose={() => setIsOrderTrackingOpen(false)}
+        initialOrderId={trackingOrderId}
       />
 
       {/* Offline Status Toast Indicator */}
