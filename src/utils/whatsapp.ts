@@ -7,23 +7,74 @@ import { Order } from '../types';
 export const OWNER_PHONE = '8499865803';
 export const OWNER_PHONE_DISPLAY = '+91 8499865803';
 
-export function buildWhatsAppTicket(order: Order): string {
+export function buildWhatsAppTicket(order: Order, lang: 'te' | 'en' = 'te'): string {
   // Free karams string formatting
   const karamLines: string[] = [];
   if (order.karamSelection.karivepaku && order.karamQuantities.karivepakuGrams > 0) {
-    karamLines.push(`• కరివేపాకు కారం: ${order.karamQuantities.karivepakuGrams} గ్రా.`);
+    karamLines.push(
+      lang === 'en'
+        ? `• Curry Leaf Podi: ${order.karamQuantities.karivepakuGrams}g`
+        : `• కరివేపాకు కారం: ${order.karamQuantities.karivepakuGrams} గ్రా.`
+    );
   }
   if (order.karamSelection.aviseGinjalu && order.karamQuantities.aviseGinjaluGrams > 0) {
-    karamLines.push(`• అవిసె గింజల కారం: ${order.karamQuantities.aviseGinjaluGrams} గ్రా.`);
+    karamLines.push(
+      lang === 'en'
+        ? `• Flax Seeds Podi: ${order.karamQuantities.aviseGinjaluGrams}g`
+        : `• అవిసె గింజల కారం: ${order.karamQuantities.aviseGinjaluGrams} గ్రా.`
+    );
   }
 
   const freeKaramSection = karamLines.length > 0
     ? karamLines.join('\n')
-    : 'ఏమీ ఎంచుకోలేదు';
+    : (lang === 'en' ? 'None selected' : 'ఏమీ ఎంచుకోలేదు');
 
-  // Build the message blocks
+  const paymentStatusLine = order.paymentStatus === 'PAY_ON_DELIVERY'
+    ? (lang === 'en' ? '💵 *Payment:* Pay on Delivery (Cash / UPI)' : '💵 *చెల్లింపు:* డెలివరీ వద్ద చెల్లింపు (Cash / UPI)')
+    : (lang === 'en' ? '✅ *Payment:* Online UPI — Completed' : '✅ *చెల్లింపు:* ఆన్‌లైన్ UPI — పూర్తయింది');
+
+  if (lang === 'en') {
+    const parts: string[] = [
+      '🧾 *Mana Enti Vanta (మన ఇంటి వంట)*',
+      'Authentic Village Jowar Rotis • Kolluru',
+      '*Order Details*',
+      '',
+      `🎫 *Order ID:* ${order.id}`,
+      `📅 *Order Time:* ${order.createdAtIST}`,
+      '',
+      `👤 *Customer Name:* ${order.customer.name}`,
+      `📞 *Mobile:* +91 ${order.customer.mobile}`,
+      '',
+      `🫓 *Jowar Rotis:* ${order.quantity}`,
+      `💵 *Price per Roti:* ₹${order.pricePerRoti}`,
+      '',
+      '🎁 *Free Karams:*',
+      freeKaramSection,
+      '',
+      `💰 *Total Amount:* ₹${order.totalPaid}`,
+      paymentStatusLine,
+      `🔖 *Payment Ref:* ${order.paymentReference}`,
+      '',
+      `🚚 *Delivery Date:* ${order.deliveryDate}`,
+      `🕕 *Delivery Window:* ${order.deliveryWindow}`,
+      `📍 *Address:* ${order.customer.address}`,
+    ];
+
+    if (order.customer.landmark && order.customer.landmark.trim().length > 0) {
+      parts.push(`🏠 *Landmark:* ${order.customer.landmark.trim()}`);
+    }
+
+    if (order.customer.locationLink && order.customer.locationLink.trim().length > 0) {
+      parts.push(`🗺️ *Location:* ${order.customer.locationLink.trim()}`);
+    }
+
+    return parts.join('\n');
+  }
+
+  // Build Telugu message blocks
   const parts: string[] = [
-    '🧾 *శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు*',
+    '🧾 *మన ఇంటి వంట (Mana Enti Vanta)*',
+    'అచ్చమైన పల్లెటూరి జొన్న రొట్టెలు • కొల్లూరు',
     '*ఆర్డర్ వివరాలు*',
     '',
     `🎫 *ఆర్డర్ నంబర్:* ${order.id}`,
@@ -39,7 +90,7 @@ export function buildWhatsAppTicket(order: Order): string {
     freeKaramSection,
     '',
     `💰 *చెల్లించిన మొత్తం:* ₹${order.totalPaid}`,
-    '✅ *చెల్లింపు:* UPI — పూర్తయింది',
+    paymentStatusLine,
     `🔖 *పేమెంట్ రిఫరెన్స్:* ${order.paymentReference}`,
     '',
     `🚚 *డెలివరీ తేదీ:* ${order.deliveryDate}`,
@@ -62,8 +113,8 @@ export function buildWhatsAppTicket(order: Order): string {
 /**
  * Generate full WhatsApp web / mobile click link to open chat with owner
  */
-export function getWhatsAppUrl(order: Order): string {
-  const ticket = buildWhatsAppTicket(order);
+export function getWhatsAppUrl(order: Order, lang: 'te' | 'en' = 'te'): string {
+  const ticket = buildWhatsAppTicket(order, lang);
   const encodedText = encodeURIComponent(ticket);
   return `https://wa.me/91${OWNER_PHONE}?text=${encodedText}`;
 }

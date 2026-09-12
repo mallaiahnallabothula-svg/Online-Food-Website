@@ -95,11 +95,18 @@ export interface OrderingHoursStatus {
   currentHourIST: number;
   currentMinuteIST: number;
   openTimeStr: string;
+  openTimeStrEn?: string;
   closeTimeStr: string;
+  closeTimeStrEn?: string;
   nextOpenMessage: string;
+  nextOpenMessageEn?: string;
   deliveryWindowStr: string;
+  deliveryWindowStrEn?: string;
   deliveryDate?: string;
+  deliveryDateEn?: string;
   currentDateIST?: string;
+  currentDateISTEn?: string;
   deliveryWindow?: string;
+  deliveryWindowEn?: string;
   isLiveBatchHours?: boolean;
 }

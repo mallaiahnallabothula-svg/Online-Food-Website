@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Minus, Check, MapPin, AlertCircle, Sparkles, ShieldCheck, ArrowRight, Navigation, Gift, CheckCircle2, ExternalLink } from 'lucide-react';
+import { Plus, Minus, Check, MapPin, AlertCircle, Sparkles, ShieldCheck, ArrowRight, Navigation, Gift, CheckCircle2, ExternalLink, Leaf } from 'lucide-react';
 import { KaramSelection, CustomerDetails, OrderingHoursStatus } from '../types';
 import { PRESET_LOCALITIES, checkKollurDeliveryEligibility, KOLLUR_CENTER } from '../data/kollurAreas';
-import karivepakuKaramImg from '../assets/images/karivepaku_karam_podi_1789125808536.jpg';
-import aviseKaramImg from '../assets/images/avise_ginjala_karam_1789125831933.jpg';
+import { useLanguage } from '../context/LanguageContext';
 
 interface OrderFormProps {
   hoursStatus: OrderingHoursStatus;
@@ -24,6 +23,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   allowOutsideHours,
   onProceedToPayment,
 }) => {
+  const { t, language } = useLanguage();
+
   // Quantity (minimum 5)
   const [quantity, setQuantity] = useState<number>(5);
 
@@ -53,7 +54,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   // Handlers for single vs dual karam choices
   const handleSelectKarivepaku = () => {
     if (!canSelectBoth) {
-      // Single choice mode: either this or that
+      // Single choice mode
       setKaramSelection({
         karivepaku: true,
         aviseGinjalu: false,
@@ -69,7 +70,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
   const handleSelectAviseGinjalu = () => {
     if (!canSelectBoth) {
-      // Single choice mode: either this or that
+      // Single choice mode
       setKaramSelection({
         karivepaku: false,
         aviseGinjalu: true,
@@ -97,7 +98,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const [mobileNumber, setMobileNumber] = useState<string>('');
   const [address, setAddress] = useState<string>('');
   const [landmark, setLandmark] = useState<string>('');
-  const [selectedPresetArea, setSelectedPresetArea] = useState<string>('కొల్లూరు గ్రామం (కేంద్రం)');
+  const [selectedPresetArea, setSelectedPresetArea] = useState<string>(PRESET_LOCALITIES[0].nameTe);
   const [customLocationLink, setCustomLocationLink] = useState<string>('');
   const [currentDistanceKm, setCurrentDistanceKm] = useState<number>(0.5);
 
@@ -106,10 +107,12 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     isEligible: boolean;
     distanceKm: number;
     messageTe: string;
+    messageEn: string;
   }>({
     isEligible: true,
     distanceKm: 0.5,
     messageTe: 'ఉచిత డెలివరీ అందుబాటులో ఉంది (కొల్లూరు నుండి దూరం: 0.5 కి.మీ.).',
+    messageEn: 'Free delivery available (Distance from Kolluru center: 0.5 km).',
   });
 
   // Form errors
@@ -128,13 +131,15 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const aviseGinjaluGrams = karamSelection.aviseGinjalu ? gramsPerSelected : 0;
 
   // Delivery date & fixed window
-  const deliveryWindow = 'సాయంత్రం 6–8 గంటలు';
-  const deliveryDateStr = hoursStatus.currentDateIST || 'నేడు (Today)';
+  const deliveryWindow = language === 'en' ? 'Evening 6:00 – 8:00 PM' : 'సాయంత్రం 6:00 – 8:00 గంటలు';
+  const deliveryDateStr = language === 'en'
+    ? (hoursStatus.currentDateISTEn || hoursStatus.currentDateIST || 'Today')
+    : (hoursStatus.currentDateIST || 'నేడు');
 
   // Handle preset locality change
-  const handleLocalityChange = (areaName: string) => {
-    setSelectedPresetArea(areaName);
-    const matched = PRESET_LOCALITIES.find(p => p.nameTe === areaName);
+  const handleLocalityChange = (areaIdentifier: string) => {
+    setSelectedPresetArea(areaIdentifier);
+    const matched = PRESET_LOCALITIES.find(p => p.nameTe === areaIdentifier || p.nameEn === areaIdentifier);
     if (matched) {
       setCurrentDistanceKm(matched.distanceKm);
       const res = checkKollurDeliveryEligibility(matched.lat, matched.lng, matched.distanceKm);
@@ -148,12 +153,18 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   // 1-Click Auto-Receive GPS Location
   const handleDetectGPSLocation = () => {
     if (!navigator.geolocation) {
-      setLocationFeedback('మీ డివైస్‌లో లొకేషన్ సదుపాయం అందుబాటులో లేదు. దయచేసి జాబితా నుండి ఎంచుకోండి.');
+      setLocationFeedback(
+        language === 'en'
+          ? 'Geolocation is not supported on this device. Please select an area from list.'
+          : 'మీ డివైస్‌లో లొకేషన్ సదుపాయం అందుబాటులో లేదు. దయచేసి జాబితా నుండి ఎంచుకోండి.'
+      );
       return;
     }
 
     setIsLocating(true);
-    setLocationFeedback('మీ ప్రస్తుత GPS లొకేషన్‌ను గుర్తిస్తోంది...');
+    setLocationFeedback(
+      language === 'en' ? 'Detecting your current GPS location...' : 'మీ ప్రస్తుత GPS లొకేషన్‌ను గుర్తిస్తోంది...'
+    );
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -165,12 +176,20 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         setDeliveryEligibility(res);
         const generatedLink = `https://www.google.com/maps?q=${lat.toFixed(6)},${lng.toFixed(6)}`;
         setCustomLocationLink(generatedLink);
-        setSelectedPresetArea('GPS ద్వారా గుర్తించబడిన లొకేషన్');
-        setLocationFeedback(`లొకేషన్ విజయవంతంగా స్వీకరించబడింది (${res.distanceKm} కి.మీ.)`);
+        setSelectedPresetArea(language === 'en' ? 'GPS Detected Location' : 'GPS ద్వారా గుర్తించబడిన లొకేషన్');
+        setLocationFeedback(
+          language === 'en'
+            ? `Location captured successfully (${res.distanceKm} km from Kolluru)`
+            : `లొకేషన్ విజయవంతంగా స్వీకరించబడింది (${res.distanceKm} కి.మీ.)`
+        );
       },
-      (err) => {
+      () => {
         setIsLocating(false);
-        setLocationFeedback('లొకేషన్ అనుమతి లభించలేదు. దయచేసి జాబితా నుండి ఎంచుకోండి లేదా మాన్యువల్ గా నమోదు చేయండి.');
+        setLocationFeedback(
+          language === 'en'
+            ? 'Location permission denied. Please select from the dropdown or enter address manually.'
+            : 'లొకేషన్ అనుమతి లభించలేదు. దయచేసి జాబితా నుండి ఎంచుకోండి లేదా మాన్యువల్ గా నమోదు చేయండి.'
+        );
       },
       { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
     );
@@ -180,19 +199,24 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const incrementQuantity = () => setQuantity(q => q + 1);
   const decrementQuantity = () => setQuantity(q => (q > 5 ? q - 1 : 5));
 
-  // Validation & Auto-scroll
+  // Quick Demo Fill
   const handleQuickDemoFill = () => {
-    setCustomerName('మల్లయ్య గారు');
+    setCustomerName(language === 'en' ? 'Suresh Kumar' : 'సురేష్ కుమార్');
     setMobileNumber('8499865803');
-    setSelectedPresetArea('కొల్లూరు గ్రామం (కేంద్రం)');
+    setSelectedPresetArea(language === 'en' ? PRESET_LOCALITIES[0].nameEn : PRESET_LOCALITIES[0].nameTe);
     setCurrentDistanceKm(0.5);
     setDeliveryEligibility({
       isEligible: true,
       distanceKm: 0.5,
       messageTe: 'ఉచిత డెలివరీ అందుబాటులో ఉంది (కొల్లూరు నుండి దూరం: 0.5 కి.మీ.).',
+      messageEn: 'Free delivery available (Distance from Kolluru center: 0.5 km).',
     });
-    setAddress('ఇంటి నెం. 2-45, రామాలయం వీధి, కొల్లూరు గ్రామం');
-    setLandmark('గ్రామ పంచాయతీ ఎదురుగా');
+    setAddress(
+      language === 'en'
+        ? 'Flat 202, Sri Sai Residency, Main Road, Kolluru Village'
+        : 'ఇంటి నెం. 2-45, రామాలయం వీధి, కొల్లూరు గ్రామం'
+    );
+    setLandmark(language === 'en' ? 'Near Gram Panchayat' : 'గ్రామ పంచాయతీ ఎదురుగా');
     setCustomLocationLink('https://maps.google.com/?q=17.4782,78.2323');
     setErrors({});
   };
@@ -202,31 +226,31 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     let firstErrorElementId = '';
 
     if (!customerName.trim()) {
-      errs.customerName = 'దయచేసి మీ పూర్తి పేరు నమోదు చేయండి.';
+      errs.customerName = t.errCustomerName;
       if (!firstErrorElementId) firstErrorElementId = 'customer-name-input';
     }
 
     const cleanMobile = mobileNumber.replace(/\D/g, '');
     if (!cleanMobile) {
-      errs.mobileNumber = 'దయచేసి మొబైల్ నంబర్ నమోదు చేయండి.';
+      errs.mobileNumber = t.errMobileEmpty;
       if (!firstErrorElementId) firstErrorElementId = 'customer-mobile-input';
     } else if (cleanMobile.length !== 10) {
-      errs.mobileNumber = 'సరైన 10 అంకెల మొబైల్ నంబర్ నమోదు చేయండి (ఉదా: 8499865803).';
+      errs.mobileNumber = t.errMobileDigits;
       if (!firstErrorElementId) firstErrorElementId = 'customer-mobile-input';
     }
 
     if (!address.trim()) {
-      errs.address = 'దయచేసి పూర్తి డెలివరీ చిరునామా (ఇంటి నం, కాలనీ) నమోదు చేయండి.';
+      errs.address = t.errAddress;
       if (!firstErrorElementId) firstErrorElementId = 'customer-address-input';
     }
 
     if (!deliveryEligibility.isEligible) {
-      errs.delivery = `కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధి దాటింది (${deliveryEligibility.distanceKm} కి.మీ.). ఉచిత డెలివరీ కేవలం 5 కి.మీ. లోపలే సాధ్యం.`;
+      errs.delivery = t.errDistance;
       if (!firstErrorElementId) firstErrorElementId = 'locality-select';
     }
 
     if (!karamSelection.karivepaku && !karamSelection.aviseGinjalu) {
-      errs.karam = 'దయచేసి కనీసం ఒక ఉచిత కారాన్ని ఎంచుకోండి (కరివేపాకు లేదా అవిసె గింజల కారం).';
+      errs.karam = t.errKaram;
       if (!firstErrorElementId) firstErrorElementId = 'karam-card-karivepaku';
     }
 
@@ -271,6 +295,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   };
 
   const isOrderBlockedByHours = !hoursStatus.isOpen && !allowOutsideHours;
+  const currentEligibilityMessage = language === 'en' ? deliveryEligibility.messageEn : deliveryEligibility.messageTe;
 
   return (
     <div id="order-section" className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
@@ -284,10 +309,10 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             </span>
             <div>
               <h2 className="text-xl font-bold text-[#451A03] dark:text-amber-100 font-telugu">
-                జొన్న రొట్టెల సంఖ్య ఎంచుకోండి
+                {t.selectQuantityTitle}
               </h2>
               <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 font-telugu">
-                తాజా మధ్యస్థ పరిమాణపు జొన్న రొట్టె | ఒక్కొక్కటి ₹30 (కనీసం 5 రొట్టెలు)
+                {t.selectQuantitySubtitle}
               </p>
             </div>
           </div>
@@ -301,8 +326,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   onClick={decrementQuantity}
                   disabled={quantity <= 5}
                   id="qty-decrement-btn"
-                  className="w-12 h-12 rounded-xl bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 flex items-center justify-center hover:bg-amber-100 dark:hover:bg-stone-700 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs transition-all"
-                  aria-label="తగ్గించండి"
+                  className="w-12 h-12 rounded-xl bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 flex items-center justify-center hover:bg-amber-100 dark:hover:bg-stone-700 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs transition-all cursor-pointer"
+                  aria-label="Decrease quantity"
                 >
                   <Minus className="w-5 h-5" />
                 </button>
@@ -312,7 +337,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                     {quantity}
                   </span>
                   <span className="block text-[11px] font-semibold text-stone-600 dark:text-stone-400 font-telugu">
-                    రొట్టెలు
+                    {t.rotisUnit}
                   </span>
                 </div>
 
@@ -320,8 +345,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   type="button"
                   onClick={incrementQuantity}
                   id="qty-increment-btn"
-                  className="w-12 h-12 rounded-xl bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 flex items-center justify-center hover:bg-amber-100 dark:hover:bg-stone-700 active:scale-95 shadow-xs transition-all"
-                  aria-label="పెంచండి"
+                  className="w-12 h-12 rounded-xl bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 flex items-center justify-center hover:bg-amber-100 dark:hover:bg-stone-700 active:scale-95 shadow-xs transition-all cursor-pointer"
+                  aria-label="Increase quantity"
                 >
                   <Plus className="w-5 h-5" />
                 </button>
@@ -334,13 +359,13 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                     key={num}
                     type="button"
                     onClick={() => setQuantity(num)}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-bold font-mono transition-all ${
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer ${
                       quantity === num
                         ? 'bg-[#78350F] text-white shadow-xs'
                         : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-amber-100 dark:hover:bg-stone-700'
                     }`}
                   >
-                    {num} రొట్టెలు
+                    {num} {t.rotisUnit}
                   </button>
                 ))}
               </div>
@@ -348,7 +373,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
             {/* Live Subtotal Card */}
             <div className="md:col-span-5 bg-amber-50/70 dark:bg-stone-900/60 p-4 rounded-xl border border-amber-200 dark:border-stone-800 flex flex-col justify-center text-right font-telugu">
-              <span className="text-xs text-stone-600 dark:text-stone-400">రొట్టెల ఉపమొత్తం (Subtotal):</span>
+              <span className="text-xs text-stone-600 dark:text-stone-400">{t.subtotalLabel}</span>
               <div className="flex items-baseline justify-end gap-1.5 mt-0.5">
                 <span className="text-xs font-mono text-stone-500">{quantity} × ₹30 =</span>
                 <span className="text-2xl sm:text-3xl font-extrabold text-[#78350F] dark:text-amber-400 font-mono">
@@ -356,7 +381,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                 </span>
               </div>
               <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold mt-1">
-                ✓ కొల్లూరు పరిధిలో ఉచిత డెలివరీ
+                {t.freeKollurDeliveryBadge}
               </span>
             </div>
           </div>
@@ -371,22 +396,20 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             <div className="flex-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-xl font-bold text-[#451A03] dark:text-amber-100 font-telugu">
-                  ఉచిత కారాలు (Free Karam Selection)
+                  {t.freeKaramsSectionTitle}
                 </h2>
                 {canSelectBoth ? (
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-telugu">
-                    🎉 రెండు కారాలూ ఎంచుకోవచ్చు! (10+ రొట్టెలు)
+                    {t.bothKaramsAllowedBadge}
                   </span>
                 ) : (
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 font-telugu">
-                    ఏదైనా ఒకటి మాత్రమే (10 రొట్టెల వరకు)
+                    {t.singleKaramAllowedBadge}
                   </span>
                 )}
               </div>
               <p className="text-xs sm:text-sm text-stone-600 dark:text-stone-400 font-telugu mt-0.5">
-                {canSelectBoth
-                  ? 'మీరు 10 కంటే ఎక్కువ రొట్టెలు ఆర్డర్ చేస్తున్నారు! కరివేపాకు మరియు అవిసె గింజల కారం రెండింటినీ ఉచితంగా ఎంచుకోవచ్చు.'
-                  : '10 రొట్టెల వరకు ఒక కారం మాత్రమే (కరివేపాకు లేదా అవిసె గింజల కారం) ఉచితంగా ఎంచుకోవచ్చు.'}
+                {canSelectBoth ? t.bothKaramsNotice : t.singleKaramNotice}
               </p>
             </div>
           </div>
@@ -397,7 +420,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2 text-emerald-900 dark:text-emerald-200 font-bold text-sm">
                   <Gift className="w-5 h-5 text-emerald-700 dark:text-emerald-400 flex-shrink-0" />
-                  <span>🎉 10 రొట్టెల కంటే ఎక్కువ ({quantity}) ఆర్డర్ చేస్తున్నారు - రెండు కారాలూ ఉచితం!</span>
+                  <span>{t.bothKaramsBannerTitle}</span>
                 </div>
                 <button
                   type="button"
@@ -405,29 +428,29 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   id="select-both-karams-btn"
                   className="px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs transition-colors cursor-pointer"
                 >
-                  రెండు కారాలనూ ఎంచుకోండి (Select Both)
+                  {t.selectBothKaramsBtn}
                 </button>
               </div>
               <div className="text-xs text-emerald-800 dark:text-emerald-300">
-                మీరు ఎంచుకున్న ప్రతి కారం: <strong className="font-mono font-bold">{gramsPerSelected} గ్రాములు</strong> ఉచితం. (రెండూ కలిపి మొత్తం <strong className="font-mono">{gramsPerSelected * 2} గ్రాములు</strong>).
+                {t.eachKaramFreeGrams} <strong className="font-mono font-bold">{gramsPerSelected} {t.gramsUnit}</strong> {t.freeGramsSuffix}. ({t.totalGramsSuffix} <strong className="font-mono">{gramsPerSelected * 2} {t.gramsUnit}</strong>).
               </div>
             </div>
           ) : (
             <div className="my-5 p-4 rounded-xl bg-amber-50/90 dark:bg-stone-900/90 border border-amber-300 dark:border-stone-700 font-telugu space-y-1.5">
               <div className="flex items-center gap-2 text-[#78350F] dark:text-amber-300 font-bold text-xs sm:text-sm">
                 <Gift className="w-4 h-4 flex-shrink-0" />
-                <span>ఒక కారం మాత్రమే ఉచితం (కరివేపాకు లేదా అవిసె గింజల కారం)</span>
+                <span>{t.singleKaramBannerTitle}</span>
               </div>
               <p className="text-xs text-stone-700 dark:text-stone-300">
-                మీరు <strong>{quantity}</strong> రొట్టెలు ఎంచుకున్నారు (10 లేదా అంతకంటే తక్కువ). కావున ఏదైనా ఒక కారాన్ని మాత్రమే ఎంచుకోవచ్చు (<strong className="font-mono">{gramsPerSelected} గ్రాములు</strong> ఉచితం).
+                {t.singleKaramBannerDesc.replace('{quantity}', quantity.toString()).replace('{grams}', gramsPerSelected.toString())}
                 <span className="block text-[#78350F] dark:text-amber-400 font-bold mt-1">
-                  💡 సలహా: 10 కంటే ఎక్కువ (11+) రొట్టెలు ఆర్డర్ చేస్తే రెండు కారాలనూ ఉచితంగా పొందవచ్చు!
+                  {t.singleKaramBannerTip}
                 </span>
               </p>
             </div>
           )}
 
-          {/* Karam Selection Cards with Authentic Photos */}
+          {/* Karam Selection Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-telugu">
             {/* Option 1: Karivepaku Karam */}
             <div
@@ -440,7 +463,6 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               }`}
             >
               <div className="flex items-center sm:items-start gap-3">
-                {/* Radio for <= 10, Checkbox for > 10 */}
                 <div className="pt-0.5">
                   {!canSelectBoth ? (
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
@@ -461,30 +483,24 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   )}
                 </div>
 
-                {/* Photo Thumbnail */}
-                <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 border border-emerald-900/20 shadow-xs">
-                  <img
-                    src={karivepakuKaramImg}
-                    alt="స్వచ్ఛమైన కరివేపాకు కారం"
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 flex items-center justify-center flex-shrink-0 shadow-xs">
+                  <Leaf className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-700 dark:text-emerald-400" />
                 </div>
               </div>
 
               <div className="space-y-1 flex-1">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-stone-900 dark:text-stone-100">
-                    కరివేపాకు కారం
+                    {t.karivepakuTitle}
                   </span>
                   {!canSelectBoth && (
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-stone-800 text-amber-900 dark:text-amber-200">
-                      ఆప్షన్ A
+                      {t.optionA}
                     </span>
                   )}
                 </div>
                 <p className="text-xs text-stone-600 dark:text-stone-400 leading-tight">
-                  స్వచ్ఛమైన తాజా కరివేపాకు, ఎండుమిర్చి, వెల్లుల్లితో రోట్లో దంచినట్లు సిద్ధం చేసిన కారం
+                  {t.karivepakuDesc}
                 </p>
                 <div className="pt-1.5 flex items-center justify-between flex-wrap gap-1">
                   <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${
@@ -492,7 +508,9 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                       ? 'bg-emerald-600 text-white font-mono'
                       : 'bg-stone-200 dark:bg-stone-800 text-stone-500'
                   }`}>
-                    {karamSelection.karivepaku ? `${karivepakuGrams} గ్రా. ఉచితం` : 'ఎంపిక కాలేదు'}
+                    {karamSelection.karivepaku 
+                      ? `${karivepakuGrams} ${t.gramsUnit} ${t.freeGramsSuffix}` 
+                      : t.notSelected}
                   </span>
                 </div>
               </div>
@@ -509,7 +527,6 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               }`}
             >
               <div className="flex items-center sm:items-start gap-3">
-                {/* Radio for <= 10, Checkbox for > 10 */}
                 <div className="pt-0.5">
                   {!canSelectBoth ? (
                     <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
@@ -530,30 +547,24 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   )}
                 </div>
 
-                {/* Photo Thumbnail */}
-                <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 border border-amber-900/20 shadow-xs">
-                  <img
-                    src={aviseKaramImg}
-                    alt="అవిసె గింజల కారం"
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-amber-100 dark:bg-amber-950/60 border border-amber-300 dark:border-amber-800 flex items-center justify-center flex-shrink-0 shadow-xs">
+                  <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 text-amber-700 dark:text-amber-400" />
                 </div>
               </div>
 
               <div className="space-y-1 flex-1">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-base text-stone-900 dark:text-stone-100">
-                    అవిసె గింజల కారం
+                    {t.aviseTitle}
                   </span>
                   {!canSelectBoth && (
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 dark:bg-stone-800 text-amber-900 dark:text-amber-200">
-                      ఆప్షన్ B
+                      {t.optionB}
                     </span>
                   )}
                 </div>
                 <p className="text-xs text-stone-600 dark:text-stone-400 leading-tight">
-                  వేయించిన నాణ్యమైన అవిసె గింజలు (Flaxseeds), ఎండుమిర్చిల సంప్రదాయ ఘుమఘుమలాడే కారం
+                  {t.aviseDesc}
                 </p>
                 <div className="pt-1.5 flex items-center justify-between flex-wrap gap-1">
                   <span className={`text-xs font-bold px-2 py-0.5 rounded-md ${
@@ -561,7 +572,9 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                       ? 'bg-emerald-600 text-white font-mono'
                       : 'bg-stone-200 dark:bg-stone-800 text-stone-500'
                   }`}>
-                    {karamSelection.aviseGinjalu ? `${aviseGinjaluGrams} గ్రా. ఉచితం` : 'ఎంపిక కాలేదు'}
+                    {karamSelection.aviseGinjalu 
+                      ? `${aviseGinjaluGrams} ${t.gramsUnit} ${t.freeGramsSuffix}` 
+                      : t.notSelected}
                   </span>
                 </div>
               </div>
@@ -578,10 +591,10 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               </span>
               <div>
                 <h2 className="text-xl font-bold text-[#451A03] dark:text-amber-100 font-telugu">
-                  కస్టమర్ వివరాలు & డెలివరీ చిరునామా
+                  {t.customerDetailsSectionTitle}
                 </h2>
                 <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 font-telugu">
-                  కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధిలో ఉచిత హోమ్ డెలివరీ
+                  {t.customerDetailsSectionSub}
                 </p>
               </div>
             </div>
@@ -590,11 +603,11 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             <button
               type="button"
               onClick={handleQuickDemoFill}
-              className="px-3.5 py-1.5 rounded-xl bg-amber-100 dark:bg-stone-800 hover:bg-amber-200 dark:hover:bg-stone-700 text-[#78350F] dark:text-amber-300 font-bold text-xs flex items-center gap-1.5 transition-all self-end sm:self-auto border border-amber-300 dark:border-stone-700 font-telugu"
-              title="టెస్ట్ చేయడానికి ఒకే క్లిక్‌తో నమూనా వివరాలను నింపండి"
+              className="px-3.5 py-1.5 rounded-xl bg-amber-100 dark:bg-stone-800 hover:bg-amber-200 dark:hover:bg-stone-700 text-[#78350F] dark:text-amber-300 font-bold text-xs flex items-center gap-1.5 transition-all self-end sm:self-auto border border-amber-300 dark:border-stone-700 font-telugu cursor-pointer"
+              title={t.sampleFillTitle}
             >
               <Sparkles className="w-3.5 h-3.5" />
-              <span>నమూనా వివరాలు నింపండి</span>
+              <span>{t.sampleFillBtn}</span>
             </button>
           </div>
 
@@ -603,14 +616,14 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             {/* Customer Name */}
             <div>
               <label htmlFor="customer-name-input" className="block text-sm font-bold text-stone-800 dark:text-stone-200 mb-1.5">
-                కస్టమర్ పూర్తి పేరు <span className="text-red-600">*</span>
+                {t.customerNameLabel} <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
                 id="customer-name-input"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="ఉదాహరణ: సురేష్ కుమార్"
+                placeholder={t.customerNamePlaceholder}
                 className={`w-full px-4 py-3 rounded-xl border bg-[#FDFBF7] dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#78350F] transition-all ${
                   errors.customerName ? 'border-red-500 ring-1 ring-red-500' : 'border-stone-300 dark:border-stone-700'
                 }`}
@@ -626,7 +639,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             {/* Customer Mobile with Fixed +91 Prefix */}
             <div>
               <label htmlFor="customer-mobile-input" className="block text-sm font-bold text-stone-800 dark:text-stone-200 mb-1.5">
-                మొబైల్ సంఖ్య (10 అంకెలు) <span className="text-red-600">*</span>
+                {t.customerMobileLabel} <span className="text-red-600">*</span>
               </label>
               <div className="flex rounded-xl overflow-hidden shadow-xs border border-stone-300 dark:border-stone-700 focus-within:ring-2 focus-within:ring-[#78350F]">
                 <div className="bg-stone-100 dark:bg-stone-800 px-4 py-3 flex items-center border-r border-stone-300 dark:border-stone-700 text-stone-700 dark:text-stone-300 font-mono font-bold text-sm">
@@ -654,7 +667,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             <div>
               <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
                 <label htmlFor="locality-select" className="text-sm font-bold text-stone-800 dark:text-stone-200">
-                  డెలివరీ ప్రాంతం (కొల్లూరు 5 కి.మీ. పరిధి) <span className="text-red-600">*</span>
+                  {t.deliveryAreaLabel} <span className="text-red-600">*</span>
                 </label>
 
                 {/* GPS current location button */}
@@ -663,10 +676,10 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   onClick={handleDetectGPSLocation}
                   disabled={isLocating}
                   id="detect-gps-btn"
-                  className="inline-flex items-center gap-1 text-xs text-[#78350F] dark:text-amber-400 font-semibold hover:underline"
+                  className="inline-flex items-center gap-1 text-xs text-[#78350F] dark:text-amber-400 font-semibold hover:underline cursor-pointer"
                 >
                   <Navigation className={`w-3.5 h-3.5 ${isLocating ? 'animate-spin' : ''}`} />
-                  <span>{isLocating ? 'గుర్తిస్తోంది...' : 'నా ప్రస్తుత GPS లొకేషన్ గుర్తించండి'}</span>
+                  <span>{isLocating ? t.detectingGps : t.detectGpsBtn}</span>
                 </button>
               </div>
 
@@ -674,13 +687,20 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                 id="locality-select"
                 value={selectedPresetArea}
                 onChange={(e) => handleLocalityChange(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-[#FDFBF7] dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#78350F] text-sm"
+                className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-[#FDFBF7] dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#78350F] text-sm cursor-pointer"
               >
-                {PRESET_LOCALITIES.map((loc) => (
-                  <option key={loc.nameTe} value={loc.nameTe}>
-                    {loc.nameTe} ({loc.distanceKm} కి.మీ. {loc.isEligible ? '— ఉచిత డెలివరీ' : '— 5 కి.మీ. దాటింది'})
-                  </option>
-                ))}
+                {PRESET_LOCALITIES.map((loc) => {
+                  const areaName = language === 'en' ? loc.nameEn : loc.nameTe;
+                  const tag = loc.isEligible 
+                    ? `— ${t.freeDeliveryTag}` 
+                    : `— ${t.outside5kmTag}`;
+                  const distUnit = language === 'en' ? 'km' : 'కి.మీ.';
+                  return (
+                    <option key={loc.nameTe} value={loc.nameTe}>
+                      {areaName} ({loc.distanceKm} {distUnit} {tag})
+                    </option>
+                  );
+                })}
               </select>
 
               {/* Real-time 5km Service Area Status */}
@@ -694,21 +714,21 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                 ) : (
                   <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
                 )}
-                <span>{deliveryEligibility.messageTe}</span>
+                <span>{currentEligibilityMessage}</span>
               </div>
             </div>
 
             {/* Complete Address */}
             <div>
               <label htmlFor="customer-address-input" className="block text-sm font-bold text-stone-800 dark:text-stone-200 mb-1.5">
-                పూర్తి చిరునామా (ఫ్లాట్ / ఇంటి నంబర్, వీధి, కాలనీ) <span className="text-red-600">*</span>
+                {t.addressLabel} <span className="text-red-600">*</span>
               </label>
               <textarea
                 id="customer-address-input"
                 rows={2}
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                placeholder="ఉదాహరణ: ఫ్లాట్ 202, శ్రీ సాయి రెసిడెన్సీ, మెయిన్ రోడ్, కొల్లూరు"
+                placeholder={t.addressPlaceholder}
                 className={`w-full px-4 py-3 rounded-xl border bg-[#FDFBF7] dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#78350F] text-sm ${
                   errors.address ? 'border-red-500 ring-1 ring-red-500' : 'border-stone-300 dark:border-stone-700'
                 }`}
@@ -724,14 +744,14 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             {/* Landmark Input */}
             <div>
               <label htmlFor="customer-landmark-input" className="block text-sm font-bold text-stone-800 dark:text-stone-200 mb-1.5">
-                ల్యాండ్మార్క్ (గుడి, పాఠశాల లేదా అపార్ట్‌మెంట్ పేరు)
+                {t.landmarkLabel}
               </label>
               <input
                 type="text"
                 id="customer-landmark-input"
                 value={landmark}
                 onChange={(e) => setLandmark(e.target.value)}
-                placeholder="ఉదా: గ్రామ పంచాయతీ దగ్గర లేదా రామాలయం ఎదురుగా"
+                placeholder={t.landmarkPlaceholder}
                 className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-[#FDFBF7] dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#78350F] text-sm"
               />
             </div>
@@ -742,10 +762,10 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                 <div>
                   <span className="font-bold text-sm text-stone-900 dark:text-stone-100 flex items-center gap-2">
                     <MapPin className="w-4 h-4 text-[#78350F] dark:text-amber-400 flex-shrink-0" />
-                    <span>ఖచ్చితమైన డెలివరీ లొకేషన్ లింక్ (Live GPS Location)</span>
+                    <span>{t.gpsLocationCardTitle}</span>
                   </span>
                   <p className="text-xs text-stone-600 dark:text-stone-400 mt-0.5">
-                    లింక్ వెతకడం లేదా కాపీ చేయనవసరం లేదు — ఒకే క్లిక్‌తో మీ లొకేషన్ పొందండి
+                    {t.gpsLocationCardSub}
                   </p>
                 </div>
 
@@ -758,7 +778,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#78350F] hover:bg-[#8C4A26] active:scale-95 text-white font-bold text-xs sm:text-sm shadow-sm transition-all cursor-pointer disabled:opacity-60 flex-shrink-0"
                 >
                   <Navigation className={`w-4 h-4 ${isLocating ? 'animate-spin' : ''}`} />
-                  <span>{isLocating ? 'లొకేషన్ స్వీకరిస్తోంది...' : '📍 క్లిక్ చేసి లొకేషన్ పొందండి'}</span>
+                  <span>{isLocating ? t.locationReceiving : t.clickToReceiveLocation}</span>
                 </button>
               </div>
 
@@ -769,7 +789,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
                     <div>
                       <span className="font-bold block">
-                        GPS లొకేషన్ లింక్ విజయవంతంగా స్వీకరించబడింది!
+                        {t.gpsSuccessNotice}
                       </span>
                       <span className="text-[11px] font-mono text-emerald-800 dark:text-emerald-300 truncate max-w-xs sm:max-w-md block">
                         {customLocationLink}
@@ -785,14 +805,14 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                       className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 dark:text-emerald-300 hover:underline bg-emerald-100 dark:bg-emerald-900/60 px-2.5 py-1.5 rounded-lg border border-emerald-300 dark:border-emerald-700"
                     >
                       <ExternalLink className="w-3 h-3" />
-                      <span>మ్యాప్‌లో సరిచూడండి</span>
+                      <span>{t.checkOnMap}</span>
                     </a>
                     <button
                       type="button"
                       onClick={handleDetectGPSLocation}
                       className="text-[11px] text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200 underline cursor-pointer"
                     >
-                      రీఫ్రెష్
+                      {t.refresh}
                     </button>
                   </div>
                 </div>
@@ -801,7 +821,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   {locationFeedback ? (
                     <span className="font-semibold text-amber-900 dark:text-amber-300">{locationFeedback}</span>
                   ) : (
-                    <span>💡 పై బటన్ నొక్కగానే మీ ఫోన్ లేదా బ్రౌజర్ నుండి ఖచ్చితమైన Google Maps లొకేషన్ లింక్ స్వయంచాలకంగా ఇక్కడ నమోదవుతుంది.</span>
+                    <span>{t.autoLocationHint}</span>
                   )}
                 </div>
               )}
@@ -811,9 +831,9 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowManualLocationInput(prev => !prev)}
-                  className="text-[11px] text-stone-500 hover:text-stone-800 dark:hover:text-stone-300 underline"
+                  className="text-[11px] text-stone-500 hover:text-stone-800 dark:hover:text-stone-300 underline cursor-pointer"
                 >
-                  {showManualLocationInput ? '− మాన్యువల్ లింక్ బాక్స్ దాచండి' : '+ లేదా లింక్ మాన్యువల్ గా పేస్ట్ చేయండి'}
+                  {showManualLocationInput ? t.hideManualLink : t.showManualLink}
                 </button>
 
                 {showManualLocationInput && (
@@ -834,17 +854,17 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             {/* Delivery Date & Window (Fixed: 6:00 PM - 8:00 PM) */}
             <div className="p-4 rounded-xl bg-amber-50/60 dark:bg-stone-900/60 border border-amber-900/10 dark:border-stone-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <span className="block text-xs font-semibold text-stone-600 dark:text-stone-400">డెలివరీ తేదీ:</span>
+                <span className="block text-xs font-semibold text-stone-600 dark:text-stone-400">{t.deliveryDateLabel}</span>
                 <span className="font-bold text-base text-stone-900 dark:text-stone-100 font-mono">
                   {deliveryDateStr}
                 </span>
               </div>
 
               <div>
-                <span className="block text-xs font-semibold text-stone-600 dark:text-stone-400">డెలివరీ సమయం (Delivery Window):</span>
+                <span className="block text-xs font-semibold text-stone-600 dark:text-stone-400">{t.deliveryTimeWindowLabel}</span>
                 <span className="inline-flex items-center gap-1.5 font-bold text-base text-[#78350F] dark:text-amber-400">
                   <span className="w-2 h-2 rounded-full bg-emerald-600" />
-                  <span>సాయంత్రం 6–8 గంటలు</span>
+                  <span>{t.deliveryWindowTime}</span>
                 </span>
               </div>
             </div>
@@ -857,7 +877,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-200 text-sm font-telugu flex items-start gap-2">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold">దయచేసి క్రింది వివరాలను సరిచూసుకోండి:</p>
+              <p className="font-bold">{t.errorCheckPrompt}</p>
               <ul className="list-disc list-inside mt-1 text-xs space-y-0.5">
                 {Object.values(errors).map((err, i) => (
                   <li key={i}>{err}</li>
@@ -872,15 +892,15 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-amber-900/15 dark:border-stone-700 font-telugu">
             <div>
               <h3 className="text-lg font-bold text-[#451A03] dark:text-amber-100">
-                ఆర్డర్ సమీక్ష (Order Summary)
+                {t.orderReviewTitle}
               </h3>
               <p className="text-xs text-stone-600 dark:text-stone-400">
-                {quantity} జొన్న రొట్టెలు + ఉచిత కారాలు
+                {t.orderReviewSub.replace('{quantity}', quantity.toString())}
               </p>
             </div>
 
             <div className="text-right">
-              <span className="text-xs text-stone-600 dark:text-stone-400 block">మొత్తం చెల్లించవలసినది:</span>
+              <span className="text-xs text-stone-600 dark:text-stone-400 block">{t.totalPayableLabel}</span>
               <span className="text-3xl font-extrabold text-[#78350F] dark:text-amber-400 font-mono">
                 ₹{totalAmount}
               </span>
@@ -890,20 +910,28 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           {/* Karam Summary Breakdown */}
           <div className="py-3 text-xs sm:text-sm font-telugu text-stone-700 dark:text-stone-300 space-y-1">
             <div className="flex justify-between">
-              <span>జొన్న రొట్టెలు ({quantity} × ₹30):</span>
+              <span>{t.rotisSubtotalLine} ({quantity} × ₹30):</span>
               <span className="font-mono font-bold">₹{totalAmount}</span>
             </div>
             <div className="flex justify-between text-emerald-800 dark:text-emerald-400 font-semibold">
-              <span>కరివేపాకు కారం:</span>
-              <span>{karamSelection.karivepaku ? `${karivepakuGrams} గ్రా. (ఉచితం ₹0)` : 'ఎంపిక చేయలేదు'}</span>
+              <span>{t.karivepakuTitle}:</span>
+              <span>
+                {karamSelection.karivepaku 
+                  ? `${karivepakuGrams} ${t.gramsUnit} (${t.freeCostZero})` 
+                  : t.notSelected}
+              </span>
             </div>
             <div className="flex justify-between text-emerald-800 dark:text-emerald-400 font-semibold">
-              <span>అవిసె గింజల కారం:</span>
-              <span>{karamSelection.aviseGinjalu ? `${aviseGinjaluGrams} గ్రా. (ఉచితం ₹0)` : 'ఎంపిక చేయలేదు'}</span>
+              <span>{t.aviseTitle}:</span>
+              <span>
+                {karamSelection.aviseGinjalu 
+                  ? `${aviseGinjaluGrams} ${t.gramsUnit} (${t.freeCostZero})` 
+                  : t.notSelected}
+              </span>
             </div>
             <div className="flex justify-between text-stone-600 dark:text-stone-400">
-              <span>హోమ్ డెలివరీ (కొల్లూరు 5 కి.మీ. పరిధి):</span>
-              <span className="font-bold text-emerald-700 dark:text-emerald-400 font-telugu">ఉచితం (₹0)</span>
+              <span>{t.homeDeliveryLine}</span>
+              <span className="font-bold text-emerald-700 dark:text-emerald-400 font-telugu">{t.freeCostZero}</span>
             </div>
           </div>
 
@@ -914,15 +942,15 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-stone-900 border border-amber-300 dark:border-stone-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 font-telugu text-xs">
                 <div className="flex items-center gap-2 text-stone-700 dark:text-stone-300">
                   <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                  <span>ఆర్డర్ చేయడానికి పైన పేరు, మొబైల్ నంబర్ మరియు చిరునామా నమోదు చేయండి.</span>
+                  <span>{t.missingDetailsPrompt}</span>
                 </div>
                 <button
                   type="button"
                   onClick={handleQuickDemoFill}
-                  className="px-3 py-1.5 rounded-lg bg-[#78350F] hover:bg-[#8C4A26] text-white font-bold flex items-center gap-1 text-xs self-end sm:self-auto shadow-xs"
+                  className="px-3 py-1.5 rounded-lg bg-[#78350F] hover:bg-[#8C4A26] text-white font-bold flex items-center gap-1 text-xs self-end sm:self-auto shadow-xs cursor-pointer"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
-                  <span>నమూనా వివరాలు నింపండి</span>
+                  <span>{t.sampleFillBtn}</span>
                 </button>
               </div>
             )}
@@ -931,27 +959,27 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               type="submit"
               disabled={isOrderBlockedByHours || !deliveryEligibility.isEligible}
               id="proceed-to-payment-btn"
-              className="w-full py-4 px-6 rounded-xl font-bold text-base sm:text-lg text-amber-50 bg-[#78350F] hover:bg-[#8C4A26] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-950/20 flex items-center justify-center gap-3 transition-all font-telugu"
+              className="w-full py-4 px-6 rounded-xl font-bold text-base sm:text-lg text-amber-50 bg-[#78350F] hover:bg-[#8C4A26] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-950/20 flex items-center justify-center gap-3 transition-all font-telugu cursor-pointer"
             >
-              <span>UPI చెల్లింపుకు కొనసాగించండి (₹{totalAmount})</span>
+              <span>{t.proceedPaymentBtn} (₹{totalAmount})</span>
               <ArrowRight className="w-5 h-5" />
             </button>
 
             {isOrderBlockedByHours && (
               <p className="text-center text-xs text-amber-800 dark:text-amber-300 font-telugu font-semibold">
-                ⚠️ ఆర్డర్ల సమయం (11:00 AM – 4:00 PM IST) ముగిసినందున చెకౌట్ డిసేబుల్ చేయబడింది.
+                {t.hoursClosedWarning}
               </p>
             )}
 
             {!deliveryEligibility.isEligible && (
               <p className="text-center text-xs text-red-600 dark:text-red-400 font-telugu font-semibold">
-                ⚠️ దయచేసి కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధిలోని చిరునామాను ఎంచుకోండి.
+                {t.beyondRadiusWarning}
               </p>
             )}
 
             <div className="flex items-center justify-center gap-2 text-xs text-stone-500 dark:text-stone-400 font-telugu pt-1">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>ఆన్‌లైన్ UPI ద్వారా మాత్రమే చెల్లింపు. క్యాష్ ఆన్ డెలివరీ లేదు. సర్వర్ ద్వారా ధృవీకరించబడుతుంది.</span>
+              <span>{t.paymentOptionsNote}</span>
             </div>
           </div>
 

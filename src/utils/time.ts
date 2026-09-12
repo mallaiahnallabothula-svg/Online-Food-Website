@@ -11,13 +11,20 @@ export interface ISTTimeInfo {
   seconds: number;
   formattedTime: string;
   formattedDateTelugu: string;
+  formattedDateEnglish: string;
   isOpen: boolean;
   nextOpenMessage: string;
+  nextOpenMessageEn: string;
 }
 
 const TELUGU_MONTHS = [
   'జనవరి', 'ఫిబ్రవరి', 'మార్చి', 'ఏప్రిల్', 'మే', 'జూన్',
   'జూలై', 'ఆగస్టు', 'సెప్టెంబర్', 'అక్టోబర్', 'నవంబర్', 'డిసెంబర్'
+];
+
+const ENGLISH_MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
 ];
 
 /**
@@ -59,17 +66,21 @@ export function getISTTime(mockOffsetMinutes: number = 0): ISTTimeInfo {
   const isOpen = true; // Always allow ordering 24/7
 
   let nextOpenMessage = '';
+  let nextOpenMessageEn = '';
   if (isTodayDelivery) {
     if (isLiveBatch) {
       const remainingMins = 16 * 60 - totalMinutes;
       const remH = Math.floor(remainingMins / 60);
       const remM = remainingMins % 60;
       nextOpenMessage = `నేటి సాయంత్రం డెలివరీ కోసం ఆర్డర్లు అందుబాటులో ఉన్నాయి! నేటి ఆర్డర్ల ముగింపుకు ఇంకా ${remH > 0 ? `${remH} గం. ` : ''}${remM} ని. సమయం ఉంది.`;
+      nextOpenMessageEn = `Orders open for today's evening delivery! Time remaining before 4:00 PM cutoff: ${remH > 0 ? `${remH} hr ` : ''}${remM} min.`;
     } else {
       nextOpenMessage = 'నేటి సాయంత్రం 6:00 – 8:00 PM డెలివరీ కోసం ఆర్డర్లు స్వీకరించబడుతున్నాయి.';
+      nextOpenMessageEn = "Accepting orders for today's evening delivery (6:00 PM – 8:00 PM).";
     }
   } else {
-    nextOpenMessage = 'రేపటి సాయంత్రం 6:00 – 8:00 PM డెలివరీ కోసం ముందస్తు ఆర్డర్లు (Pre-orders) స్వీకరించబడుతున్నాయి.';
+    nextOpenMessage = 'రేపటి సాయంత్రం 6:00 – 8:00 PM డెలివరీ కోసం ముందస్తు ఆర్డర్లు స్వీకరించబడుతున్నాయి.';
+    nextOpenMessageEn = "Accepting pre-orders for tomorrow's evening delivery (6:00 PM – 8:00 PM).";
   }
 
   // Format 12-hour AM/PM
@@ -79,6 +90,7 @@ export function getISTTime(mockOffsetMinutes: number = 0): ISTTimeInfo {
   const formattedTime = `${pad(hour12)}:${pad(minutes)} ${ampm} IST`;
 
   const formattedDateTelugu = `${date} ${TELUGU_MONTHS[month]} ${year}`;
+  const formattedDateEnglish = `${date} ${ENGLISH_MONTHS[month]} ${year}`;
 
   return {
     year,
@@ -89,8 +101,10 @@ export function getISTTime(mockOffsetMinutes: number = 0): ISTTimeInfo {
     seconds,
     formattedTime,
     formattedDateTelugu,
+    formattedDateEnglish,
     isOpen,
     nextOpenMessage,
+    nextOpenMessageEn,
   };
 }
 
@@ -102,6 +116,7 @@ export function getInitialOrderingStatus(): import('../types').OrderingHoursStat
   const ist = getISTTime();
   const isTodayDelivery = ist.hours < 16;
   const deliveryDateLabel = isTodayDelivery ? `${ist.formattedDateTelugu} (నేడు)` : `${ist.formattedDateTelugu} (రేపు)`;
+  const deliveryDateLabelEn = isTodayDelivery ? `${ist.formattedDateEnglish} (Today)` : `${ist.formattedDateEnglish} (Tomorrow)`;
 
   return {
     isOpen: true,
@@ -109,13 +124,20 @@ export function getInitialOrderingStatus(): import('../types').OrderingHoursStat
     currentTimeIST: ist.formattedTime,
     currentHourIST: ist.hours,
     currentMinuteIST: ist.minutes,
-    openTimeStr: '24/7 ఆర్డరింగ్ అందుబాటులో ఉంది',
+    openTimeStr: 'రోజంతా ఆర్డర్ చేయవచ్చు',
+    openTimeStrEn: '24/7 Ordering Available',
     closeTimeStr: 'సాయంత్రం 04:00 PM (నేటి డెలివరీ కటాఫ్)',
+    closeTimeStrEn: '04:00 PM IST (Cutoff for Same-Day Delivery)',
     nextOpenMessage: ist.nextOpenMessage,
+    nextOpenMessageEn: ist.nextOpenMessageEn,
     deliveryWindowStr: 'సాయంత్రం 6:00 - 8:00 గంటలు',
+    deliveryWindowStrEn: 'Evening 6:00 - 8:00 PM',
     deliveryWindow: 'సాయంత్రం 6:00 - 8:00 గంటలు',
+    deliveryWindowEn: 'Evening 6:00 - 8:00 PM',
     deliveryDate: ist.formattedDateTelugu,
+    deliveryDateEn: ist.formattedDateEnglish,
     currentDateIST: deliveryDateLabel,
+    currentDateISTEn: deliveryDateLabelEn,
   };
 }
 

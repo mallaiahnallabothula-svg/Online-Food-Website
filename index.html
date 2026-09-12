@@ -4,46 +4,53 @@
     <meta charset="UTF-8" />
     <script>
       (function() {
-        const isViteLog = function(item) {
+        const isViteNotice = function(item) {
           if (!item) return false;
-          const str = typeof item === 'string' ? item : (item.message || String(item));
-          return str.includes('[vite]');
+          const str = typeof item === 'string' ? item : (item.message || item.stack || String(item));
+          return str.includes('[vite]') || str.includes('failed to connect to websocket') || str.includes('WebSocket connection to');
         };
         const origError = console.error;
         console.error = function(...args) {
-          if (args.some(isViteLog)) return;
+          if (args.some(isViteNotice)) return;
           origError.apply(console, args);
         };
         const origWarn = console.warn;
         console.warn = function(...args) {
-          if (args.some(isViteLog)) return;
+          if (args.some(isViteNotice)) return;
           origWarn.apply(console, args);
         };
+        const origLog = console.log;
+        console.log = function(...args) {
+          if (args.some(isViteNotice)) return;
+          origLog.apply(console, args);
+        };
         window.addEventListener('error', function(e) {
-          if (isViteLog(e.message) || isViteLog(e.error)) {
+          if (isViteNotice(e.message) || isViteNotice(e.error) || isViteNotice(e.filename)) {
             e.preventDefault();
             e.stopImmediatePropagation();
+            return true;
           }
         }, true);
         window.addEventListener('unhandledrejection', function(e) {
-          if (isViteLog(e.reason)) {
+          if (isViteNotice(e.reason)) {
             e.preventDefault();
             e.stopImmediatePropagation();
+            return true;
           }
         }, true);
       })();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు | Sri Mallikarjuna Palle Jonna Rottelu</title>
-    <meta name="description" content="కొల్లూరు మరియు పరిసర ప్రాంతాలలో తాజా, వేడివేడి పల్లె జొన్న రొట్టెలు మరియు రుచికరమైన ఉచిత కారాల ఆన్‌లైన్ ఆర్డరింగ్ వెబ్‌సైట్." />
-    <meta property="og:title" content="శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు | Sri Mallikarjuna Palle Jonna Rottelu" />
-    <meta property="og:description" content="కొల్లూరు మరియు పరిసర ప్రాంతాలలో తాజా, వేడివేడి పల్లె జొన్న రొట్టెలు మరియు రుచికరమైన ఉచిత కారాల ఆన్‌లైన్ ఆర్డరింగ్ వెబ్‌సైట్." />
+    <title>మన ఇంటి వంట | Mana Enti Vanta - అచ్చమైన పల్లెటూరి రుచులు</title>
+    <meta name="description" content="మన ఇంటి వంట - అచ్చమైన పల్లెటూరి రుచులు, స్వచ్ఛమైన ఆరోగ్యం. ప్రతి రోజూ తాజా వేడివేడి జొన్న రొట్టెలు మరియు కారాల ఆన్‌లైన్ ఆర్డరింగ్." />
+    <meta property="og:title" content="మన ఇంటి వంట | Mana Enti Vanta - అచ్చమైన పల్లెటూరి రుచులు" />
+    <meta property="og:description" content="మన ఇంటి వంట - అచ్చమైన పల్లెటూరి రుచులు, స్వచ్ఛమైన ఆరోగ్యం. ప్రతి రోజూ తాజా వేడివేడి జొన్న రొట్టెలు మరియు కారాల ఆన్‌లైన్ ఆర్డరింగ్." />
     <meta property="og:type" content="website" />
     <meta name="theme-color" content="#78350f" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="జొన్న రొట్టెలు" />
+    <meta name="apple-mobile-web-app-title" content="మన ఇంటి వంట" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/png" href="/favicon.png" />

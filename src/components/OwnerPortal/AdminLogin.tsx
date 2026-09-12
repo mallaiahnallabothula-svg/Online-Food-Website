@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ShieldCheck, KeyRound, Lock, ArrowRight, RefreshCw, AlertCircle, Smartphone } from 'lucide-react';
 import { AdminRole } from '../../types';
-import brandLogo from '../../assets/images/mallikarjuna_rottelu_logo_1789103187340.jpg';
+import { BrandEmblem } from '../BrandEmblem';
 
 interface AdminLoginProps {
   onLoginSuccess: (token: string, role: AdminRole) => void;
@@ -159,16 +159,11 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onCancel
         
         {/* Header with Brand Logo */}
         <div className="text-center mb-6">
-          <div className="w-16 h-16 rounded-full mx-auto mb-3 p-1 bg-amber-100 dark:bg-stone-800 shadow-md border-2 border-amber-600/30 flex items-center justify-center">
-            <img
-              src={brandLogo}
-              alt="శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు Logo"
-              referrerPolicy="no-referrer"
-              className="w-full h-full rounded-full object-cover"
-            />
+          <div className="flex justify-center mb-3">
+            <BrandEmblem size="lg" />
           </div>
           <h2 className="text-xl font-extrabold text-[#451A03] dark:text-amber-100">
-            యజమాని & నిర్వాహకుల పోర్టల్
+            మన ఇంటి వంట - యజమాని పోర్టల్
           </h2>
           <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
             ద్విముఖ ప్రమాణీకరణ (Two-Factor Authentication) రక్షణ

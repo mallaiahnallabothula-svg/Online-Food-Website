@@ -21,7 +21,8 @@ import {
   ExternalLink,
   ShieldCheck,
   Star,
-  MessageSquareHeart
+  MessageSquareHeart,
+  Banknote
 } from 'lucide-react';
 import { Order, FulfillmentStatus, AdminRole, AnalyticsData, AuditLog, OrderFeedback } from '../../types';
 import { playOrderNotificationSound } from '../../utils/audio';
@@ -193,7 +194,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
             </span>
           </div>
           <p className="text-xs text-stone-500 mt-1">
-            శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు | కొల్లూరు గ్రామం | +91 8499865803
+            మన ఇంటి వంట (Mana Enti Vanta) | కొల్లూరు గ్రామం | +91 8499865803
           </p>
         </div>
 
@@ -392,10 +393,17 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                         {order.id}
                       </span>
                       {getStatusBadge(order.fulfillmentStatus)}
-                      <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-semibold font-mono">
-                        <CheckCircle2 className="w-3 h-3" />
-                        <span>UPI ధృవీకరించబడింది</span>
-                      </span>
+                      {order.paymentStatus === 'PAY_ON_DELIVERY' ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 font-semibold font-mono border border-amber-300 dark:border-amber-800">
+                          <Banknote className="w-3 h-3 text-amber-700 dark:text-amber-400" />
+                          <span>డెలివరీ వద్ద చెల్లింపు (Pay on Delivery)</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-semibold font-mono">
+                          <CheckCircle2 className="w-3 h-3" />
+                          <span>UPI ధృవీకరించబడింది</span>
+                        </span>
+                      )}
                       {order.isCustomerReceived && (
                         <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 font-semibold">
                           <CheckCircle2 className="w-3 h-3 text-blue-600 dark:text-blue-400" />

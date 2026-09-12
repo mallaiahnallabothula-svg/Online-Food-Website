@@ -1,6 +1,7 @@
 import React from 'react';
 import { Clock, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { OrderingHoursStatus } from '../types';
+import { useLanguage } from '../context/LanguageContext';
 
 interface OrderingHoursBannerProps {
   status: OrderingHoursStatus;
@@ -13,6 +14,12 @@ export const OrderingHoursBanner: React.FC<OrderingHoursBannerProps> = ({
   allowOutsideHoursForTesting,
   onToggleAllowOutsideHours,
 }) => {
+  const { language, t } = useLanguage();
+
+  const openMessage = language === 'en' 
+    ? (status.nextOpenMessageEn || status.nextOpenMessage)
+    : status.nextOpenMessage;
+
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 my-4">
       <div
@@ -38,22 +45,20 @@ export const OrderingHoursBanner: React.FC<OrderingHoursBannerProps> = ({
             <div className="space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-bold text-base sm:text-lg font-telugu">
-                  {status.isOpen
-                    ? 'ఆర్డర్లు స్వీకరించబడుతున్నాయి (24/7 ఆర్డరింగ్ అందుబాటులో ఉంది)'
-                    : 'ఆర్డర్ల స్వీకరణ ప్రస్తుతం నిలిపివేయబడింది'}
+                  {status.isOpen ? t.ordersAcceptingTitle : t.ordersPausedTitle}
                 </h3>
                 <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-stone-200/80 dark:bg-stone-800 text-stone-800 dark:text-stone-300">
-                  ప్రస్తుత IST సమయం: {status.currentTimeIST}
+                  {t.currentIstLabel} {status.currentTimeIST}
                 </span>
               </div>
 
               <p className="text-sm font-telugu text-stone-700 dark:text-stone-300 leading-relaxed">
-                {status.nextOpenMessage}
+                {openMessage}
               </p>
 
               <div className="flex items-center gap-4 text-xs font-telugu text-stone-600 dark:text-stone-400 pt-0.5 flex-wrap">
-                <span>🕒 <strong>సాయంత్రం 4:00 PM లోపు:</strong> నేటి సాయంత్రం 6:00 – 8:00 PM కి డెలివరీ</span>
-                <span>🚚 <strong>సాయంత్రం 4:00 PM దాటితే:</strong> రేపటి సాయంత్రం 6:00 – 8:00 PM కి డెలివరీ</span>
+                <span>🕒 <strong>{t.before4pmLabel}</strong> {t.before4pmDesc}</span>
+                <span>🚚 <strong>{t.after4pmLabel}</strong> {t.after4pmDesc}</span>
               </div>
             </div>
           </div>
@@ -63,7 +68,7 @@ export const OrderingHoursBanner: React.FC<OrderingHoursBannerProps> = ({
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 bg-white/70 dark:bg-stone-900/80 p-2.5 rounded-xl border border-amber-300/60 dark:border-stone-700 text-xs font-telugu self-stretch md:self-auto">
               <div className="flex items-center gap-1.5 text-stone-700 dark:text-stone-300">
                 <Info className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                <span>ప్రివ్యూ టెస్టింగ్ కోసం సమయ నిబంధన మినహాయింపు:</span>
+                <span>{language === 'te' ? 'ప్రివ్యూ టెస్టింగ్ కోసం సమయ నిబంధన మినహాయింపు:' : 'Testing Override:'}</span>
               </div>
               <button
                 type="button"
@@ -75,7 +80,9 @@ export const OrderingHoursBanner: React.FC<OrderingHoursBannerProps> = ({
                     : 'bg-amber-600 text-white hover:bg-amber-700'
                 }`}
               >
-                {allowOutsideHoursForTesting ? 'ఆర్డరింగ్ ఎనేబుల్ అయింది' : 'ఆర్డరింగ్ టెస్ట్ చేయండి'}
+                {allowOutsideHoursForTesting 
+                  ? (language === 'te' ? 'ఆర్డరింగ్ ఎనేబుల్ అయింది' : 'Ordering Enabled') 
+                  : (language === 'te' ? 'ఆర్డరింగ్ టెస్ట్ చేయండి' : 'Test Ordering')}
               </button>
             </div>
           )}

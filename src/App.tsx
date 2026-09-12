@@ -11,12 +11,16 @@ import { AndroidInstallBanner } from './components/AndroidInstallBanner';
 import { AndroidInstallModal } from './components/AndroidInstallModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { OrderTrackingModal } from './components/OrderTrackingModal';
+import { BrandEmblem } from './components/BrandEmblem';
 import { usePWAInstall } from './hooks/usePWAInstall';
 import { OrderingHoursStatus, Order, AdminRole } from './types';
 import { getISTTime, getInitialOrderingStatus } from './utils/time';
+import { useLanguage } from './context/LanguageContext';
 import { Phone, Clock, Lock, Smartphone } from 'lucide-react';
 
 export default function App() {
+  const { t, language } = useLanguage();
+
   // Dark mode state
   const [darkMode, setDarkMode] = useState<boolean>(() => {
     return localStorage.getItem('smjr_theme') === 'dark';
@@ -246,17 +250,22 @@ export default function App() {
 
       {/* Footer */}
       <footer className="mt-auto border-t border-amber-900/10 dark:border-stone-800 bg-[#FAF4EA] dark:bg-[#151413] py-8 text-xs font-telugu text-stone-600 dark:text-stone-400">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="text-center md:text-left space-y-1">
-            <h4 className="font-bold text-sm text-[#451A03] dark:text-amber-100">
-              శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు
-            </h4>
-            <p>
-              పక్కా పల్లెటూరి స్వచ్ఛమైన ఇంటి రుచితో, వేడివేడి జొన్న రొట్టెలు
-            </p>
-            <p className="text-[11px] text-stone-500">
-              కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధిలో ఉచిత డెలివరీ | ఆన్‌లైన్ UPI చెల్లింపు మాత్రమే
-            </p>
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-3 text-center md:text-left">
+            <BrandEmblem size="sm" />
+            <div className="space-y-0.5">
+              <h4 className="font-bold text-sm text-[#451A03] dark:text-amber-100">
+                {t.brandName}
+              </h4>
+              <p className="text-xs text-stone-600 dark:text-stone-300">
+                {t.brandTagline}
+              </p>
+              <p className="text-[11px] text-stone-500 dark:text-stone-400">
+                {language === 'te' 
+                  ? 'కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధిలో ఉచిత డెలివరీ | ఆన్‌లైన్ UPI & డెలివరీ వద్ద నగదు'
+                  : 'Free delivery within 5 km radius from Kolluru | Online UPI & Pay on Delivery'}
+              </p>
+            </div>
           </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-4 text-center md:text-right">
@@ -274,7 +283,7 @@ export default function App() {
               className="inline-flex items-center gap-1 text-[11px] text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors cursor-pointer"
             >
               <Lock className="w-3 h-3 text-stone-400" />
-              <span>యజమాని పోర్టల్</span>
+              <span>{t.ownerPortalLink}</span>
             </button>
 
             {/* Android App Install CTA in Footer */}
@@ -285,7 +294,7 @@ export default function App() {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-bold transition-colors cursor-pointer shadow-xs"
               >
                 <Smartphone className="w-3.5 h-3.5 text-emerald-200" />
-                <span>Android యాప్ డౌన్‌లోడ్</span>
+                <span>{t.androidAppBtn}</span>
               </button>
             )}
 
@@ -299,7 +308,7 @@ export default function App() {
 
             <div className="flex items-center gap-1.5 text-stone-500 text-[11px]">
               <Clock className="w-3.5 h-3.5" />
-              <span>ఆర్డర్లు: 11:00 AM – 4:00 PM | డెలివరీ: 6:00 – 8:00 PM</span>
+              <span>{language === 'te' ? 'ఆర్డర్లు: 11:00 AM – 4:00 PM | డెలివరీ: 6:00 – 8:00 PM' : 'Orders: 11:00 AM – 4:00 PM | Delivery: 6:00 – 8:00 PM'}</span>
             </div>
           </div>
         </div>

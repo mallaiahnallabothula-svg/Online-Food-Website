@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
-import { X, CheckCircle2, AlertTriangle, ShieldCheck, Copy, Check, ExternalLink, RefreshCw, Smartphone, Phone, CreditCard, Banknote } from 'lucide-react';
+import { X, CheckCircle2, AlertTriangle, ShieldCheck, Copy, Check, Smartphone, Banknote, Download, RefreshCw } from 'lucide-react';
 import { Order } from '../types';
-import brandLogo from '../assets/images/mallikarjuna_rottelu_logo_1789103187340.jpg';
+import { BrandEmblem } from './BrandEmblem';
+import { useLanguage } from '../context/LanguageContext';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -25,6 +26,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   orderData,
   onPaymentSuccess,
 }) => {
+  const { t, language } = useLanguage();
+  const [activePaymentTab, setActivePaymentTab] = useState<'UPI' | 'POD'>('UPI');
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [paymentReference, setPaymentReference] = useState<string>('');
   const [upiIntentUri, setUpiIntentUri] = useState<string>('');
@@ -39,10 +42,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const ownerMobile = '8499865803';
   const ownerName = 'Mallaiah Nallabothula';
 
-  // Clean UPI standard link without `tr=` parameter to prevent NPCI/Bank "declined for security reasons" errors
   const cleanUpiUri = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(ownerName)}&am=${orderData.totalAmount}&cu=INR`;
   const phonepeUri = `phonepe://pay?pa=${upiId}&pn=${encodeURIComponent(ownerName)}&am=${orderData.totalAmount}&cu=INR`;
-  const paytmUri = `paytmmp://pay?pa=${upiId}&pn=${encodeURIComponent(ownerName)}&am=${orderData.totalAmount}&cu=INR`;
 
   // Initialize payment order with server
   useEffect(() => {
@@ -70,9 +71,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           setPaymentReference(ref);
           setUpiIntentUri(data.upiUri || cleanUpiUri);
 
-          // Generate Clean QR Code (standard P2P compatible, never rejected by bank risk engines)
           QRCode.toDataURL(cleanUpiUri, {
-            width: 260,
+            width: 280,
             margin: 1,
             color: { dark: '#451A03', light: '#FFFFFF' },
           }).then(url => {
@@ -86,7 +86,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           setUpiIntentUri(cleanUpiUri);
 
           QRCode.toDataURL(cleanUpiUri, {
-            width: 260,
+            width: 280,
             margin: 1,
             color: { dark: '#451A03', light: '#FFFFFF' },
           }).then(url => {
@@ -115,6 +115,16 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     navigator.clipboard.writeText(ownerMobile);
     setCopiedPhone(true);
     setTimeout(() => setCopiedPhone(false), 2000);
+  };
+
+  const handleDownloadQr = () => {
+    if (!qrCodeDataUrl) return;
+    const a = document.createElement('a');
+    a.href = qrCodeDataUrl;
+    a.download = `mana_enti_vanta_qr_₹${orderData.totalAmount}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
 
   // Server-Side Payment Verification with Reliable Fallback
@@ -151,7 +161,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
     // Graceful client-side fallback
     const createdFallbackOrder: Order = {
-      id: `SMJR-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`,
+      id: `MEV-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`,
       paymentReference: refToSend,
       paymentStatus: 'VERIFIED',
       fulfillmentStatus: 'NEW',
@@ -177,7 +187,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     onPaymentSuccess(createdFallbackOrder);
   };
 
-  // Option to Pay upon Delivery (if UPI bank server fails/declines)
+  // Option to Pay upon Delivery
   const handlePayOnDelivery = async () => {
     setIsPayOnDeliverySubmitting(true);
     setErrorMessage('');
@@ -209,7 +219,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
     // Fallback confirmation
     const codOrder: Order = {
-      id: `SMJR-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`,
+      id: `MEV-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`,
       paymentReference: podRef,
       paymentStatus: 'PAY_ON_DELIVERY',
       fulfillmentStatus: 'NEW',
@@ -241,18 +251,13 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         {/* Modal Header */}
         <div className="bg-[#FAF4EA] dark:bg-[#28241F] px-5 py-3.5 border-b border-amber-900/10 dark:border-stone-800 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img
-              src={brandLogo}
-              alt="Sri Mallikarjuna Palle Jonna Rottelu Logo"
-              referrerPolicy="no-referrer"
-              className="w-10 h-10 rounded-full object-cover border border-amber-600/30 shadow-xs flex-shrink-0"
-            />
+            <BrandEmblem size="sm" />
             <div>
               <span className="text-[11px] font-bold text-[#78350F] dark:text-amber-400 block leading-tight">
-                సురక్షిత UPI చెల్లింపు (Secure Payment)
+                {t.selectPaymentMethod}
               </span>
               <h3 className="text-base font-extrabold text-[#451A03] dark:text-amber-100 leading-tight">
-                శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు
+                {t.brandName}
               </h3>
             </div>
           </div>
@@ -260,24 +265,52 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           <button
             onClick={onClose}
             id="close-payment-modal-btn"
-            className="p-1.5 rounded-lg text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-200/60 dark:hover:bg-stone-800 transition-colors"
-            aria-label="మూసివేయండి"
+            className="p-1.5 rounded-lg text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-200/60 dark:hover:bg-stone-800 transition-colors cursor-pointer"
+            aria-label={t.closeBtn}
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
+        {/* Payment Tabs: UPI vs Pay on Delivery */}
+        <div className="flex border-b border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900">
+          <button
+            type="button"
+            onClick={() => setActivePaymentTab('UPI')}
+            className={`flex-1 py-3 px-4 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 border-b-2 transition-all cursor-pointer ${
+              activePaymentTab === 'UPI'
+                ? 'border-[#78350F] text-[#78350F] dark:text-amber-400 bg-white dark:bg-[#211E1A]'
+                : 'border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
+            }`}
+          >
+            <Smartphone className="w-4 h-4" />
+            <span>{t.onlineUpiTab}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActivePaymentTab('POD')}
+            className={`flex-1 py-3 px-4 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 border-b-2 transition-all cursor-pointer ${
+              activePaymentTab === 'POD'
+                ? 'border-emerald-600 text-emerald-700 dark:text-emerald-400 bg-white dark:bg-[#211E1A]'
+                : 'border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
+            }`}
+          >
+            <Banknote className="w-4 h-4" />
+            <span>{t.podTab}</span>
+          </button>
+        </div>
+
         {/* Modal Content */}
-        <div className="p-5 space-y-4 max-h-[82vh] overflow-y-auto">
+        <div className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
           
           {/* Amount Summary */}
           <div className="bg-amber-50/90 dark:bg-stone-900/90 p-3.5 rounded-xl border border-amber-300 dark:border-stone-700 flex items-center justify-between">
             <div>
               <span className="text-xs text-stone-600 dark:text-stone-400 block">
-                చెల్లించవలసిన మొత్తం:
+                {t.amountToPay}:
               </span>
               <span className="text-xs font-mono text-stone-500">
-                {orderData.quantity} రొట్టెలు × ₹30 (ఉచిత కారాలు & డెలివరీ)
+                {t.rotisFreeDeliverySub.replace('{quantity}', orderData.quantity.toString())}
               </span>
             </div>
             <div className="text-right">
@@ -287,191 +320,237 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             </div>
           </div>
 
-          {/* Direct Mobile Number & UPI ID Quick Copy Box */}
-          <div className="p-3.5 rounded-xl bg-amber-50/60 dark:bg-stone-900/60 border border-amber-200 dark:border-stone-800 space-y-2">
-            <span className="text-xs font-bold text-[#78350F] dark:text-amber-300 block">
-              Google Pay / PhonePe / Paytm ద్వారా నేరుగా పంపండి:
-            </span>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {/* Mobile Number Copy */}
-              <div className="flex items-center justify-between bg-white dark:bg-stone-800 px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700">
-                <div>
-                  <span className="text-[10px] text-stone-500 block">మొబైల్ నంబర్:</span>
-                  <span className="font-mono font-bold text-sm text-stone-900 dark:text-stone-100">
-                    {ownerMobile}
-                  </span>
+          {/* TAB 1: UPI PAYMENT */}
+          {activePaymentTab === 'UPI' && (
+            <div className="space-y-4">
+              
+              {/* Security Decline Alert Card */}
+              <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/80 text-xs text-amber-950 dark:text-amber-200 space-y-2 shadow-xs">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold block">
+                      {t.phonePeAlertTitle}
+                    </span>
+                    <p className="text-[11px] text-stone-700 dark:text-stone-300 mt-1 leading-relaxed">
+                      {t.phonePeAlertDesc}
+                    </p>
+                    <p className="text-[11px] font-bold text-[#78350F] dark:text-amber-300 mt-1.5">
+                      {t.phonePeSolution.replace('{amount}', orderData.totalAmount.toString())}
+                    </p>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleCopyPhone}
-                  className="px-2 py-1 rounded bg-amber-100 dark:bg-stone-700 text-amber-900 dark:text-amber-200 text-xs font-bold flex items-center gap-1 hover:bg-amber-200 transition-colors"
-                  title="మొబైల్ నంబర్ కాపీ చేయండి"
-                >
-                  {copiedPhone ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedPhone ? 'కాపీ అయింది' : 'కాపీ'}</span>
-                </button>
               </div>
 
-              {/* UPI ID Copy */}
-              <div className="flex items-center justify-between bg-white dark:bg-stone-800 px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-700">
-                <div>
-                  <span className="text-[10px] text-stone-500 block">UPI ID:</span>
-                  <span className="font-mono font-bold text-xs sm:text-sm text-stone-900 dark:text-stone-100">
-                    {upiId}
+              {/* Instant 1-Tap Copy Box (Recommended & Fail-Safe) */}
+              <div className="p-4 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                    <span>{t.easyMobileHeader}</span>
+                  </span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200">
+                    {t.successRate100}
                   </span>
                 </div>
+
+                <div className="bg-white dark:bg-stone-800 p-3 rounded-xl border border-stone-200 dark:border-stone-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <div>
+                    <span className="text-[10px] text-stone-500 block">{t.mobileNumberLabel}</span>
+                    <span className="font-mono font-extrabold text-base sm:text-lg text-stone-900 dark:text-stone-100">
+                      8499865803
+                    </span>
+                    <span className="text-[11px] text-stone-500 block">{t.recipientName}</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyPhone}
+                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
+                  >
+                    {copiedPhone ? <Check className="w-4 h-4 text-white" /> : <Copy className="w-4 h-4" />}
+                    <span>{copiedPhone ? t.numberCopied : t.copyNumber}</span>
+                  </button>
+                </div>
+
+                {/* Secondary UPI ID */}
+                <div className="flex items-center justify-between text-xs pt-1 px-1">
+                  <span className="text-stone-500">UPI ID: <span className="font-mono font-bold text-stone-800 dark:text-stone-200">{upiId}</span></span>
+                  <button
+                    type="button"
+                    onClick={handleCopyUpi}
+                    className="text-stone-700 dark:text-stone-300 font-bold hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    {copiedUpi ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedUpi ? t.numberCopied : t.copyUpiBtn}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* QR Code Section with Download Button */}
+              <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-center space-y-3">
+                <span className="text-xs font-bold text-stone-700 dark:text-stone-300">
+                  {t.orScanQr} (₹{orderData.totalAmount}):
+                </span>
+
+                {qrCodeDataUrl ? (
+                  <div className="relative group p-2.5 bg-white rounded-xl shadow-md border border-amber-900/10">
+                    <img
+                      src={qrCodeDataUrl}
+                      alt="UPI QR Code"
+                      className="w-44 h-44 sm:w-48 sm:h-48 object-contain mx-auto"
+                      referrerPolicy="no-referrer"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-44 h-44 flex items-center justify-center bg-stone-100 dark:bg-stone-800 rounded-xl">
+                    <RefreshCw className="w-6 h-6 animate-spin text-stone-400" />
+                  </div>
+                )}
+
+                {/* QR Code Action: Download */}
                 <button
                   type="button"
-                  onClick={handleCopyUpi}
-                  className="px-2 py-1 rounded bg-amber-100 dark:bg-stone-700 text-amber-900 dark:text-amber-200 text-xs font-bold flex items-center gap-1 hover:bg-amber-200 transition-colors"
-                  title="UPI ID కాపీ చేయండి"
+                  onClick={handleDownloadQr}
+                  className="px-3.5 py-1.5 rounded-lg border border-stone-300 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
-                  {copiedUpi ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedUpi ? 'కాపీ అయింది' : 'కాపీ'}</span>
+                  <Download className="w-3.5 h-3.5" />
+                  <span>{t.downloadQr}</span>
                 </button>
+
+                {/* Direct App Launch Buttons */}
+                <div className="w-full pt-1">
+                  <div className="grid grid-cols-2 gap-2">
+                    <a
+                      href={phonepeUri}
+                      id="direct-phonepe-btn"
+                      className="py-2.5 px-3 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center gap-1.5 shadow-xs transition-colors"
+                    >
+                      <Smartphone className="w-3.5 h-3.5" />
+                      <span>PhonePe</span>
+                    </a>
+
+                    <a
+                      href={cleanUpiUri}
+                      id="direct-gpay-btn"
+                      className="py-2.5 px-3 rounded-xl text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 flex items-center justify-center gap-1.5 shadow-xs transition-colors"
+                    >
+                      <Smartphone className="w-3.5 h-3.5" />
+                      <span>GPay / UPI</span>
+                    </a>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          {/* QR Code Section */}
-          <div className="flex flex-col items-center justify-center p-3.5 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-center">
-            <span className="text-xs font-bold text-stone-700 dark:text-stone-300 mb-2">
-              ఏదైనా UPI యాప్ ద్వారా స్కాన్ చేయండి (Scan to Pay ₹{orderData.totalAmount}):
-            </span>
-
-            {qrCodeDataUrl ? (
-              <div className="p-2.5 bg-white rounded-xl shadow-md border border-amber-900/10">
-                <img
-                  src={qrCodeDataUrl}
-                  alt="UPI QR Code"
-                  className="w-44 h-44 sm:w-48 sm:h-48 object-contain"
-                  referrerPolicy="no-referrer"
+              {/* Payment Reference & UTR Input */}
+              <div className="space-y-1.5">
+                <label htmlFor="customer-utr-input" className="block text-xs font-bold text-stone-800 dark:text-stone-200">
+                  {t.utrLabel}
+                </label>
+                <input
+                  type="text"
+                  id="customer-utr-input"
+                  value={customerUtrInput}
+                  onChange={(e) => setCustomerUtrInput(e.target.value)}
+                  placeholder={t.utrPlaceholder}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-[#FDFBF7] dark:bg-stone-900 text-stone-900 dark:text-stone-100 font-mono text-sm"
                 />
               </div>
-            ) : (
-              <div className="w-44 h-44 flex items-center justify-center bg-stone-100 dark:bg-stone-800 rounded-xl">
-                <RefreshCw className="w-6 h-6 animate-spin text-stone-400" />
-              </div>
-            )}
 
-            {/* Direct App Launch Buttons */}
-            <div className="mt-3 w-full grid grid-cols-2 gap-2 sm:hidden">
-              <a
-                href={phonepeUri}
-                id="direct-phonepe-btn"
-                className="py-2 px-3 rounded-lg text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center gap-1 shadow-xs"
+              {/* Error Banner */}
+              {errorMessage && (
+                <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
+                  <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-bold">{language === 'en' ? 'Payment Error:' : 'చెల్లింపు లోపం:'}</p>
+                    <p>{errorMessage}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Online Payment Confirm Button */}
+              <button
+                type="button"
+                onClick={handleVerifyPayment}
+                disabled={isVerifying || isPayOnDeliverySubmitting}
+                id="verify-payment-btn"
+                className="w-full py-3.5 px-4 rounded-xl font-bold text-sm text-white bg-[#78350F] hover:bg-[#8C4A26] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
               >
-                <Smartphone className="w-3.5 h-3.5" />
-                <span>PhonePe</span>
-              </a>
-
-              <a
-                href={cleanUpiUri}
-                id="direct-gpay-btn"
-                className="py-2 px-3 rounded-lg text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 flex items-center justify-center gap-1 shadow-xs"
-              >
-                <Smartphone className="w-3.5 h-3.5" />
-                <span>GPay / UPI</span>
-              </a>
-            </div>
-          </div>
-
-          {/* Security Decline Guidance Box */}
-          <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-[11px] text-blue-900 dark:text-blue-200 space-y-1">
-            <div className="font-bold flex items-center gap-1.5 text-blue-950 dark:text-blue-100">
-              <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-              <span>సెక్యూరిటీ కారణాల వల్ల UPI లింక్ విఫలమైతే (Bank Security Fix):</span>
-            </div>
-            <p>
-              కొన్ని బ్యాంకులు వెబ్ బ్రౌజర్ లింక్‌లను భద్రతా కారణాలతో డిక్లైన్ చేస్తాయి. అటువంటి సమయంలో:
-            </p>
-            <p className="font-medium">
-              👉 మీ <strong>PhonePe</strong> లేదా <strong>Google Pay</strong> లో "To Mobile Number" క్లిక్ చేసి <strong>8499865803</strong> నంబర్‌కు ₹{orderData.totalAmount} పంపవచ్చు.
-            </p>
-          </div>
-
-          {/* Payment Reference & UTR Input */}
-          <div className="space-y-1.5">
-            <label htmlFor="customer-utr-input" className="block text-xs font-bold text-stone-800 dark:text-stone-200">
-              UPI లావాదేవీ UTR / Transaction Ref నంబర్:
-            </label>
-            <input
-              type="text"
-              id="customer-utr-input"
-              value={customerUtrInput}
-              onChange={(e) => setCustomerUtrInput(e.target.value)}
-              placeholder="ఉదా: 425319871234 లేదా నంబర్ లేకుంటే ఖాళీగా ఉంచండి"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-[#FDFBF7] dark:bg-stone-900 text-stone-900 dark:text-stone-100 font-mono text-sm"
-            />
-          </div>
-
-          {/* Error / Failure Banner */}
-          {errorMessage && (
-            <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-bold">చెల్లింపు లోపం:</p>
-                <p>{errorMessage}</p>
-              </div>
+                {isVerifying ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>{t.verifyingPayment}</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>{t.confirmUpiBtn.replace('{amount}', orderData.totalAmount.toString())}</span>
+                  </>
+                )}
+              </button>
             </div>
           )}
 
-          {/* CTAs */}
-          <div className="pt-2 space-y-2.5">
-            {/* Online Payment Confirm Button */}
-            <button
-              type="button"
-              onClick={handleVerifyPayment}
-              disabled={isVerifying || isPayOnDeliverySubmitting}
-              id="verify-payment-btn"
-              className="w-full py-3 px-4 rounded-xl font-bold text-sm text-white bg-[#78350F] hover:bg-[#8C4A26] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
-            >
-              {isVerifying ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>చెల్లింపును ధృవీకరిస్తోంది...</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>చెల్లింపు పూర్తయింది — ఆర్డర్ కన్ఫర్మ్ చేయండి</span>
-                </>
-              )}
-            </button>
+          {/* TAB 2: PAY ON DELIVERY (CASH OR UPI AFTER ARRIVAL) */}
+          {activePaymentTab === 'POD' && (
+            <div className="space-y-4 py-2">
+              <div className="p-5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-300 dark:border-emerald-700/60 text-center space-y-3">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 flex items-center justify-center mx-auto">
+                  <Banknote className="w-6 h-6" />
+                </div>
 
-            {/* Alternative: Pay on Delivery Button */}
-            <div className="relative py-1 flex items-center justify-center">
-              <div className="border-t border-stone-200 dark:border-stone-700 w-full"></div>
-              <span className="bg-white dark:bg-[#211E1A] px-2 text-[10px] text-stone-500 font-bold uppercase tracking-wider absolute">లేదా</span>
+                <h4 className="font-extrabold text-base text-emerald-950 dark:text-emerald-100">
+                  {t.podTab}
+                </h4>
+
+                <p className="text-xs sm:text-sm text-stone-700 dark:text-stone-300 leading-relaxed max-w-md mx-auto">
+                  {t.podNoticeText}
+                </p>
+
+                <div className="pt-2 flex flex-col items-center gap-1 text-xs text-emerald-800 dark:text-emerald-300 font-semibold">
+                  <span>
+                    {language === 'en'
+                      ? `Payable Amount: ₹${orderData.totalAmount} (${orderData.quantity} rotis)`
+                      : `చెల్లించవలసిన మొత్తం: ₹${orderData.totalAmount} (${orderData.quantity} రొట్టెలు)`}
+                  </span>
+                  <span>
+                    {language === 'en'
+                      ? `Delivery Window: ${orderData.deliveryWindow}`
+                      : `డెలివరీ సమయం: ${orderData.deliveryWindow}`}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handlePayOnDelivery}
+                disabled={isPayOnDeliverySubmitting}
+                id="confirm-pod-btn"
+                className="w-full py-3.5 px-4 rounded-xl font-bold text-sm sm:text-base text-white bg-emerald-700 hover:bg-emerald-800 active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer"
+              >
+                {isPayOnDeliverySubmitting ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" />
+                    <span>{t.submittingOrder}</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-5 h-5" />
+                    <span>{t.confirmPodBtn.replace('{amount}', orderData.totalAmount.toString())}</span>
+                  </>
+                )}
+              </button>
             </div>
+          )}
 
-            <button
-              type="button"
-              onClick={handlePayOnDelivery}
-              disabled={isVerifying || isPayOnDeliverySubmitting}
-              id="pay-on-delivery-btn"
-              className="w-full py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm text-emerald-900 dark:text-emerald-200 bg-emerald-100/90 dark:bg-emerald-950/60 hover:bg-emerald-200 dark:hover:bg-emerald-900/80 border border-emerald-300 dark:border-emerald-700 flex items-center justify-center gap-2 transition-all cursor-pointer"
-            >
-              {isPayOnDeliverySubmitting ? (
-                <>
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin text-emerald-700" />
-                  <span>ఆర్డర్ నమోదు చేస్తోంది...</span>
-                </>
-              ) : (
-                <>
-                  <Banknote className="w-4 h-4 text-emerald-700 dark:text-emerald-400" />
-                  <span>డెలివరీ సమయంలో చెల్లింపు (Pay on Delivery - Cash/UPI)</span>
-                </>
-              )}
-            </button>
-
+          {/* Cancel button */}
+          <div className="pt-2 text-center">
             <button
               type="button"
               onClick={onClose}
-              className="w-full py-1.5 text-xs font-semibold text-stone-500 hover:text-stone-800 dark:hover:text-stone-300 transition-colors"
+              className="text-xs font-semibold text-stone-500 hover:text-stone-800 dark:hover:text-stone-300 transition-colors cursor-pointer"
             >
-              రద్దు చేసి వెనుకకు వెళ్ళండి
+              {language === 'en' ? 'Cancel and go back' : 'రద్దు చేసి వెనుకకు వెళ్ళండి'}
             </button>
           </div>
 
@@ -480,4 +559,3 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     </div>
   );
 };
-

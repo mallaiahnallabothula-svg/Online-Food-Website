@@ -76,9 +76,9 @@ export default defineConfig(() => {
         includeAssets: ['favicon.ico', 'favicon.png', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-maskable-512x512.png'],
         manifest: {
           id: '/',
-          name: 'శ్రీ మల్లికార్జున పల్లె జొన్న రొట్టెలు',
-          short_name: 'జొన్న రొట్టెలు',
-          description: 'కొల్లూరు మరియు పరిసర ప్రాంతాలలో తాజా, వేడివేడి పల్లె జొన్న రొట్టెలు మరియు ఉచిత కారాల ఆన్‌లైన్ ఆర్డరింగ్ అప్లికేషన్',
+          name: 'మన ఇంటి వంట',
+          short_name: 'మన ఇంటి వంట',
+          description: 'కొల్లూరు మరియు పరిసర ప్రాంతాలలో తాజా, వేడివేడి పల్లె జొన్న రొట్టెలు మరియు కారాల ఆన్‌లైన్ ఆర్డరింగ్ అప్లికేషన్',
           theme_color: '#78350F',
           background_color: '#FDFBF7',
           display: 'standalone',

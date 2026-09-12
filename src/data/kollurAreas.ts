@@ -57,6 +57,7 @@ export function checkKollurDeliveryEligibility(lat?: number, lng?: number, areaD
   isEligible: boolean;
   distanceKm: number;
   messageTe: string;
+  messageEn: string;
 } {
   let dist = 1.0;
   if (areaDistanceKm !== undefined) {
@@ -69,10 +70,14 @@ export function checkKollurDeliveryEligibility(lat?: number, lng?: number, areaD
   const messageTe = isEligible
     ? `ఉచిత డెలివరీ అందుబాటులో ఉంది (కొల్లూరు కేంద్రం నుండి దూరం: ${dist} కి.మీ., 5 కి.మీ. పరిధి లోపలే).`
     : `క్షమించండి, మీ చిరునామా కొల్లూరు నుండి ${dist} కి.మీ. దూరంలో ఉంది. ఉచిత డెలివరీ కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధి వరకే పరిమితం.`;
+  const messageEn = isEligible
+    ? `Free delivery available (Distance from Kolluru center: ${dist} km, within 5 km limit).`
+    : `Sorry, your address is ${dist} km away from Kolluru. Free delivery is only within 5 km of Kolluru village.`;
 
   return {
     isEligible,
     distanceKm: dist,
     messageTe,
+    messageEn,
   };
 }

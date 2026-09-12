@@ -382,7 +382,7 @@ app.post('/api/payment/create-order', (req, res) => {
     providerStatus: {
       isConfigured: true,
       mode: 'UPI_DIRECT_SERVER_VERIFIED',
-      disclaimer: 'ఆన్‌లైన్ UPI ద్వారా మాత్రమే చెల్లింపులు స్వీకరించబడతాయి. క్యాష్ ఆన్ డెలివరీ లేదు.'
+      disclaimer: 'ఆన్‌లైన్ UPI లేదా డెలివరీ సమయంలో చెల్లింపు (Pay on Delivery) అందుబాటులో ఉంది.'
     }
   });
 });
