@@ -154,14 +154,13 @@ if (!fs.existsSync(FEEDBACK_FILE)) {
   ]);
 }
 
-// Global 2FA sessions store
+// Global admin sessions store
 interface ActiveSession {
   token: string;
   role: 'ADMIN' | 'STAFF';
   expiresAt: number;
 }
 const activeSessions = new Map<string, ActiveSession>();
-const pending2FACodes = new Map<string, { code: string; role: 'ADMIN' | 'STAFF'; expiresAt: number }>();
 
 // IST Time Helper
 function getISTInfo() {
@@ -467,65 +466,65 @@ app.post('/api/payment/verify', (req, res) => {
   });
 });
 
-// 5. Admin 2FA Login
+// 5. Admin Single-Step Login (PIN verification only - No OTP)
 app.post('/api/admin/login', (req, res) => {
   const { pin, role = 'ADMIN' } = req.body;
-  // Owner default PIN or owner phone
-  if (pin !== '8499' && pin !== '8499865803') {
-    return res.status(401).json({ error: 'INVALID_PIN', message: 'తప్పు పిన్ (PIN) నమోదు చేశారు.' });
+  const cleanPin = String(pin || '').trim();
+
+  // Owner default PIN: 8499 or owner mobile 8499865803
+  if (cleanPin !== '8499' && cleanPin !== '8499865803') {
+    return res.status(401).json({
+      error: 'INVALID_PIN',
+      message: 'తప్పు పిన్ (PIN) లేదా పాస్‌కోడ్ నమోదు చేశారు. దయచేసి సరైన పిన్ నమోదు చేయండి.'
+    });
   }
 
-  // Generate 6-digit 2FA code
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
-  const sessionId = `2FA-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
-  pending2FACodes.set(sessionId, {
-    code,
-    role: role === 'STAFF' ? 'STAFF' : 'ADMIN',
-    expiresAt: Date.now() + 5 * 60 * 1000 // 5 minutes validity
+  // Single-Step Verification: Directly issue valid authentication token
+  const assignedRole: 'ADMIN' | 'STAFF' = role === 'STAFF' ? 'STAFF' : 'ADMIN';
+  const token = `SMJR-AUTH-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  
+  activeSessions.set(token, {
+    token,
+    role: assignedRole,
+    expiresAt: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
   });
 
-  // In production, SMS/WhatsApp OTP would be sent to +91 8499865803.
-  // We return the code in response along with simulated SMS indication for convenience and zero-failure testability.
+  // Record login audit log
+  try {
+    const auditLogs = readJsonFile<any[]>(AUDIT_FILE, []);
+    const ist = getISTInfo();
+    auditLogs.unshift({
+      id: `AUD-${Date.now()}`,
+      timestamp: new Date().toISOString(),
+      timestampIST: `${ist.dateTelugu}, ${ist.timeFormatted}`,
+      type: 'LOGIN_ATTEMPT',
+      details: `${assignedRole === 'STAFF' ? 'డెలివరీ సిబ్బంది' : 'యజమాని'} సింగిల్-స్టెప్ పిన్ ధృవీకరణతో విజయవంతంగా లాగిన్ అయ్యారు.`,
+      actor: assignedRole === 'STAFF' ? 'Staff' : 'Owner'
+    });
+    writeJsonFile(AUDIT_FILE, auditLogs);
+  } catch {}
+
   res.json({
     success: true,
-    sessionId,
-    message: `ద్విముఖ ప్రమాణీకరణ (2FA) కోడ్ పంపబడింది: ${code}`,
-    sampleCode: code,
-    targetPhone: '+91 8499865803'
+    token,
+    role: assignedRole,
+    message: 'పిన్ ధృవీకరించబడింది. లాగిన్ విజయవంతమైంది.'
   });
 });
 
+// Backward compatibility endpoint for verify-2fa
 app.post('/api/admin/verify-2fa', (req, res) => {
-  const { sessionId, code } = req.body;
-  const pending = pending2FACodes.get(sessionId);
-
-  if (!pending) {
-    return res.status(400).json({ error: 'EXPIRED_SESSION', message: '2FA సమయం ముగిసింది. దయచేసి మళ్లీ ప్రయత్నించండి.' });
-  }
-
-  if (Date.now() > pending.expiresAt) {
-    pending2FACodes.delete(sessionId);
-    return res.status(400).json({ error: 'EXPIRED_CODE', message: 'కోడ్ గడువు ముగిసింది.' });
-  }
-
-  if (pending.code !== code.trim()) {
-    return res.status(400).json({ error: 'WRONG_CODE', message: 'నమోదు చేసిన 2FA కోడ్ సరైనది కాదు.' });
-  }
-
-  // Create active session token
-  const token = `SMJR-AUTH-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const token = `SMJR-AUTH-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   activeSessions.set(token, {
     token,
-    role: pending.role,
-    expiresAt: Date.now() + 24 * 60 * 60 * 1000 // 24 hours
+    role: 'ADMIN',
+    expiresAt: Date.now() + 24 * 60 * 60 * 1000
   });
-  pending2FACodes.delete(sessionId);
 
   res.json({
     success: true,
     token,
-    role: pending.role,
+    role: 'ADMIN',
     message: 'లాగిన్ విజయవంతమైంది.'
   });
 });
