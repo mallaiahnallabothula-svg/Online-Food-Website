@@ -273,57 +273,96 @@ app.get('/api/status', (req, res) => {
     deliveryWindow: 'సాయంత్రం 6:00 - 8:00 గంటలు',
     deliveryDate: ist.targetDeliveryDate,
     nextOpenMessage,
-    serviceArea: 'కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధిలో ఉచిత డెలివరీ'
+    serviceArea: 'కొల్లూరు గ్రామం నుండి 5 కి.మీ. వరకు ఉచిత డెలివరీ (5 కి.మీ. పైబడితే ₹9/కి.మీ.)'
   });
 });
 
-// 2. Check delivery eligibility (distance within 5 km of Kollur)
+// 2. Check delivery eligibility (Free within 5 km, ₹9/km above 5 km)
 app.post('/api/check-delivery', (req, res) => {
   const { distanceKm, localityName } = req.body;
-  const dist = typeof distanceKm === 'number' ? distanceKm : 1.0;
-  const isEligible = dist <= 5.0;
+  const dist = typeof distanceKm === 'number' ? Math.max(0, Math.round(distanceKm * 10) / 10) : 1.0;
+  const isFreeDelivery = dist <= 5.0;
+  const extraKm = dist > 5.0 ? Math.round((dist - 5.0) * 10) / 10 : 0;
+  const deliveryCharge = dist > 5.0 ? Math.max(9, Math.round(extraKm * 9)) : 0;
+  const isEligible = dist <= 35.0; // Serviceable up to 35 km
+
+  let message = '';
+  if (!isEligible) {
+    message = `క్షమించండి, మీ చిరునామా కొల్లూరు నుండి ${dist} కి.మీ. దూరంలో ఉంది. మా గరిష్ట డెలివరీ పరిధి 35 కి.మీ. మాత్రమే.`;
+  } else if (isFreeDelivery) {
+    message = `ఉచిత డెలివరీ అందుబాటులో ఉంది (కొల్లూరు కేంద్రం నుండి దూరం: ${dist} కి.మీ. — 5 కి.మీ. పరిధి లోపల ఉచితం).`;
+  } else {
+    message = `కొల్లూరు నుండి దూరం: ${dist} కి.మీ. (5 కి.మీ. పైబడిన దూరం: ${extraKm} కి.మీ.). డెలివరీ ఛార్జీ: ₹${deliveryCharge} (కి.మీ.కు ₹9 చొప్పున).`;
+  }
 
   res.json({
     isEligible,
     distanceKm: dist,
+    isFreeDelivery,
+    extraKm,
+    deliveryCharge,
     localityName: localityName || 'కొల్లూరు పరిసర ప్రాంతం',
-    message: isEligible
-      ? `ఉచిత డెలివరీ అందుబాటులో ఉంది (దూరం: ${dist} కి.మీ., 5 కి.మీ. పరిధి లోపలే).`
-      : `క్షమించండి, మీ చిరునామా కొల్లూరు నుండి ${dist} కి.మీ. దూరంలో ఉంది. ఉచిత డెలివరీ కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధి వరకే పరిమితం.`
+    message
   });
 });
 
 // 3. Initiate payment order
 app.post('/api/payment/create-order', (req, res) => {
-  const { quantity, karamSelection, customer } = req.body;
+  const { quantity, jowarQuantity, chapathiQuantity, karamSelection, customer } = req.body;
   const ist = getISTInfo();
 
-  // Validate quantity
-  const qty = parseInt(quantity, 10);
-  if (isNaN(qty) || qty < 5) {
+  // Validate quantities
+  const parsedQuantity = parseInt(quantity, 10);
+  const jowarQty = typeof jowarQuantity === 'number' 
+    ? jowarQuantity 
+    : (!isNaN(parsedQuantity) && !chapathiQuantity ? parsedQuantity : 0);
+  const chapathiQty = typeof chapathiQuantity === 'number' ? chapathiQuantity : 0;
+
+  if (jowarQty > 0 && jowarQty < 5) {
     return res.status(400).json({
       error: 'INVALID_QUANTITY',
-      message: 'కనీసం 5 జొన్న రొట్టెలు ఆర్డర్ చేయాలి.'
+      message: 'జొన్న రొట్టెలు ఆర్డర్ చేస్తే కనీసం 5 రొట్టెలు ఎంచుకోవాలి.'
+    });
+  }
+  if (chapathiQty > 0 && chapathiQty < 5) {
+    return res.status(400).json({
+      error: 'INVALID_QUANTITY',
+      message: 'చపాతీలు ఆర్డర్ చేస్తే కనీసం 5 చపాతీలు ఎంచుకోవాలి.'
+    });
+  }
+
+  const totalBreads = jowarQty + chapathiQty;
+  if (totalBreads < 5) {
+    return res.status(400).json({
+      error: 'INVALID_QUANTITY',
+      message: 'కనీసం 5 జొన్న రొట్టెలు లేదా చపాతీలు ఆర్డర్ చేయాలి.'
     });
   }
 
   // Calculate pricing & karam
   const pricePerRoti = 30;
-  const totalAmount = qty * pricePerRoti;
-  const setsOf5 = Math.floor(qty / 5);
+  const pricePerChapathi = 10;
+  const itemsSubtotal = (jowarQty * pricePerRoti) + (chapathiQty * pricePerChapathi);
+
+  // Delivery charge calculation: Free within 5 km, ₹9/km for distance above 5 km
+  const customerDistance = typeof customer?.distanceKm === 'number' ? Math.max(0, customer.distanceKm) : 0.5;
+  const extraKm = customerDistance > 5.0 ? Math.round((customerDistance - 5.0) * 10) / 10 : 0;
+  const deliveryCharge = customerDistance > 5.0 ? Math.max(9, Math.round(extraKm * 9)) : 0;
+  const totalAmount = itemsSubtotal + deliveryCharge;
+
+  const setsOf5 = Math.max(1, Math.floor(totalBreads / 5));
   const gramsPerSelected = setsOf5 * 20;
 
   // Business Rule:
-  // - If qty <= 10: only ONE karam option allowed (either Karivepaku OR Avise Ginjalu).
-  // - If qty > 10: BOTH options are allowed.
-  const canSelectBoth = qty > 10;
+  // - If totalBreads <= 10: only ONE karam option allowed (either Karivepaku OR Avise Ginjalu).
+  // - If totalBreads > 10: BOTH options are allowed.
+  const canSelectBoth = totalBreads > 10;
   let normalizedKaram = {
     karivepaku: !!karamSelection?.karivepaku,
     aviseGinjalu: !!karamSelection?.aviseGinjalu,
   };
 
   if (!canSelectBoth && normalizedKaram.karivepaku && normalizedKaram.aviseGinjalu) {
-    // Keep only one if qty <= 10
     normalizedKaram.aviseGinjalu = false;
   }
   if (!normalizedKaram.karivepaku && !normalizedKaram.aviseGinjalu) {
@@ -371,8 +410,15 @@ app.post('/api/payment/create-order', (req, res) => {
     ownerPhone: '8499865803',
     upiUri,
     calculatedDetails: {
-      quantity: qty,
+      quantity: totalBreads,
+      jowarQuantity,
+      chapathiQuantity,
       pricePerRoti,
+      pricePerChapathi,
+      subtotal: itemsSubtotal,
+      distanceKm: customerDistance,
+      extraKm,
+      deliveryCharge,
       totalAmount,
       karamQuantities,
       deliveryWindow: 'సాయంత్రం 6–8 గంటలు',
@@ -381,7 +427,7 @@ app.post('/api/payment/create-order', (req, res) => {
     providerStatus: {
       isConfigured: true,
       mode: 'UPI_DIRECT_SERVER_VERIFIED',
-      disclaimer: 'ఆన్‌లైన్ UPI లేదా డెలివరీ సమయంలో చెల్లింపు (Pay on Delivery) అందుబాటులో ఉంది.'
+      disclaimer: 'ఆన్‌లైన్ UPI చెల్లింపు మాత్రమే (No Cash on Delivery). చెల్లింపు తర్వాత మాత్రమే ఆర్డర్ నమోదవుతుంది.'
     }
   });
 });
@@ -407,10 +453,17 @@ app.post('/api/payment/verify', (req, res) => {
   }
 
   // Server-side payment validation
-  // Accepts standard UPI-REF, UTR numbers, or Pay on Delivery
+  // Strict rule: NO Cash on Delivery. Orders placed only after verified online payment!
   const cleanRef = String(paymentReference).trim();
-  const isPayOnDelivery = cleanRef.startsWith('POD-') || cleanRef.startsWith('COD-') || cleanRef.includes('DELIVERY');
+  const isPayOnDelivery = cleanRef.startsWith('POD-') || cleanRef.startsWith('COD-') || cleanRef.toUpperCase().includes('DELIVERY') || cleanRef.toUpperCase().includes('CASH');
   
+  if (isPayOnDelivery) {
+    return res.status(400).json({
+      error: 'NO_CASH_ON_DELIVERY',
+      message: 'నగదు డెలివరీ (Cash on Delivery) సదుపాయం అందుబాటులో లేదు. ఆన్‌లైన్ పేమెంట్ పూర్తయిన తర్వాత మాత్రమే ఆర్డర్ నమోదవుతుంది.'
+    });
+  }
+
   if (cleanRef.length < 4) {
     return res.status(400).json({
       error: 'INVALID_PAYMENT_PROOF',
@@ -423,19 +476,40 @@ app.post('/api/payment/verify', (req, res) => {
   const randomId = Math.floor(1000 + Math.random() * 9000);
   const newOrderId = `SMJR-${dateNum}-${randomId}`;
 
+  // Distance and delivery charge
+  const customerDistance = typeof orderData?.customer?.distanceKm === 'number'
+    ? Math.max(0, orderData.customer.distanceKm)
+    : 0.5;
+  const extraKm = customerDistance > 5.0 ? Math.round((customerDistance - 5.0) * 10) / 10 : 0;
+  const calculatedDeliveryCharge = customerDistance > 5.0 ? Math.max(9, Math.round(extraKm * 9)) : 0;
+  const deliveryCharge = orderData.deliveryCharge !== undefined ? orderData.deliveryCharge : calculatedDeliveryCharge;
+
+  const jowarQty = orderData.jowarQuantity !== undefined ? orderData.jowarQuantity : (orderData.chapathiQuantity ? 0 : orderData.quantity);
+  const chapathiQty = orderData.chapathiQuantity || 0;
+  const subtotal = orderData.subtotal !== undefined ? orderData.subtotal : ((jowarQty * 30) + (chapathiQty * 10));
+  const totalPaid = orderData.totalAmount || (subtotal + deliveryCharge);
+
   const confirmedOrder = {
     id: newOrderId,
     createdAt: new Date().toISOString(),
     createdAtIST: `${ist.dateTelugu}, ${ist.timeFormatted}`,
-    quantity: orderData.quantity,
+    quantity: orderData.quantity || (jowarQty + chapathiQty),
+    jowarQuantity: jowarQty,
+    chapathiQuantity: chapathiQty,
     pricePerRoti: 30,
-    totalPaid: orderData.totalAmount,
+    pricePerChapathi: 10,
+    subtotal,
+    deliveryCharge,
+    totalPaid,
     karamSelection: orderData.karamSelection,
     karamQuantities: orderData.karamQuantities,
-    customer: orderData.customer,
+    customer: {
+      ...orderData.customer,
+      distanceKm: customerDistance,
+    },
     deliveryDate: orderData.deliveryDate || ist.dateTelugu,
     deliveryWindow: 'సాయంత్రం 6–8 గంటలు',
-    paymentStatus: isPayOnDelivery ? 'PAY_ON_DELIVERY' : 'VERIFIED',
+    paymentStatus: 'VERIFIED',
     paymentReference: cleanRef,
     paymentVerifiedAt: new Date().toISOString(),
     fulfillmentStatus: 'NEW'

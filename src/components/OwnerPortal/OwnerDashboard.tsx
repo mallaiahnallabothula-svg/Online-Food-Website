@@ -459,13 +459,33 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
 
                     {/* Quantity & Karams */}
                     <div className="md:col-span-4 bg-stone-50 dark:bg-stone-900/60 p-3 rounded-xl border border-stone-200 dark:border-stone-800 text-xs space-y-1.5">
-                      <div className="flex justify-between items-center">
-                        <span className="font-bold text-stone-800 dark:text-stone-200">
-                          జొన్న రొట్టెలు:
-                        </span>
-                        <span className="font-mono font-bold text-base text-[#78350F] dark:text-amber-400">
-                          {order.quantity} రొట్టెలు (₹{order.totalPaid})
-                        </span>
+                      <div className="space-y-1">
+                        {(order.jowarQuantity ?? order.quantity) > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span className="font-semibold text-stone-800 dark:text-stone-200">
+                              🌾 జొన్న రొట్టెలు:
+                            </span>
+                            <span className="font-mono font-bold text-[#78350F] dark:text-amber-400">
+                              {order.jowarQuantity ?? order.quantity} సంఖ్య
+                            </span>
+                          </div>
+                        )}
+                        {(order.chapathiQuantity ?? 0) > 0 && (
+                          <div className="flex justify-between items-center">
+                            <span className="font-semibold text-stone-800 dark:text-stone-200">
+                              🥞 వేడివేడి చపాతీలు:
+                            </span>
+                            <span className="font-mono font-bold text-amber-700 dark:text-amber-400">
+                              {order.chapathiQuantity} సంఖ్య
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex justify-between items-center pt-1 border-t border-stone-200 dark:border-stone-800">
+                          <span className="font-bold text-stone-700 dark:text-stone-300">మొత్తం చెల్లింపు:</span>
+                          <span className="font-mono font-bold text-base text-[#78350F] dark:text-amber-400">
+                            ₹{order.totalPaid}
+                          </span>
+                        </div>
                       </div>
 
                       <div className="pt-1 border-t border-stone-200 dark:border-stone-800 space-y-1 text-stone-700 dark:text-stone-300">

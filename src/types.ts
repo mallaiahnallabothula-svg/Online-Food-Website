@@ -38,8 +38,13 @@ export interface Order {
   id: string; // e.g. SMJR-20260910-4821
   createdAt: string; // ISO string
   createdAtIST: string; // Formatted IST
-  quantity: number; // min 5
+  quantity: number; // Total rotis + chapathis (backward compatible)
+  jowarQuantity?: number; // Jowar Rotis count (min 5 if selected, ₹30 each)
+  chapathiQuantity?: number; // Chapathis count (min 5 if selected, ₹10 each)
   pricePerRoti: number; // 30
+  pricePerChapathi?: number; // 10
+  subtotal?: number; // Food items subtotal
+  deliveryCharge?: number; // Delivery charge: ₹0 if <= 5km, ₹9/km above 5km
   totalPaid: number;
   karamSelection: KaramSelection;
   karamQuantities: {

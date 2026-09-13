@@ -9,6 +9,8 @@ interface OrderFormProps {
   allowOutsideHours: boolean;
   onProceedToPayment: (orderPayload: {
     quantity: number;
+    jowarQuantity: number;
+    chapathiQuantity: number;
     totalAmount: number;
     karamSelection: KaramSelection;
     karamQuantities: { karivepakuGrams: number; aviseGinjaluGrams: number };
@@ -25,13 +27,19 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 }) => {
   const { t, language } = useLanguage();
 
-  // Quantity (minimum 5)
-  const [quantity, setQuantity] = useState<number>(5);
+  // Item Quantities
+  // Jowar Roti: ₹30 each, minimum 5 if chosen
+  const [jowarQuantity, setJowarQuantity] = useState<number>(5);
+  // Fresh Wheat Chapathi: ₹10 each, minimum 5 if chosen
+  const [chapathiQuantity, setChapathiQuantity] = useState<number>(0);
+
+  const totalQuantity = jowarQuantity + chapathiQuantity;
+  const quantity = totalQuantity; // Backwards-compatible alias
 
   // Business Rule:
-  // - If quantity <= 10: only ONE karam option is allowed at a time (either Karivepaku OR Avise Ginjalu).
-  // - If quantity > 10: BOTH options are available and can be selected simultaneously.
-  const canSelectBoth = quantity > 10;
+  // - If total quantity <= 10: only ONE karam option is allowed at a time (either Karivepaku OR Avise Ginjalu).
+  // - If total quantity > 10: BOTH options are available and can be selected simultaneously.
+  const canSelectBoth = totalQuantity > 10;
 
   // Karam selections: defaults to single option (Karivepaku) for starting quantity 5
   const [karamSelection, setKaramSelection] = useState<KaramSelection>({
@@ -41,7 +49,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
   // Whenever quantity drops to <= 10, if both were previously selected, enforce single choice
   useEffect(() => {
-    if (quantity <= 10) {
+    if (totalQuantity <= 10) {
       if (karamSelection.karivepaku && karamSelection.aviseGinjalu) {
         setKaramSelection({
           karivepaku: true,
@@ -49,7 +57,42 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         });
       }
     }
-  }, [quantity]);
+  }, [totalQuantity]);
+
+  // Quantity Stepper Helpers
+  const incrementJowar = () => {
+    if (jowarQuantity === 0) {
+      setJowarQuantity(5);
+    } else {
+      setJowarQuantity(prev => prev + 1);
+    }
+  };
+
+  const decrementJowar = () => {
+    if (jowarQuantity > 5) {
+      setJowarQuantity(prev => prev - 1);
+    } else if (jowarQuantity === 5) {
+      if (chapathiQuantity >= 5) {
+        setJowarQuantity(0);
+      }
+    }
+  };
+
+  const incrementChapathi = () => {
+    if (chapathiQuantity === 0) {
+      setChapathiQuantity(5);
+    } else {
+      setChapathiQuantity(prev => prev + 1);
+    }
+  };
+
+  const decrementChapathi = () => {
+    if (chapathiQuantity > 5) {
+      setChapathiQuantity(prev => prev - 1);
+    } else if (chapathiQuantity === 5) {
+      setChapathiQuantity(0);
+    }
+  };
 
   // Handlers for single vs dual karam choices
   const handleSelectKarivepaku = () => {
@@ -106,13 +149,19 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const [deliveryEligibility, setDeliveryEligibility] = useState<{
     isEligible: boolean;
     distanceKm: number;
+    isFreeDelivery?: boolean;
+    extraKm?: number;
+    deliveryCharge?: number;
     messageTe: string;
     messageEn: string;
   }>({
     isEligible: true,
     distanceKm: 0.5,
-    messageTe: 'ఉచిత డెలివరీ అందుబాటులో ఉంది (కొల్లూరు నుండి దూరం: 0.5 కి.మీ.).',
-    messageEn: 'Free delivery available (Distance from Kolluru center: 0.5 km).',
+    isFreeDelivery: true,
+    extraKm: 0,
+    deliveryCharge: 0,
+    messageTe: 'ఉచిత డెలివరీ అందుబాటులో ఉంది (కొల్లూరు నుండి దూరం: 0.5 కి.మీ. — 5 కి.మీ. లోపల ఉచితం).',
+    messageEn: 'Free delivery available (Distance from Kolluru center: 0.5 km — free within 5 km).',
   });
 
   // Form errors
@@ -123,8 +172,21 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
   // Calculations
   const pricePerRoti = 30;
-  const totalAmount = quantity * pricePerRoti;
-  const setsOf5 = Math.floor(quantity / 5);
+  const pricePerChapathi = 10;
+  const jowarSubtotal = jowarQuantity * pricePerRoti;
+  const chapathiSubtotal = chapathiQuantity * pricePerChapathi;
+  const itemsSubtotal = jowarSubtotal + chapathiSubtotal;
+
+  // Delivery charge calculation: Free within 5 km, ₹9/km for distance above 5 km
+  const currentDist = typeof deliveryEligibility.distanceKm === 'number' 
+    ? deliveryEligibility.distanceKm 
+    : (currentDistanceKm || 0.5);
+  const extraKm = currentDist > 5.0 ? Math.round((currentDist - 5.0) * 10) / 10 : 0;
+  const deliveryCharge = currentDist > 5.0 ? Math.max(9, Math.round(extraKm * 9)) : 0;
+  const isFreeDelivery = currentDist <= 5.0;
+  const totalAmount = itemsSubtotal + deliveryCharge;
+
+  const setsOf5 = Math.max(1, Math.floor(totalQuantity / 5));
   const gramsPerSelected = setsOf5 * 20;
 
   const karivepakuGrams = karamSelection.karivepaku ? gramsPerSelected : 0;
@@ -195,10 +257,6 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     );
   };
 
-  // Quantity helpers
-  const incrementQuantity = () => setQuantity(q => q + 1);
-  const decrementQuantity = () => setQuantity(q => (q > 5 ? q - 1 : 5));
-
   // Quick Demo Fill
   const handleQuickDemoFill = () => {
     setCustomerName(language === 'en' ? 'Suresh Kumar' : 'సురేష్ కుమార్');
@@ -224,6 +282,27 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const validateForm = (): boolean => {
     const errs: Record<string, string> = {};
     let firstErrorElementId = '';
+
+    if (totalQuantity < 5) {
+      errs.quantity = language === 'en' 
+        ? 'Minimum order quantity is 5 items.' 
+        : 'కనీస ఆర్డర్ 5 సంఖ్య ఉండాలి.';
+      if (!firstErrorElementId) firstErrorElementId = 'jowar-roti-card';
+    }
+
+    if (jowarQuantity > 0 && jowarQuantity < 5) {
+      errs.jowar = language === 'en' 
+        ? 'Minimum 5 Jowar Rotis required if selected.' 
+        : 'జొన్న రొట్టెలు కనీసం 5 సంఖ్య ఆర్డర్ చేయాలి.';
+      if (!firstErrorElementId) firstErrorElementId = 'jowar-roti-card';
+    }
+
+    if (chapathiQuantity > 0 && chapathiQuantity < 5) {
+      errs.chapathi = language === 'en' 
+        ? 'Minimum 5 Chapathis required if selected.' 
+        : 'చపాతీలు కనీసం 5 సంఖ్య ఆర్డర్ చేయాలి.';
+      if (!firstErrorElementId) firstErrorElementId = 'chapathi-card';
+    }
 
     if (!customerName.trim()) {
       errs.customerName = t.errCustomerName;
@@ -274,7 +353,11 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     if (!validateForm()) return;
 
     onProceedToPayment({
-      quantity,
+      quantity: totalQuantity,
+      jowarQuantity,
+      chapathiQuantity,
+      subtotal: itemsSubtotal,
+      deliveryCharge,
       totalAmount,
       karamSelection,
       karamQuantities: {
@@ -287,7 +370,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         address: address.trim(),
         landmark: landmark.trim(),
         locationLink: customLocationLink.trim() || `https://maps.google.com/?q=${KOLLUR_CENTER.lat},${KOLLUR_CENTER.lng}`,
-        distanceKm: deliveryEligibility.distanceKm,
+        distanceKm: currentDist,
       },
       deliveryDate: deliveryDateStr,
       deliveryWindow,
@@ -309,81 +392,245 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             </span>
             <div>
               <h2 className="text-xl font-bold text-[#451A03] dark:text-amber-100 font-telugu">
-                {t.selectQuantityTitle}
+                {language === 'en' ? 'Select Items & Quantities' : 'రొట్టెలు & చపాతీలు ఎంచుకోండి'}
               </h2>
               <p className="text-xs sm:text-sm text-stone-500 dark:text-stone-400 font-telugu">
-                {t.selectQuantitySubtitle}
+                {language === 'en' 
+                  ? 'Authentic Jowar Rotis (₹30) & Soft Wheat Chapathis (₹10). Minimum order: 5 nos.'
+                  : 'పల్లెటూరి జొన్న రొట్టెలు (₹30) మరియు వేడివేడి చపాతీలు (₹10). కనీసం 5 సంఖ్య.'}
               </p>
             </div>
           </div>
 
-          <div className="pt-6 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-            {/* Quantity Selector Control */}
-            <div className="md:col-span-7 flex flex-col sm:flex-row items-center sm:items-start gap-4">
-              <div className="flex items-center gap-3 bg-[#FBF7EE] dark:bg-stone-900 p-2 rounded-2xl border border-amber-900/15 dark:border-stone-700">
-                <button
-                  type="button"
-                  onClick={decrementQuantity}
-                  disabled={quantity <= 5}
-                  id="qty-decrement-btn"
-                  className="w-12 h-12 rounded-xl bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 flex items-center justify-center hover:bg-amber-100 dark:hover:bg-stone-700 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed shadow-xs transition-all cursor-pointer"
-                  aria-label="Decrease quantity"
-                >
-                  <Minus className="w-5 h-5" />
-                </button>
-
-                <div className="w-20 text-center">
-                  <span className="text-3xl font-extrabold text-[#78350F] dark:text-amber-400 font-mono">
-                    {quantity}
-                  </span>
-                  <span className="block text-[11px] font-semibold text-stone-600 dark:text-stone-400 font-telugu">
-                    {t.rotisUnit}
-                  </span>
+          <div className="pt-6 space-y-6">
+            {/* Two Menu Items Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              
+              {/* ITEM 1: JOWAR ROTI */}
+              <div 
+                id="jowar-roti-card"
+                className={`p-5 rounded-2xl border-2 transition-all ${
+                  jowarQuantity > 0 
+                    ? 'border-amber-600 bg-amber-50/40 dark:bg-amber-950/20 shadow-xs' 
+                    : 'border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-900/40'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 text-[11px] font-bold font-telugu mb-1">
+                      <span>🌾 {language === 'en' ? 'Traditional' : 'సంప్రదాయం'}</span>
+                    </div>
+                    <h3 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-telugu">
+                      {language === 'en' ? 'Authentic Jowar Roti' : 'పల్లె జొన్న రొట్టె'}
+                    </h3>
+                    <p className="text-xs text-stone-500 dark:text-stone-400 font-telugu mt-0.5">
+                      {language === 'en' ? 'Authentic tawa roasted sorghum roti' : 'కట్టెల పొయ్యిపై తాజాగా కాల్చిన మెత్తటి జొన్న రొట్టె'}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xl font-extrabold text-[#78350F] dark:text-amber-400 font-mono">
+                      ₹30
+                    </span>
+                    <span className="block text-[10px] text-stone-500 font-telugu">
+                      {language === 'en' ? 'per piece' : 'ఒక్కొక్కటి'}
+                    </span>
+                  </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={incrementQuantity}
-                  id="qty-increment-btn"
-                  className="w-12 h-12 rounded-xl bg-white dark:bg-stone-800 text-stone-800 dark:text-stone-100 flex items-center justify-center hover:bg-amber-100 dark:hover:bg-stone-700 active:scale-95 shadow-xs transition-all cursor-pointer"
-                  aria-label="Increase quantity"
-                >
-                  <Plus className="w-5 h-5" />
-                </button>
+                <div className="mt-4 pt-4 border-t border-amber-900/10 dark:border-stone-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  {/* Stepper */}
+                  <div className="flex items-center gap-2.5 bg-white dark:bg-stone-800 p-1.5 rounded-xl border border-stone-300 dark:border-stone-700 shadow-2xs">
+                    <button
+                      type="button"
+                      onClick={decrementJowar}
+                      id="jowar-decrement-btn"
+                      className="w-9 h-9 rounded-lg bg-stone-100 dark:bg-stone-700 text-stone-800 dark:text-stone-100 flex items-center justify-center hover:bg-amber-100 dark:hover:bg-stone-600 active:scale-95 transition-all cursor-pointer"
+                      aria-label="Decrease jowar quantity"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <div className="w-14 text-center">
+                      <span className="text-xl font-extrabold text-[#78350F] dark:text-amber-400 font-mono">
+                        {jowarQuantity}
+                      </span>
+                      <span className="block text-[10px] text-stone-500 font-telugu">
+                        {language === 'en' ? 'rotis' : 'రొట్టెలు'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={incrementJowar}
+                      id="jowar-increment-btn"
+                      className="w-9 h-9 rounded-lg bg-stone-100 dark:bg-stone-700 text-stone-800 dark:text-stone-100 flex items-center justify-center hover:bg-amber-100 dark:hover:bg-stone-600 active:scale-95 transition-all cursor-pointer"
+                      aria-label="Increase jowar quantity"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Quick Select Buttons */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {[5, 10, 15, 20].map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => setJowarQuantity(num)}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold font-mono transition-all cursor-pointer ${
+                          jowarQuantity === num
+                            ? 'bg-[#78350F] text-white shadow-xs'
+                            : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-amber-100 dark:hover:bg-stone-700'
+                        }`}
+                      >
+                        {num}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-center justify-between text-xs font-telugu text-stone-600 dark:text-stone-400">
+                  <span className="text-[11px] text-amber-700 dark:text-amber-400 font-medium">
+                    {language === 'en' ? 'Min order: 5 nos' : 'కనీస ఆర్డర్: 5 సంఖ్య'}
+                  </span>
+                  <span className="font-mono font-bold text-stone-800 dark:text-stone-200">
+                    {language === 'en' ? 'Subtotal' : 'ఉపమొత్తం'}: ₹{jowarSubtotal}
+                  </span>
+                </div>
               </div>
 
-              {/* Quick Select Buttons */}
-              <div className="flex items-center gap-2 flex-wrap">
-                {[5, 10, 15, 20].map((num) => (
-                  <button
-                    key={num}
-                    type="button"
-                    onClick={() => setQuantity(num)}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-bold font-mono transition-all cursor-pointer ${
-                      quantity === num
-                        ? 'bg-[#78350F] text-white shadow-xs'
-                        : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-amber-100 dark:hover:bg-stone-700'
-                    }`}
-                  >
-                    {num} {t.rotisUnit}
-                  </button>
-                ))}
+              {/* ITEM 2: CHAPATHI */}
+              <div 
+                id="chapathi-card"
+                className={`p-5 rounded-2xl border-2 transition-all ${
+                  chapathiQuantity > 0 
+                    ? 'border-amber-600 bg-amber-50/40 dark:bg-amber-950/20 shadow-xs' 
+                    : 'border-stone-200 dark:border-stone-800 bg-stone-50/50 dark:bg-stone-900/40'
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200 text-[11px] font-bold font-telugu mb-1">
+                      <span>🥞 {language === 'en' ? 'Whole Wheat' : '100% గోధుమ'}</span>
+                    </div>
+                    <h3 className="text-lg font-bold text-stone-900 dark:text-stone-100 font-telugu">
+                      {language === 'en' ? 'Fresh Soft Chapathi' : 'వేడివేడి చపాతీ'}
+                    </h3>
+                    <p className="text-xs text-stone-500 dark:text-stone-400 font-telugu mt-0.5">
+                      {language === 'en' ? 'Soft, freshly made traditional wheat chapathi' : 'చేతితో రుద్దిన తాజా వేడివేడి మెత్తటి గోధుమ చపాతీ'}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xl font-extrabold text-amber-700 dark:text-amber-400 font-mono">
+                      ₹10
+                    </span>
+                    <span className="block text-[10px] text-stone-500 font-telugu">
+                      {language === 'en' ? 'per piece' : 'ఒక్కొక్కటి'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-amber-900/10 dark:border-stone-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+                  {/* Stepper */}
+                  <div className="flex items-center gap-2.5 bg-white dark:bg-stone-800 p-1.5 rounded-xl border border-stone-300 dark:border-stone-700 shadow-2xs">
+                    <button
+                      type="button"
+                      onClick={decrementChapathi}
+                      id="chapathi-decrement-btn"
+                      className="w-9 h-9 rounded-lg bg-stone-100 dark:bg-stone-700 text-stone-800 dark:text-stone-100 flex items-center justify-center hover:bg-amber-100 dark:hover:bg-stone-600 active:scale-95 transition-all cursor-pointer"
+                      aria-label="Decrease chapathi quantity"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <div className="w-14 text-center">
+                      <span className="text-xl font-extrabold text-amber-700 dark:text-amber-400 font-mono">
+                        {chapathiQuantity}
+                      </span>
+                      <span className="block text-[10px] text-stone-500 font-telugu">
+                        {language === 'en' ? 'chapathis' : 'చపాతీలు'}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={incrementChapathi}
+                      id="chapathi-increment-btn"
+                      className="w-9 h-9 rounded-lg bg-stone-100 dark:bg-stone-700 text-stone-800 dark:text-stone-100 flex items-center justify-center hover:bg-amber-100 dark:hover:bg-stone-600 active:scale-95 transition-all cursor-pointer"
+                      aria-label="Increase chapathi quantity"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Quick Select Buttons */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {[0, 5, 10, 15].map((num) => (
+                      <button
+                        key={num}
+                        type="button"
+                        onClick={() => setChapathiQuantity(num)}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold font-mono transition-all cursor-pointer ${
+                          chapathiQuantity === num
+                            ? 'bg-amber-700 text-white shadow-xs'
+                            : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-amber-100 dark:hover:bg-stone-700'
+                        }`}
+                      >
+                        {num === 0 ? (language === 'en' ? 'None' : 'వద్దు') : num}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-center justify-between text-xs font-telugu text-stone-600 dark:text-stone-400">
+                  <span className="text-[11px] text-amber-700 dark:text-amber-400 font-medium">
+                    {language === 'en' ? 'Price: ₹10 | Min order: 5 nos' : 'ధర: ₹10 | కనీస ఆర్డర్: 5 సంఖ్య'}
+                  </span>
+                  <span className="font-mono font-bold text-stone-800 dark:text-stone-200">
+                    {language === 'en' ? 'Subtotal' : 'ఉపమొత్తం'}: ₹{chapathiSubtotal}
+                  </span>
+                </div>
               </div>
+
             </div>
 
-            {/* Live Subtotal Card */}
-            <div className="md:col-span-5 bg-amber-50/70 dark:bg-stone-900/60 p-4 rounded-xl border border-amber-200 dark:border-stone-800 flex flex-col justify-center text-right font-telugu">
-              <span className="text-xs text-stone-600 dark:text-stone-400">{t.subtotalLabel}</span>
-              <div className="flex items-baseline justify-end gap-1.5 mt-0.5">
-                <span className="text-xs font-mono text-stone-500">{quantity} × ₹30 =</span>
+            {/* Combined Live Order Summary Bar */}
+            <div className="p-4 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50/50 dark:from-stone-900 dark:to-stone-900 border border-amber-200 dark:border-stone-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 font-telugu">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm font-bold text-stone-900 dark:text-stone-100">
+                    {language === 'en' ? 'Total Selected' : 'మొత్తం ఎంచుకున్నవి'}:
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-md bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 font-mono font-bold text-xs border border-stone-200 dark:border-stone-700">
+                    {totalQuantity} {language === 'en' ? 'items' : 'సంఖ్య'}
+                  </span>
+                  {jowarQuantity > 0 && (
+                    <span className="text-xs text-stone-600 dark:text-stone-400">
+                      (🌾 {jowarQuantity} {language === 'en' ? 'Rotis' : 'రొట్టెలు'})
+                    </span>
+                  )}
+                  {chapathiQuantity > 0 && (
+                    <span className="text-xs text-stone-600 dark:text-stone-400">
+                      (🥞 {chapathiQuantity} {language === 'en' ? 'Chapathis' : 'చపాతీలు'})
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-400 font-semibold">
+                  <Gift className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span>
+                    {language === 'en' 
+                      ? `${gramsPerSelected}g complimentary dry podi included!` 
+                      : `${gramsPerSelected} గ్రా. ఉచిత పల్లెటూరి కారం పొడి లభిస్తుంది!`}
+                  </span>
+                </div>
+              </div>
+
+              <div className="text-right self-end sm:self-auto">
+                <span className="text-xs text-stone-500 dark:text-stone-400 block">
+                  {language === 'en' ? 'Total Amount' : 'మొత్తం చెల్లింపు'}
+                </span>
                 <span className="text-2xl sm:text-3xl font-extrabold text-[#78350F] dark:text-amber-400 font-mono">
                   ₹{totalAmount}
                 </span>
               </div>
-              <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold mt-1">
-                {t.freeKollurDeliveryBadge}
-              </span>
             </div>
+
           </div>
         </div>
 
@@ -691,9 +938,9 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               >
                 {PRESET_LOCALITIES.map((loc) => {
                   const areaName = language === 'en' ? loc.nameEn : loc.nameTe;
-                  const tag = loc.isEligible 
-                    ? `— ${t.freeDeliveryTag}` 
-                    : `— ${t.outside5kmTag}`;
+                  const tag = loc.deliveryCharge === 0 
+                    ? (language === 'en' ? '— Free Delivery (within 5 km)' : '— ఉచిత డెలివరీ (5 కి.మీ. లోపల)')
+                    : (language === 'en' ? `— Delivery +₹${loc.deliveryCharge} (Above 5 km)` : `— డెలివరీ ఛార్జీ +₹${loc.deliveryCharge} (5 కి.మీ. పైబడినది)`);
                   const distUnit = language === 'en' ? 'km' : 'కి.మీ.';
                   return (
                     <option key={loc.nameTe} value={loc.nameTe}>
@@ -907,11 +1154,23 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             </div>
           </div>
 
-          {/* Karam Summary Breakdown */}
+          {/* Order Items & Karam Summary Breakdown */}
           <div className="py-3 text-xs sm:text-sm font-telugu text-stone-700 dark:text-stone-300 space-y-1">
-            <div className="flex justify-between">
-              <span>{t.rotisSubtotalLine} ({quantity} × ₹30):</span>
-              <span className="font-mono font-bold">₹{totalAmount}</span>
+            {jowarQuantity > 0 && (
+              <div className="flex justify-between">
+                <span>🌾 {language === 'en' ? 'Jowar Rotis' : 'జొన్న రొట్టెలు'} ({jowarQuantity} × ₹30):</span>
+                <span className="font-mono font-bold">₹{jowarSubtotal}</span>
+              </div>
+            )}
+            {chapathiQuantity > 0 && (
+              <div className="flex justify-between">
+                <span>🥞 {language === 'en' ? 'Fresh Chapathis' : 'వేడివేడి చపాతీలు'} ({chapathiQuantity} × ₹10):</span>
+                <span className="font-mono font-bold">₹{chapathiSubtotal}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-xs text-stone-500 dark:text-stone-400 pt-0.5 border-t border-amber-900/10 dark:border-stone-800">
+              <span>{language === 'en' ? 'Total Items' : 'మొత్తం ఐటెమ్స్'}:</span>
+              <span className="font-mono font-semibold">{totalQuantity} {language === 'en' ? 'nos' : 'సంఖ్య'}</span>
             </div>
             <div className="flex justify-between text-emerald-800 dark:text-emerald-400 font-semibold">
               <span>{t.karivepakuTitle}:</span>
@@ -929,9 +1188,22 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                   : t.notSelected}
               </span>
             </div>
-            <div className="flex justify-between text-stone-600 dark:text-stone-400">
-              <span>{t.homeDeliveryLine}</span>
-              <span className="font-bold text-emerald-700 dark:text-emerald-400 font-telugu">{t.freeCostZero}</span>
+            <div className="flex justify-between text-stone-600 dark:text-stone-400 pt-1 border-t border-amber-900/10 dark:border-stone-800">
+              <span>{language === 'en' ? 'Items Subtotal:' : 'రొట్టెల ఉపమొత్తం:'}</span>
+              <span className="font-mono font-bold text-stone-800 dark:text-stone-200">₹{itemsSubtotal}</span>
+            </div>
+            <div className="flex justify-between items-center text-stone-600 dark:text-stone-400">
+              <div>
+                <span>{t.homeDeliveryLine}</span>
+                <span className="text-[11px] text-stone-500 dark:text-stone-400 block">
+                  {isFreeDelivery 
+                    ? (language === 'en' ? 'Within 5 km radius (Free)' : 'కొల్లూరు కేంద్రం నుండి 5 కి.మీ. పరిధిలో ఉచితం')
+                    : (language === 'en' ? `${extraKm} km above 5 km @ ₹9/km` : `5 కి.మీ. పైబడిన ${extraKm} కి.మీ. (కి.మీ.కు ₹9 చొప్పున)`)}
+                </span>
+              </div>
+              <span className={`font-bold font-mono ${isFreeDelivery ? 'text-emerald-700 dark:text-emerald-400' : 'text-[#78350F] dark:text-amber-400'}`}>
+                {isFreeDelivery ? t.freeCostZero : `+₹${deliveryCharge}`}
+              </span>
             </div>
           </div>
 
@@ -977,9 +1249,14 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               </p>
             )}
 
-            <div className="flex items-center justify-center gap-2 text-xs text-stone-500 dark:text-stone-400 font-telugu pt-1">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>{t.paymentOptionsNote}</span>
+            {/* Strict Online Payment Only Badge */}
+            <div className="p-3 rounded-xl bg-amber-100/70 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/80 flex items-center justify-center gap-2 text-xs font-bold text-[#78350F] dark:text-amber-300 font-telugu text-center">
+              <ShieldCheck className="w-4 h-4 text-[#78350F] dark:text-amber-400 flex-shrink-0" />
+              <span>
+                {language === 'en'
+                  ? '⚠️ No Cash on Delivery. Order is placed only after verified online UPI payment.'
+                  : '⚠️ క్యాష్ ఆన్ డెలివరీ లేదు. ఆన్‌లైన్ పేమెంట్ పూర్తయిన తర్వాత మాత్రమే ఆర్డర్ నమోదవుతుంది.'}
+              </span>
             </div>
           </div>
 

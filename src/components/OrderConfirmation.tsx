@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { CheckCircle2, MessageSquare, Copy, Check, ArrowRight, MapPin } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { CheckCircle2, MessageSquare, Copy, Check, ArrowRight, MapPin, Send, BellRing } from 'lucide-react';
 import { Order } from '../types';
-import { buildWhatsAppTicket, getWhatsAppUrl, OWNER_PHONE_DISPLAY } from '../utils/whatsapp';
+import { buildWhatsAppTicket, getWhatsAppUrl, OWNER_PHONE, OWNER_PHONE_DISPLAY } from '../utils/whatsapp';
 import { PostOrderFeedback } from './PostOrderFeedback';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -15,8 +15,23 @@ export const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ order, onN
   const { t, language } = useLanguage();
   const [currentOrder, setCurrentOrder] = useState<Order>(order);
   const [copied, setCopied] = useState<boolean>(false);
+  const [autoOpened, setAutoOpened] = useState<boolean>(false);
   const ticketText = buildWhatsAppTicket(currentOrder, language);
   const whatsappUrl = getWhatsAppUrl(currentOrder, language);
+
+  // Automatically attempt opening WhatsApp to owner (8499865803) upon order placement
+  useEffect(() => {
+    try {
+      const sessionKey = `wa_prompted_${order.id}`;
+      if (!sessionStorage.getItem(sessionKey)) {
+        sessionStorage.setItem(sessionKey, 'true');
+        const popup = window.open(whatsappUrl, '_blank');
+        if (popup) {
+          setAutoOpened(true);
+        }
+      }
+    } catch {}
+  }, [order.id, whatsappUrl]);
 
   const handleCopyTicket = () => {
     navigator.clipboard.writeText(ticketText);
@@ -62,10 +77,36 @@ export const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ order, onN
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-[#FAF4EA] dark:bg-stone-900 border border-amber-900/10 dark:border-stone-800">
             <div>
               <span className="text-xs text-stone-500 dark:text-stone-400 block">{t.orderDetailsTitle}:</span>
-              <span className="text-lg font-bold text-[#78350F] dark:text-amber-400 font-mono">
-                {order.quantity} {t.rotisUnit}
-              </span>
-              <span className="text-[11px] text-stone-500 block font-mono">₹{order.pricePerRoti} {language === 'en' ? 'each' : 'చొప్పున'}</span>
+              {(order.jowarQuantity !== undefined || order.chapathiQuantity !== undefined) ? (
+                <div className="space-y-1 mt-0.5">
+                  {(order.jowarQuantity ?? (order.chapathiQuantity ? 0 : order.quantity)) > 0 && (
+                    <div className="text-sm font-bold text-[#78350F] dark:text-amber-400 font-mono">
+                      🌾 {order.jowarQuantity ?? order.quantity} {language === 'en' ? 'Jowar Rotis' : 'జొన్న రొట్టెలు'}
+                      <span className="text-[11px] text-stone-500 dark:text-stone-400 font-normal block font-sans">
+                        ₹30 × {order.jowarQuantity ?? order.quantity} = ₹{(order.jowarQuantity ?? order.quantity) * 30}
+                      </span>
+                    </div>
+                  )}
+                  {(order.chapathiQuantity ?? 0) > 0 && (
+                    <div className="text-sm font-bold text-amber-700 dark:text-amber-300 font-mono">
+                      🥞 {order.chapathiQuantity} {language === 'en' ? 'Chapathis' : 'చపాతీలు'}
+                      <span className="text-[11px] text-stone-500 dark:text-stone-400 font-normal block font-sans">
+                        ₹10 × {order.chapathiQuantity} = ₹{(order.chapathiQuantity || 0) * 10}
+                      </span>
+                    </div>
+                  )}
+                  <span className="text-[11px] text-stone-500 block font-mono">
+                    {language === 'en' ? 'Total items' : 'మొత్తం ఐటెమ్స్'}: {order.quantity}
+                  </span>
+                </div>
+              ) : (
+                <>
+                  <span className="text-lg font-bold text-[#78350F] dark:text-amber-400 font-mono">
+                    {order.quantity} {t.rotisUnit}
+                  </span>
+                  <span className="text-[11px] text-stone-500 block font-mono">₹{order.pricePerRoti} {language === 'en' ? 'each' : 'చొప్పున'}</span>
+                </>
+              )}
             </div>
 
             <div>
@@ -82,6 +123,17 @@ export const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ order, onN
                   ? (language === 'en' ? 'Mode: Cash/UPI on delivery' : 'విధానం: డెలివరీ సమయంలో నగదు/UPI') 
                   : `Ref: ${order.paymentReference.slice(0, 16)}`}
               </span>
+              {typeof order.deliveryCharge === 'number' && order.deliveryCharge > 0 ? (
+                <span className="text-[11px] text-amber-700 dark:text-amber-400 block font-medium mt-0.5">
+                  {language === 'en'
+                    ? `(Includes ₹${order.deliveryCharge} delivery fee)`
+                    : `(డెలివరీ ఛార్జీ ₹${order.deliveryCharge} కలిపి)`}
+                </span>
+              ) : (
+                <span className="text-[11px] text-emerald-700 dark:text-emerald-400 block font-medium mt-0.5">
+                  {language === 'en' ? '✓ Free delivery (≤ 5 km)' : '✓ ఉచిత డెలివరీ (5 కి.మీ. లోపల)'}
+                </span>
+              )}
             </div>
 
             <div>
@@ -178,10 +230,14 @@ export const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ order, onN
                 target="_blank"
                 rel="noopener noreferrer"
                 id="send-whatsapp-ticket-btn"
-                className="flex-1 inline-flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl font-bold text-sm sm:text-base text-white bg-[#25D366] hover:bg-[#1EBE5D] active:scale-[0.99] shadow-md transition-all cursor-pointer"
+                className="flex-1 inline-flex items-center justify-center gap-2.5 py-3.5 px-6 rounded-xl font-bold text-sm sm:text-base text-white bg-[#25D366] hover:bg-[#1EBE5D] active:scale-[0.99] shadow-md transition-all cursor-pointer ring-2 ring-emerald-500/30"
               >
-                <MessageSquare className="w-5 h-5" />
-                <span>{t.sendToWhatsAppBtn}</span>
+                <MessageSquare className="w-5 h-5 fill-current" />
+                <span>
+                  {language === 'en' 
+                    ? 'Send Order Ticket via WhatsApp (+91 8499865803)' 
+                    : 'WhatsApp లో యజమానికి ఆర్డర్ టికెట్ పంపండి (+91 8499865803)'}
+                </span>
               </a>
 
               <button

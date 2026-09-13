@@ -1,8 +1,8 @@
 import React from 'react';
-import { UtensilsCrossed } from 'lucide-react';
+import logoImage from '../assets/images/mana_enti_vanta_logo_1789296509537.jpg';
 
 interface BrandEmblemProps {
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   className?: string;
   showText?: boolean;
 }
@@ -13,28 +13,25 @@ export const BrandEmblem: React.FC<BrandEmblemProps> = ({
   showText = false,
 }) => {
   const sizeClasses = {
-    sm: 'w-8 h-8 text-xs',
-    md: 'w-11 h-11 text-sm',
-    lg: 'w-14 h-14 text-base',
-    xl: 'w-20 h-20 text-xl',
-  };
-
-  const iconSizes = {
-    sm: 'w-4 h-4',
-    md: 'w-5 h-5',
-    lg: 'w-7 h-7',
-    xl: 'w-10 h-10',
+    sm: 'w-9 h-9',
+    md: 'w-12 h-12',
+    lg: 'w-16 h-16',
+    xl: 'w-20 h-20',
+    '2xl': 'w-28 h-28',
   };
 
   return (
     <div className={`inline-flex items-center gap-2.5 ${className}`}>
       <div
-        className={`${sizeClasses[size]} rounded-2xl bg-gradient-to-br from-[#78350F] to-[#451A03] text-amber-100 flex items-center justify-center font-extrabold shadow-md shadow-amber-950/20 border border-amber-500/30 flex-shrink-0 select-none`}
-        title="మన ఇంటి వంట (Mana Enti Vanta)"
+        className={`${sizeClasses[size]} rounded-full overflow-hidden shadow-md shadow-amber-950/20 border-2 border-amber-600/40 dark:border-amber-500/30 flex-shrink-0 select-none bg-amber-50`}
+        title="మన ఇంటి వంట (Mana Enti Vanta) Rotis"
       >
-        <span className="font-telugu font-bold text-amber-100">
-          మన
-        </span>
+        <img
+          src={logoImage}
+          alt="మన ఇంటి వంట - అచ్చమైన పల్లెటూరి రుచులు"
+          className="w-full h-full object-cover"
+          referrerPolicy="no-referrer"
+        />
       </div>
 
       {showText && (

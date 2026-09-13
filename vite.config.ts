@@ -63,11 +63,59 @@ function aistudioMediaPlugin(): Plugin {
     },
   };
 }
+
+function suppressHmrPlugin(): Plugin {
+  return {
+    name: 'suppress-hmr-notices',
+    transformIndexHtml() {
+      return [
+        {
+          tag: 'script',
+          attrs: { type: 'text/javascript' },
+          children: `
+            if (typeof window !== 'undefined' && window.WebSocket) {
+              const OrigWebSocket = window.WebSocket;
+              const DummyWebSocket = function(url, protocols) {
+                const isHmr = (Array.isArray(protocols) ? protocols.includes('vite-hmr') : protocols === 'vite-hmr') ||
+                              (typeof url === 'string' && (url.includes('vite-hmr') || url.includes('token=')));
+                if (isHmr) {
+                  const target = new EventTarget();
+                  target.CONNECTING = 0;
+                  target.OPEN = 1;
+                  target.CLOSING = 2;
+                  target.CLOSED = 3;
+                  target.readyState = 1;
+                  target.protocol = 'vite-hmr';
+                  target.url = String(url);
+                  target.send = function() {};
+                  target.close = function() { target.readyState = 3; };
+                  setTimeout(function() {
+                    target.dispatchEvent(new Event('open'));
+                  }, 0);
+                  return target;
+                }
+                return new OrigWebSocket(url, protocols);
+              };
+              DummyWebSocket.CONNECTING = 0;
+              DummyWebSocket.OPEN = 1;
+              DummyWebSocket.CLOSING = 2;
+              DummyWebSocket.CLOSED = 3;
+              DummyWebSocket.prototype = OrigWebSocket.prototype;
+              window.WebSocket = DummyWebSocket;
+            }
+          `,
+          injectTo: 'head-prepend',
+        },
+      ];
+    },
+  };
+}
 // LINT.ThenChange(//depot/google3/java/com/google/alkali/boq/makersuite/applet_dev_service/templates/initializers/react_theme/vite.config.ts:aistudio_media_plugin)
 
 export default defineConfig(() => {
   return {
     plugins: [
+      suppressHmrPlugin(),
       react(),
       tailwindcss(),
       aistudioMediaPlugin(),

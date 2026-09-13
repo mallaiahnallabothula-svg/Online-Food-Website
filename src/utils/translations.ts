@@ -63,6 +63,17 @@ export interface Translations {
   rotisUnit: string;
   subtotalLabel: string;
   freeKollurDeliveryBadge: string;
+  deliveryAbove5kmNote: string;
+  noCodBadge: string;
+  chapathiItemName: string;
+  chapathiPriceTag: string;
+  chapathiUnit: string;
+  chapathiDesc: string;
+  jowarItemName: string;
+  jowarPriceTag: string;
+  jowarDesc: string;
+  minChapathiNotice: string;
+  minJowarNotice: string;
 
   // Order Form - Section 2: Karam
   freeKaramsSectionTitle: string;
@@ -254,9 +265,9 @@ export const translations: Record<Language, Translations> = {
 
     // Hero Section
     badgeTraditional: 'స్వచ్ఛమైన గ్రామీణ సంప్రదాయ ఆహారం',
-    heroDescription: 'రోజూ సాయంత్రం పొయ్యి మీద తాజాగా కాల్చిన మెత్తటి పల్లె జొన్న రొట్టెలు. ప్రతి రొట్టె కేవలం ₹30 మాత్రమే. ప్రతి పూర్తి 5 రొట్టెలకు 20 గ్రా. ఉచిత పల్లెటూరి కారం (కరివేపాకు కారం లేదా అవిసె గింజల కారం).',
-    featurePriceTitle: 'ధర: ఒక్కొక్కటి ₹30',
-    featurePriceSub: 'కనీస ఆర్డర్: 5 రొట్టెలు',
+    heroDescription: 'రోజూ సాయంత్రం పొయ్యి మీద తాజాగా కాల్చిన మెత్తటి పల్లె జొన్న రొట్టెలు (₹30) మరియు వేడివేడి చపాతీలు (₹10). ప్రతి పూర్తి 5 సంఖ్యలకు 20 గ్రా. ఉచిత పల్లెటూరి కారం (కరివేపాకు కారం లేదా అవిసె గింజల కారం).',
+    featurePriceTitle: 'రొట్టె ₹30 | చపాతీ ₹10',
+    featurePriceSub: 'కనీస ఆర్డర్: 5 సంఖ్య (Min 5)',
     featureKaramTitle: 'ఉచిత కారాలు',
     featureKaramSub: 'ప్రతి 5 రొట్టెలకు 20 గ్రా. ఉచితం',
     featureDeliveryTitle: 'ఉచిత డెలివరీ',
@@ -264,7 +275,7 @@ export const translations: Record<Language, Translations> = {
     featureTimeTitle: 'డెలివరీ సమయం',
     featureTimeSub: 'సాయంత్రం 6:00 – 8:00 గంటలు',
     orderNowBtn: 'ఇప్పుడే ఆర్డర్ చేయండి',
-    securePaymentNote: 'ఆన్‌లైన్ UPI లేదా డెలివరీ వద్ద చెల్లింపు అందుబాటులో ఉంది.',
+    securePaymentNote: 'ఆన్‌లైన్ UPI చెల్లింపు మాత్రమే (No Cash on Delivery). చెల్లింపు తర్వాత మాత్రమే ఆర్డర్ నమోదవుతుంది.',
 
     // Menu Highlights
     highlightsTitle: 'మన ఇంటి వంట విశిష్టతలు',
@@ -291,11 +302,22 @@ export const translations: Record<Language, Translations> = {
     after4pmDesc: 'రేపటి సాయంత్రం 6:00 – 8:00 PM కి డెలివరీ',
 
     // Order Form - Section 1: Quantity
-    selectQuantityTitle: 'జొన్న రొట్టెల సంఖ్య ఎంచుకోండి',
-    selectQuantitySubtitle: 'తాజా మధ్యస్థ పరిమాణపు జొన్న రొట్టె | ఒక్కొక్కటి ₹30 (కనీసం 5 రొట్టెలు)',
+    selectQuantityTitle: 'రొట్టెలు & చపాతీల సంఖ్య ఎంచుకోండి',
+    selectQuantitySubtitle: 'తాజా జొన్న రొట్టెలు (₹30) మరియు మెత్తటి చపాతీలు (₹10)',
     rotisUnit: 'రొట్టెలు',
-    subtotalLabel: 'రొట్టెల ఉపమొత్తం:',
-    freeKollurDeliveryBadge: '✓ కొల్లూరు పరిధిలో ఉచిత డెలివరీ',
+    subtotalLabel: 'మొత్తం ఉపమొత్తం:',
+    freeKollurDeliveryBadge: '✓ కొల్లూరు నుండి 5 కి.మీ. వరకు ఉచిత డెలివరీ (5 కి.మీ. దాటితే ₹9/కి.మీ.)',
+    deliveryAbove5kmNote: '5 కి.మీ. వరకు ఉచితం. 5 కి.మీ. పైబడిన దూరానికి ₹9/కి.మీ. చొప్పున డెలివరీ ఛార్జీ వర్తిస్తుంది.',
+    noCodBadge: '🚫 నో క్యాష్ ఆన్ డెలివరీ (ఆన్‌లైన్ పేమెంట్ తర్వాతే ఆర్డర్)',
+    chapathiItemName: 'వేడివేడి చపాతీలు (Chapathi)',
+    chapathiPriceTag: 'ధర: ₹10 / ఒక్కటి (కనీస ఆర్డర్ 5)',
+    chapathiUnit: 'చపాతీలు',
+    chapathiDesc: 'గోధుమ పిండితో చేత్తో రుద్దిన తాజా మెత్తని వేడివేడి చపాతీలు',
+    jowarItemName: 'పల్లెటూరి జొన్న రొట్టెలు (Jowar Roti)',
+    jowarPriceTag: 'ధర: ₹30 / ఒక్కటి (కనీస ఆర్డర్ 5)',
+    jowarDesc: '100% స్వచ్ఛమైన జొన్న పిండితో కాల్చిన ఆరోగ్యకరమైన సంప్రదాయ రొట్టెలు',
+    minChapathiNotice: 'చపాతీలు ఎంచుకుంటే కనీసం 5 ఆర్డర్ చేయాలి',
+    minJowarNotice: 'జొన్న రొట్టెలు ఎంచుకుంటే కనీసం 5 ఆర్డర్ చేయాలి',
 
     // Order Form - Section 2: Karam
     freeKaramsSectionTitle: 'ఉచిత సాంప్రదాయ కారాలు',
@@ -357,21 +379,21 @@ export const translations: Record<Language, Translations> = {
     errMobileEmpty: 'దయచేసి మొబైల్ నంబర్ నమోదు చేయండి.',
     errMobileDigits: 'సరైన 10 అంకెల మొబైల్ నంబర్ నమోదు చేయండి (ఉదా: 8499865803).',
     errAddress: 'దయచేసి పూర్తి డెలివరీ చిరునామా (ఇంటి నం, కాలనీ) నమోదు చేయండి.',
-    errDistance: 'కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధి దాటింది. ఉచిత డెలివరీ కేవలం 5 కి.మీ. లోపలే సాధ్యం.',
+    errDistance: 'కొల్లూరు గ్రామం నుండి 35 కి.మీ. పరిధి దాటింది. దయచేసి సర్వీస్ చేయగల ప్రాంతాన్ని ఎంచుకోండి.',
     errKaram: 'దయచేసి కనీసం ఒక ఉచిత కారాన్ని ఎంచుకోండి (కరివేపాకు లేదా అవిసె గింజల కారం).',
 
     // Order Form - Section 4: Review & Checkout
     orderReviewTitle: 'ఆర్డర్ సమీక్ష',
-    orderReviewSub: '{quantity} జొన్న రొట్టెలు + ఉచిత కారాలు',
+    orderReviewSub: '{quantity} రొట్టెలు + ఉచిత కారాలు',
     totalPayableLabel: 'మొత్తం చెల్లించవలసినది:',
-    rotisSubtotalLine: 'జొన్న రొట్టెలు',
+    rotisSubtotalLine: 'జొన్న రొట్టెలు / చపాతీలు',
     freeCostZero: 'ఉచితం (₹0)',
-    homeDeliveryLine: 'హోమ్ డెలివరీ (కొల్లూరు 5 కి.మీ. పరిధి):',
+    homeDeliveryLine: 'హోమ్ డెలివరీ:',
     missingDetailsPrompt: 'ఆర్డర్ చేయడానికి పైన పేరు, మొబైల్ నంబర్ మరియు చిరునామా నమోదు చేయండి.',
     proceedPaymentBtn: 'చెల్లింపుకు కొనసాగించండి',
     hoursClosedWarning: '⚠️ ఆర్డర్ల సమయం (11:00 AM – 4:00 PM IST) ముగిసినందున చెకౌట్ డిసేబుల్ చేయబడింది.',
-    beyondRadiusWarning: '⚠️ దయచేసి కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధిలోని చిరునామాను ఎంచుకోండి.',
-    paymentOptionsNote: 'సురక్షిత UPI చెల్లింపు లేదా డెలివరీ సమయంలో చెల్లింపు అందుబాటులో ఉంది.',
+    beyondRadiusWarning: '⚠️ దయచేసి కొల్లూరు గ్రామం నుండి 35 కి.మీ. పరిధిలోని చిరునామాను ఎంచుకోండి.',
+    paymentOptionsNote: 'ఆన్‌లైన్ UPI చెల్లింపు మాత్రమే (No Cash on Delivery). చెల్లింపు పూర్తయిన తర్వాతే ఆర్డర్ నమోదవుతుంది.',
 
     // Payment Modal
     selectPaymentMethod: 'చెల్లింపు విధానం ఎంచుకోండి',
@@ -486,9 +508,9 @@ export const translations: Record<Language, Translations> = {
 
     // Hero Section
     badgeTraditional: '100% Traditional Village Cuisine',
-    heroDescription: 'Authentic sorghum (jowar) rotis freshly roasted on hot tawa every evening. Just ₹30 per roti. Complimentary homemade dry podi (Curry Leaf / Flax Seeds Karam) with every 5 rotis.',
-    featurePriceTitle: 'Price: ₹30 each',
-    featurePriceSub: 'Minimum order: 5 rotis',
+    heroDescription: 'Authentic jowar rotis (₹30) and fresh hot wheat chapathis (₹10) freshly roasted on hot tawa every evening. Complimentary homemade dry podi with every 5 rotis/chapathis.',
+    featurePriceTitle: 'Roti ₹30 | Chapathi ₹10',
+    featurePriceSub: 'Minimum order: 5 nos',
     featureKaramTitle: 'Free Dry Podis',
     featureKaramSub: '20g free per 5 rotis',
     featureDeliveryTitle: 'Free Delivery',
@@ -496,7 +518,7 @@ export const translations: Record<Language, Translations> = {
     featureTimeTitle: 'Delivery Time',
     featureTimeSub: 'Evening 6:00 PM – 8:00 PM',
     orderNowBtn: 'Order Now',
-    securePaymentNote: 'Secure UPI or Pay on Delivery available.',
+    securePaymentNote: 'Online UPI payment only (No Cash on Delivery). Order placed only after payment.',
 
     // Menu Highlights
     highlightsTitle: 'Why Choose Mana Enti Vanta?',
@@ -523,11 +545,22 @@ export const translations: Record<Language, Translations> = {
     after4pmDesc: "Tomorrow's Evening 6:00 – 8:00 PM Delivery",
 
     // Order Form - Section 1: Quantity
-    selectQuantityTitle: 'Select Number of Jowar Rotis',
-    selectQuantitySubtitle: 'Fresh medium-sized jowar roti | ₹30 each (Minimum 5 rotis)',
+    selectQuantityTitle: 'Select Quantity: Jowar Rotis & Chapathis',
+    selectQuantitySubtitle: 'Fresh hot Jowar Rotis (₹30) & Soft Wheat Chapathis (₹10)',
     rotisUnit: 'Rotis',
-    subtotalLabel: 'Rotis Subtotal:',
-    freeKollurDeliveryBadge: '✓ Free delivery within Kolluru radius',
+    subtotalLabel: 'Order Subtotal:',
+    freeKollurDeliveryBadge: '✓ Free delivery up to 5 km (₹9/km above 5 km)',
+    deliveryAbove5kmNote: 'Free within 5 km. ₹9/km delivery charge applies for distance above 5 km.',
+    noCodBadge: '🚫 No Cash on Delivery (Order placed after payment only)',
+    chapathiItemName: 'Fresh Soft Chapathis',
+    chapathiPriceTag: 'Price: ₹10 each (Min. 5 nos)',
+    chapathiUnit: 'Chapathis',
+    chapathiDesc: 'Handmade soft whole-wheat chapathis roasted fresh on tawa',
+    jowarItemName: 'Traditional Jowar Rotis',
+    jowarPriceTag: 'Price: ₹30 each (Min. 5 nos)',
+    jowarDesc: '100% pure gluten-free sorghum jowar rotis roasted to perfection',
+    minChapathiNotice: 'Minimum 5 chapathis if ordered',
+    minJowarNotice: 'Minimum 5 jowar rotis if ordered',
 
     // Order Form - Section 2: Karam
     freeKaramsSectionTitle: 'Complimentary Traditional Podis',
@@ -589,21 +622,21 @@ export const translations: Record<Language, Translations> = {
     errMobileEmpty: 'Please enter mobile number.',
     errMobileDigits: 'Please enter a valid 10-digit mobile number (e.g., 8499865803).',
     errAddress: 'Please enter complete delivery address (House No, Colony).',
-    errDistance: 'Address is beyond 5 km from Kolluru village. Free delivery is only within 5 km.',
+    errDistance: 'Address is beyond 35 km from Kolluru village. Please select a serviceable locality.',
     errKaram: 'Please select at least one complimentary podi (Curry Leaf or Flax Seeds).',
 
     // Order Form - Section 4: Review & Checkout
     orderReviewTitle: 'Order Summary',
-    orderReviewSub: '{quantity} Jowar Rotis + Complimentary Podis',
+    orderReviewSub: '{quantity} Rotis + Complimentary Podis',
     totalPayableLabel: 'Total Payable Amount:',
-    rotisSubtotalLine: 'Jowar Rotis',
+    rotisSubtotalLine: 'Jowar Rotis / Chapathis',
     freeCostZero: 'Free (₹0)',
-    homeDeliveryLine: 'Home Delivery (Within 5 km):',
+    homeDeliveryLine: 'Home Delivery:',
     missingDetailsPrompt: 'Please enter name, mobile number and address above to proceed.',
     proceedPaymentBtn: 'Proceed to Payment',
     hoursClosedWarning: '⚠️ Ordering is currently paused outside schedule (11:00 AM – 4:00 PM IST).',
-    beyondRadiusWarning: '⚠️ Please select an address within 5 km of Kolluru village.',
-    paymentOptionsNote: 'Secure UPI payment or Pay on Delivery is available.',
+    beyondRadiusWarning: '⚠️ Please select an address within 35 km of Kolluru village.',
+    paymentOptionsNote: 'Online UPI payment only (No Cash on Delivery). Order is placed only after payment.',
 
     // Payment Modal
     selectPaymentMethod: 'Select Payment Method',

@@ -4,26 +4,61 @@
     <meta charset="UTF-8" />
     <script>
       (function() {
+        // Mock WebSocket for Vite HMR in environment where HMR is disabled
+        if (typeof window !== 'undefined' && window.WebSocket) {
+          const OrigWebSocket = window.WebSocket;
+          const DummyWebSocket = function(url, protocols) {
+            const isHmr = (Array.isArray(protocols) ? protocols.includes('vite-hmr') : protocols === 'vite-hmr') ||
+                          (typeof url === 'string' && (url.includes('vite-hmr') || url.includes('token=')));
+            if (isHmr) {
+              const target = new EventTarget();
+              target.CONNECTING = 0;
+              target.OPEN = 1;
+              target.CLOSING = 2;
+              target.CLOSED = 3;
+              target.readyState = 1;
+              target.protocol = 'vite-hmr';
+              target.url = String(url);
+              target.send = function() {};
+              target.close = function() { target.readyState = 3; };
+              setTimeout(function() {
+                target.dispatchEvent(new Event('open'));
+              }, 0);
+              return target;
+            }
+            return new OrigWebSocket(url, protocols);
+          };
+          DummyWebSocket.CONNECTING = 0;
+          DummyWebSocket.OPEN = 1;
+          DummyWebSocket.CLOSING = 2;
+          DummyWebSocket.CLOSED = 3;
+          DummyWebSocket.prototype = OrigWebSocket.prototype;
+          window.WebSocket = DummyWebSocket;
+        }
+
         const isViteNotice = function(item) {
           if (!item) return false;
-          const str = typeof item === 'string' ? item : (item.message || item.stack || String(item));
-          return str.includes('[vite]') || str.includes('failed to connect to websocket') || str.includes('WebSocket connection to');
+          try {
+            const str = typeof item === 'string' ? item : (item.message || item.stack || JSON.stringify(item) || String(item));
+            return str.includes('[vite]') || str.includes('failed to connect to websocket') || str.includes('WebSocket connection to');
+          } catch (_) {
+            return false;
+          }
         };
-        const origError = console.error;
-        console.error = function(...args) {
-          if (args.some(isViteNotice)) return;
-          origError.apply(console, args);
-        };
-        const origWarn = console.warn;
-        console.warn = function(...args) {
-          if (args.some(isViteNotice)) return;
-          origWarn.apply(console, args);
-        };
-        const origLog = console.log;
-        console.log = function(...args) {
-          if (args.some(isViteNotice)) return;
-          origLog.apply(console, args);
-        };
+
+        const methods = ['log', 'info', 'warn', 'error', 'debug'];
+        methods.forEach(function(m) {
+          const orig = console[m];
+          if (orig) {
+            console[m] = function(...args) {
+              for (let i = 0; i < args.length; i++) {
+                if (isViteNotice(args[i])) return;
+              }
+              orig.apply(console, args);
+            };
+          }
+        });
+
         window.addEventListener('error', function(e) {
           if (isViteNotice(e.message) || isViteNotice(e.error) || isViteNotice(e.filename)) {
             e.preventDefault();
@@ -31,6 +66,7 @@
             return true;
           }
         }, true);
+
         window.addEventListener('unhandledrejection', function(e) {
           if (isViteNotice(e.reason)) {
             e.preventDefault();
@@ -42,9 +78,9 @@
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>మన ఇంటి వంట | Mana Enti Vanta - అచ్చమైన పల్లెటూరి రుచులు</title>
-    <meta name="description" content="మన ఇంటి వంట - అచ్చమైన పల్లెటూరి రుచులు, స్వచ్ఛమైన ఆరోగ్యం. ప్రతి రోజూ తాజా వేడివేడి జొన్న రొట్టెలు మరియు కారాల ఆన్‌లైన్ ఆర్డరింగ్." />
+    <meta name="description" content="మన ఇంటి వంట - అచ్చమైన పల్లెటూరి రుచులు, స్వచ్ఛమైన ఆరోగ్యం. ప్రతి రోజూ తాజా వేడివేడి జొన్న రొట్టెలు, చపాతీలు మరియు కారాల ఆన్‌లైన్ ఆర్డరింగ్." />
     <meta property="og:title" content="మన ఇంటి వంట | Mana Enti Vanta - అచ్చమైన పల్లెటూరి రుచులు" />
-    <meta property="og:description" content="మన ఇంటి వంట - అచ్చమైన పల్లెటూరి రుచులు, స్వచ్ఛమైన ఆరోగ్యం. ప్రతి రోజూ తాజా వేడివేడి జొన్న రొట్టెలు మరియు కారాల ఆన్‌లైన్ ఆర్డరింగ్." />
+    <meta property="og:description" content="మన ఇంటి వంట - అచ్చమైన పల్లెటూరి రుచులు, స్వచ్ఛమైన ఆరోగ్యం. ప్రతి రోజూ తాజా వేడివేడి జొన్న రొట్టెలు, చపాతీలు మరియు కారాల ఆన్‌లైన్ ఆర్డరింగ్." />
     <meta property="og:type" content="website" />
     <meta name="theme-color" content="#78350f" />
     <meta name="mobile-web-app-capable" content="yes" />
