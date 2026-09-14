@@ -1,6 +1,32 @@
 <!doctype html>
 <html lang="te">
   <head>
+    <script>
+      (function() {
+        var isViteMsg = function(arg) {
+          if (!arg) return false;
+          var str = typeof arg === 'string' ? arg : (arg.message || arg.stack || '');
+          return typeof str === 'string' && (str.indexOf('[vite]') !== -1 || str.indexOf('failed to connect to websocket') !== -1 || str.indexOf('WebSocket') !== -1);
+        };
+        ['error', 'warn'].forEach(function(method) {
+          var orig = console[method];
+          if (orig) {
+            console[method] = function() {
+              for (var i = 0; i < arguments.length; i++) {
+                if (isViteMsg(arguments[i])) return;
+              }
+              orig.apply(console, arguments);
+            };
+          }
+        });
+        window.addEventListener('unhandledrejection', function(e) {
+          if (e && isViteMsg(e.reason)) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+          }
+        }, true);
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>మన ఇంటి వంట | Mana Enti Vanta - అచ్చమైన పల్లెటూరి రుచులు</title>

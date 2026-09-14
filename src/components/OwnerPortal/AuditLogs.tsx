@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, History, ArrowDownRight, User, CheckCircle2 } from 'lucide-react';
+import { History, CheckCircle2 } from 'lucide-react';
 import { AuditLog } from '../../types';
 
 interface AuditLogsProps {
@@ -28,55 +28,55 @@ export const AuditLogs: React.FC<AuditLogsProps> = ({ logs }) => {
         <table className="w-full text-left text-xs">
           <thead className="bg-stone-50 dark:bg-stone-900/60 text-stone-600 dark:text-stone-400 border-b border-stone-200 dark:border-stone-800 uppercase tracking-wider font-mono">
             <tr>
-              <th className="px-5 py-3.5">సమయం (IST)</th>
-              <th className="px-5 py-3.5">రకం</th>
-              <th className="px-5 py-3.5">ఆర్డర్ ఐడీ</th>
-              <th className="px-5 py-3.5">రిఫరెన్స్</th>
-              <th className="px-5 py-3.5">మొత్తం</th>
+              <th className="px-5 py-3.5">సమయం (IST / UTC)</th>
+              <th className="px-5 py-3.5">రకం / చర్య</th>
+              <th className="px-5 py-3.5">లక్ష్యం / ఆర్డర్</th>
               <th className="px-5 py-3.5">వివరాలు</th>
-              <th className="px-5 py-3.5">ఆపరేటర్</th>
+              <th className="px-5 py-3.5">కర్త (Actor)</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-100 dark:divide-stone-800">
             {logs.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-5 py-8 text-center text-stone-500">
+                <td colSpan={5} className="px-5 py-8 text-center text-stone-500">
                   ఇంకా ఎలాంటి ఆడిట్ రికార్డులు నమోదు కాలేదు.
                 </td>
               </tr>
             ) : (
-              logs.map((log) => (
-                <tr key={log.id} className="hover:bg-amber-50/40 dark:hover:bg-stone-900/40 transition-colors">
-                  <td className="px-5 py-3.5 font-mono text-stone-600 dark:text-stone-400 whitespace-nowrap">
-                    {log.timestampIST || log.timestamp.slice(0, 19).replace('T', ' ')}
-                  </td>
-                  <td className="px-5 py-3.5 whitespace-nowrap">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold font-mono text-[10px] ${
-                      log.type === 'PAYMENT_VERIFIED'
-                        ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
-                        : 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300'
-                    }`}>
-                      {log.type === 'PAYMENT_VERIFIED' ? <CheckCircle2 className="w-3 h-3" /> : null}
-                      {log.type}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5 font-mono font-bold text-[#78350F] dark:text-amber-400 whitespace-nowrap">
-                    {log.orderId || '-'}
-                  </td>
-                  <td className="px-5 py-3.5 font-mono text-stone-600 dark:text-stone-300 whitespace-nowrap">
-                    {log.paymentReference || '-'}
-                  </td>
-                  <td className="px-5 py-3.5 font-mono font-bold text-stone-900 dark:text-stone-100 whitespace-nowrap">
-                    {log.amount ? `₹${log.amount}` : '-'}
-                  </td>
-                  <td className="px-5 py-3.5 text-stone-700 dark:text-stone-300 min-w-[200px]">
-                    {log.details}
-                  </td>
-                  <td className="px-5 py-3.5 text-stone-500 whitespace-nowrap">
-                    {log.actor}
-                  </td>
-                </tr>
-              ))
+              logs.map((log) => {
+                const actionType = log.action || (log as any).type || 'ACTION';
+                const orderOrTarget = log.targetId || (log as any).orderId || '-';
+                const timeStr = (log as any).timestampIST || (log as any).timestamp || log.createdAt || '';
+                const actorStr = log.actorId || (log as any).actor || log.actorType || 'SYSTEM';
+                const detailsStr = typeof log.details === 'object' ? JSON.stringify(log.details) : String(log.details || '');
+
+                return (
+                  <tr key={log.id} className="hover:bg-amber-50/40 dark:hover:bg-stone-900/40 transition-colors">
+                    <td className="px-5 py-3.5 font-mono text-stone-600 dark:text-stone-400 whitespace-nowrap">
+                      {timeStr.slice(0, 19).replace('T', ' ')}
+                    </td>
+                    <td className="px-5 py-3.5 whitespace-nowrap">
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold font-mono text-[10px] ${
+                        actionType.includes('PAYMENT') || actionType.includes('SUCCESS')
+                          ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+                          : 'bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300'
+                      }`}>
+                        {actionType.includes('SUCCESS') || actionType.includes('VERIFIED') ? <CheckCircle2 className="w-3 h-3" /> : null}
+                        {actionType}
+                      </span>
+                    </td>
+                    <td className="px-5 py-3.5 font-mono font-bold text-[#78350F] dark:text-amber-400 whitespace-nowrap">
+                      {orderOrTarget}
+                    </td>
+                    <td className="px-5 py-3.5 text-stone-700 dark:text-stone-300 max-w-[320px] truncate">
+                      {detailsStr || '-'}
+                    </td>
+                    <td className="px-5 py-3.5 text-stone-500 whitespace-nowrap font-mono">
+                      {actorStr}
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

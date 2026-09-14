@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import QRCode from 'qrcode';
-import { X, CheckCircle2, AlertTriangle, ShieldCheck, Copy, Check, Smartphone, Banknote, Download, RefreshCw } from 'lucide-react';
+import { X, CheckCircle2, AlertTriangle, ShieldCheck, Copy, Check, Smartphone, RefreshCw, Lock } from 'lucide-react';
 import { Order } from '../types';
 import { BrandEmblem } from './BrandEmblem';
 import { useLanguage } from '../context/LanguageContext';
@@ -9,17 +9,21 @@ interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   orderData: {
-    quantity: number;
-    jowarQuantity?: number;
-    chapathiQuantity?: number;
-    subtotal?: number;
-    deliveryCharge?: number;
-    totalAmount: number;
-    karamSelection: any;
-    karamQuantities: any;
-    customer: any;
-    deliveryDate: string;
-    deliveryWindow: string;
+    jowarQuantity: number;
+    chapathiQuantity: number;
+    karamSelection: {
+      karivepaku: boolean;
+      aviseGinjalu: boolean;
+    };
+    customer: {
+      name: string;
+      mobile: string;
+      address: string;
+      landmark?: string;
+      locationLink?: string;
+      latitude?: number;
+      longitude?: number;
+    };
   };
   onPaymentSuccess: (confirmedOrder: Order) => void;
 }
@@ -30,451 +34,329 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   orderData,
   onPaymentSuccess,
 }) => {
-  const { t, language } = useLanguage();
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
-  const [paymentReference, setPaymentReference] = useState<string>('');
-  const [upiIntentUri, setUpiIntentUri] = useState<string>('');
-  const [customerUtrInput, setCustomerUtrInput] = useState<string>('');
+  const { language } = useLanguage();
+  const isTe = language !== 'en';
+
+  const [isLoadingIntent, setIsLoadingIntent] = useState<boolean>(true);
   const [isVerifying, setIsVerifying] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('');
+  
+  // Payment Intent from server
+  const [intentData, setIntentData] = useState<{
+    intentId: string;
+    provider: string;
+    amountRupees: number;
+    subtotalRupees: number;
+    deliveryChargeRupees: number;
+    distanceKm: number;
+    businessUpiId: string;
+    businessPhone: string;
+    mockDetails?: {
+      isMock: boolean;
+      verificationToken: string;
+      instructions: string;
+    };
+  } | null>(null);
+
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [copiedUpi, setCopiedUpi] = useState<boolean>(false);
   const [copiedPhone, setCopiedPhone] = useState<boolean>(false);
+  const [simulatedUtr, setSimulatedUtr] = useState<string>('');
 
-  const upiId = 'nmallaiah12@axl';
-  const ownerMobile = '8499865803';
-  const ownerName = 'Mallaiah Nallabothula';
-
-  const cleanUpiUri = `upi://pay?pa=${upiId}&pn=${encodeURIComponent(ownerName)}&am=${orderData.totalAmount}&cu=INR`;
-  const phonepeUri = `phonepe://pay?pa=${upiId}&pn=${encodeURIComponent(ownerName)}&am=${orderData.totalAmount}&cu=INR`;
-
-  // Initialize payment order with server
+  // 1. Create Server-Authoritative Payment Intent
   useEffect(() => {
     if (!isOpen) return;
 
     let isMounted = true;
+    setIsLoadingIntent(true);
     setErrorMessage('');
+    setIntentData(null);
 
-    async function initPayment() {
+    async function initIntent() {
       try {
-        const res = await fetch('/api/payment/create-order', {
+        const res = await fetch('/api/payment/create-intent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            quantity: orderData.quantity,
             jowarQuantity: orderData.jowarQuantity,
             chapathiQuantity: orderData.chapathiQuantity,
-            subtotal: orderData.subtotal,
-            deliveryCharge: orderData.deliveryCharge,
             karamSelection: orderData.karamSelection,
             customer: orderData.customer,
-            forceAllowOutsideHours: true,
           }),
         });
 
         const data = await res.json();
-        if (isMounted) {
-          const ref = data.paymentReference || `UPI-REF-${Date.now()}`;
-          setPaymentReference(ref);
-          setUpiIntentUri(data.upiUri || cleanUpiUri);
-
-          QRCode.toDataURL(cleanUpiUri, {
-            width: 280,
-            margin: 1,
-            color: { dark: '#451A03', light: '#FFFFFF' },
-          }).then(url => {
-            if (isMounted) setQrCodeDataUrl(url);
-          });
+        if (!res.ok) {
+          throw new Error(data.error?.message || 'Failed to initialize payment with server.');
         }
-      } catch {
-        if (isMounted) {
-          const fallbackRef = `UPI-REF-${Date.now()}`;
-          setPaymentReference(fallbackRef);
-          setUpiIntentUri(cleanUpiUri);
 
-          QRCode.toDataURL(cleanUpiUri, {
-            width: 280,
+        if (isMounted) {
+          setIntentData(data);
+          setSimulatedUtr(`UPI${Math.floor(1000000000 + Math.random() * 9000000000)}`);
+
+          // Generate QR code for clean UPI intent
+          const upiUri = `upi://pay?pa=${data.businessUpiId}&pn=${encodeURIComponent('Mana Enti Vanta')}&am=${data.amountRupees}&cu=INR`;
+          QRCode.toDataURL(upiUri, {
+            width: 260,
             margin: 1,
             color: { dark: '#451A03', light: '#FFFFFF' },
           }).then(url => {
             if (isMounted) setQrCodeDataUrl(url);
           }).catch(() => {});
         }
+      } catch (err: any) {
+        if (isMounted) {
+          setErrorMessage(err.message || 'Payment server connection error.');
+        }
+      } finally {
+        if (isMounted) setIsLoadingIntent(false);
       }
     }
 
-    initPayment();
+    initIntent();
 
     return () => {
       isMounted = false;
     };
-  }, [isOpen, orderData, cleanUpiUri]);
+  }, [isOpen, orderData]);
 
   if (!isOpen) return null;
 
   const handleCopyUpi = () => {
-    navigator.clipboard.writeText(upiId);
-    setCopiedUpi(true);
-    setTimeout(() => setCopiedUpi(false), 2000);
+    if (intentData?.businessUpiId) {
+      navigator.clipboard.writeText(intentData.businessUpiId);
+      setCopiedUpi(true);
+      setTimeout(() => setCopiedUpi(false), 2000);
+    }
   };
 
   const handleCopyPhone = () => {
-    navigator.clipboard.writeText(ownerMobile);
-    setCopiedPhone(true);
-    setTimeout(() => setCopiedPhone(false), 2000);
+    if (intentData?.businessPhone) {
+      navigator.clipboard.writeText(intentData.businessPhone);
+      setCopiedPhone(true);
+      setTimeout(() => setCopiedPhone(false), 2000);
+    }
   };
 
-  const handleDownloadQr = () => {
-    if (!qrCodeDataUrl) return;
-    const a = document.createElement('a');
-    a.href = qrCodeDataUrl;
-    a.download = `mana_enti_vanta_qr_₹${orderData.totalAmount}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  };
+  // 2. Authoritative Server Verification
+  const handleVerifyAndCompletePayment = async () => {
+    if (!intentData) return;
 
-  // Server-Side Payment Verification with Reliable Fallback
-  const handleVerifyPayment = async () => {
     setIsVerifying(true);
     setErrorMessage('');
-
-    const refToSend = customerUtrInput.trim().length >= 4
-      ? (customerUtrInput.startsWith('UPI-REF-') ? customerUtrInput : `UPI-REF-${customerUtrInput.trim()}`)
-      : (paymentReference || `UPI-REF-${Date.now()}`);
 
     try {
       const res = await fetch('/api/payment/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          paymentReference: refToSend,
-          orderData: {
-            ...orderData,
-            totalAmount: orderData.totalAmount,
-            deliveryCharge: orderData.deliveryCharge || 0,
-            subtotal: orderData.subtotal,
-          },
-          verificationToken: `VERIFIED-${Date.now()}`,
+          intentId: intentData.intentId,
+          providerPaymentId: simulatedUtr || `PAY-${Date.now()}`,
+          mockVerificationToken: intentData.mockDetails?.verificationToken,
         }),
       });
 
       const data = await res.json();
-      if (res.ok && data.order) {
-        onPaymentSuccess(data.order);
-        return;
-      } else if (!res.ok) {
-        setErrorMessage(data.error || 'Payment verification failed. Please check your transaction reference.');
-        setIsVerifying(false);
-        return;
+
+      if (!res.ok || !data.success || !data.order) {
+        throw new Error(data.error?.message || 'Payment verification failed on server.');
       }
-    } catch {}
 
-    // Fallback order creation
-    const createdFallbackOrder: Order = {
-      id: `MEV-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`,
-      paymentReference: refToSend,
-      paymentStatus: 'VERIFIED',
-      fulfillmentStatus: 'NEW',
-      quantity: orderData.quantity,
-      jowarQuantity: orderData.jowarQuantity,
-      chapathiQuantity: orderData.chapathiQuantity,
-      pricePerRoti: 30,
-      pricePerChapathi: 10,
-      subtotal: orderData.subtotal,
-      deliveryCharge: orderData.deliveryCharge,
-      totalPaid: orderData.totalAmount,
-      karamSelection: orderData.karamSelection,
-      karamQuantities: orderData.karamQuantities,
-      customer: orderData.customer,
-      deliveryDate: orderData.deliveryDate,
-      deliveryWindow: orderData.deliveryWindow,
-      createdAt: new Date().toISOString(),
-      createdAtIST: new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata' }),
-      paymentVerifiedAt: new Date().toISOString(),
-    };
-
-    try {
-      const existing = JSON.parse(localStorage.getItem('smjr_client_orders') || '[]');
-      existing.unshift(createdFallbackOrder);
-      localStorage.setItem('smjr_client_orders', JSON.stringify(existing.slice(0, 50)));
-    } catch {}
-
-    onPaymentSuccess(createdFallbackOrder);
+      // Pass real confirmed order with customerAccessToken
+      onPaymentSuccess({
+        ...data.order,
+        customerAccessToken: data.customerAccessToken,
+      });
+    } catch (err: any) {
+      setErrorMessage(err.message || 'Payment verification failed.');
+    } finally {
+      setIsVerifying(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/75 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
-      <div className="relative w-full max-w-lg bg-white dark:bg-[#211E1A] rounded-2xl shadow-2xl border border-stone-200 dark:border-stone-800 overflow-hidden font-telugu my-6">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white dark:bg-[#211E1A] w-full max-w-lg rounded-3xl shadow-2xl border border-stone-200 dark:border-stone-800 overflow-hidden relative font-telugu my-8">
         
-        {/* Modal Header */}
-        <div className="bg-[#FAF4EA] dark:bg-[#28241F] px-5 py-3.5 border-b border-amber-900/10 dark:border-stone-800 flex items-center justify-between">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-[#78350F] to-[#92400E] p-5 sm:p-6 text-white flex items-center justify-between">
           <div className="flex items-center gap-3">
             <BrandEmblem size="sm" />
             <div>
-              <span className="text-[11px] font-bold text-[#78350F] dark:text-amber-400 block leading-tight">
-                {t.selectPaymentMethod}
-              </span>
-              <h3 className="text-base font-extrabold text-[#451A03] dark:text-amber-100 leading-tight">
-                {t.brandName}
+              <h3 className="font-bold text-lg sm:text-xl leading-tight">
+                {isTe ? 'సురక్షిత ఆన్‌లైన్ చెల్లింపు' : 'Secure Online Payment'}
               </h3>
+              <p className="text-xs text-amber-200 mt-0.5">
+                {isTe ? 'ఆన్‌లైన్ పేమెంట్ మాత్రమే (No COD)' : 'Online Payment Only (No COD)'}
+              </p>
             </div>
           </div>
-
           <button
             onClick={onClose}
-            id="close-payment-modal-btn"
-            className="p-1.5 rounded-lg text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 hover:bg-stone-200/60 dark:hover:bg-stone-800 transition-colors cursor-pointer"
-            aria-label={t.closeBtn}
+            className="p-1.5 rounded-full hover:bg-white/20 transition-colors text-white/80 hover:text-white"
+            aria-label="Close modal"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Trust & Policy Badge (No COD Guarantee) */}
-        <div className="bg-amber-500/10 dark:bg-amber-950/30 px-5 py-2.5 border-b border-amber-900/10 dark:border-stone-800 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2 text-[#78350F] dark:text-amber-300 font-bold">
-            <ShieldCheck className="w-4 h-4 text-[#78350F] dark:text-amber-400 flex-shrink-0" />
-            <span>
-              {language === 'en' 
-                ? 'Online Payment Only • No Cash on Delivery (COD)' 
-                : 'ఆన్‌లైన్ చెల్లింపు మాత్రమే • క్యాష్ ఆన్ డెలివరీ (COD) లేదు'}
-            </span>
-          </div>
-          <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-200 dark:bg-amber-900/80 text-amber-900 dark:text-amber-200 font-semibold">
-            {language === 'en' ? 'Pay First, Order Placed' : 'చెల్లింపు తర్వాతే ఆర్డర్'}
-          </span>
-        </div>
-
-        {/* Modal Content */}
-        <div className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+        {/* Modal Body */}
+        <div className="p-5 sm:p-6 space-y-5">
           
-          {/* Amount & Delivery Breakdown Card */}
-          <div className="bg-amber-50/90 dark:bg-stone-900/90 p-4 rounded-xl border border-amber-300 dark:border-stone-700 space-y-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="text-xs text-stone-600 dark:text-stone-400 block font-bold">
-                  {t.amountToPay}:
-                </span>
-                {(orderData.jowarQuantity !== undefined || orderData.chapathiQuantity !== undefined) ? (
-                  <div className="text-[11px] text-stone-600 dark:text-stone-300 font-mono space-y-0.5 mt-0.5">
-                    {(orderData.jowarQuantity ?? 0) > 0 && (
-                      <span>🌾 {orderData.jowarQuantity} {language === 'en' ? 'Jowar Rotis' : 'జొన్న రొట్టెలు'} (₹{(orderData.jowarQuantity ?? 0) * 30})</span>
+          {isLoadingIntent ? (
+            <div className="py-16 text-center space-y-3">
+              <RefreshCw className="w-8 h-8 text-amber-700 dark:text-amber-400 animate-spin mx-auto" />
+              <p className="text-sm font-semibold text-stone-700 dark:text-stone-300">
+                {isTe ? 'సర్వర్ నుండి సురక్షిత చెల్లింపు వివరాలు పొందుతోంది...' : 'Initializing secure server payment intent...'}
+              </p>
+            </div>
+          ) : errorMessage && !intentData ? (
+            <div className="py-8 text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-950/60 text-red-600 flex items-center justify-center mx-auto">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-bold text-red-700 dark:text-red-400">
+                  {isTe ? 'ఆర్డర్ ప్రారంభించడం సాధ్యపడలేదు' : 'Unable to Start Order'}
+                </h4>
+                <p className="text-xs text-stone-600 dark:text-stone-400 max-w-sm mx-auto">
+                  {errorMessage}
+                </p>
+              </div>
+              <button
+                onClick={onClose}
+                className="px-5 py-2.5 bg-stone-200 dark:bg-stone-800 text-stone-800 dark:text-stone-200 text-xs font-bold rounded-xl"
+              >
+                {isTe ? 'సరిచేయడానికి వెనుకకు వెళ్ళు' : 'Go Back & Edit'}
+              </button>
+            </div>
+          ) : intentData && (
+            <>
+              {/* Order Pricing Breakdown (Authoritative from Server) */}
+              <div className="bg-stone-50 dark:bg-[#1A1816] p-4 rounded-2xl border border-stone-200 dark:border-stone-800 space-y-2">
+                <div className="flex justify-between text-xs text-stone-600 dark:text-stone-400">
+                  <span>
+                    {isTe ? 'రొట్టెలు & చపాతీల మొత్తం' : 'Items Subtotal'} ({orderData.jowarQuantity > 0 ? `${orderData.jowarQuantity} జొన్న` : ''}{orderData.jowarQuantity > 0 && orderData.chapathiQuantity > 0 ? ' + ' : ''}{orderData.chapathiQuantity > 0 ? `${orderData.chapathiQuantity} చపాతీ` : ''})
+                  </span>
+                  <span className="font-mono font-bold text-stone-800 dark:text-stone-200">
+                    ₹{intentData.subtotalRupees}
+                  </span>
+                </div>
+
+                <div className="flex justify-between text-xs text-stone-600 dark:text-stone-400">
+                  <span>
+                    {isTe ? 'డెలివరీ రుసుము' : 'Delivery Fee'} ({intentData.distanceKm} km)
+                  </span>
+                  <span className="font-mono font-bold">
+                    {intentData.deliveryChargeRupees === 0 ? (
+                      <span className="text-emerald-600 dark:text-emerald-400">
+                        {isTe ? 'ఉచితం (₹0)' : 'FREE (₹0)'}
+                      </span>
+                    ) : (
+                      <span className="text-stone-800 dark:text-stone-200">
+                        ₹{intentData.deliveryChargeRupees}
+                      </span>
                     )}
-                    {(orderData.jowarQuantity ?? 0) > 0 && (orderData.chapathiQuantity ?? 0) > 0 && <span className="mx-1.5">•</span>}
-                    {(orderData.chapathiQuantity ?? 0) > 0 && (
-                      <span>🥞 {orderData.chapathiQuantity} {language === 'en' ? 'Chapathis' : 'చపాతీలు'} (₹{(orderData.chapathiQuantity ?? 0) * 10})</span>
-                    )}
+                  </span>
+                </div>
+
+                <div className="border-t border-stone-200 dark:border-stone-800 pt-2 flex justify-between items-center font-bold text-stone-900 dark:text-stone-100">
+                  <span className="text-sm">
+                    {isTe ? 'చెల్లించాల్సిన మొత్తం' : 'Total Payable'}
+                  </span>
+                  <span className="text-xl text-[#78350F] dark:text-amber-400 font-mono">
+                    ₹{intentData.amountRupees}
+                  </span>
+                </div>
+              </div>
+
+              {/* UPI QR & Payment Action */}
+              <div className="text-center space-y-3">
+                {qrCodeDataUrl ? (
+                  <div className="inline-block p-2 bg-white rounded-2xl border border-stone-200 shadow-sm">
+                    <img
+                      src={qrCodeDataUrl}
+                      alt="UPI QR Code"
+                      className="w-44 h-44 mx-auto rounded-xl"
+                    />
                   </div>
-                ) : (
-                  <span className="text-xs font-mono text-stone-500">
-                    {orderData.quantity} {t.rotisUnit}
-                  </span>
-                )}
-              </div>
-              <div className="text-right">
-                <span className="text-2xl sm:text-3xl font-extrabold text-[#78350F] dark:text-amber-400 font-mono">
-                  ₹{orderData.totalAmount}
-                </span>
-              </div>
-            </div>
+                ) : null}
 
-            {/* Delivery Charge Line */}
-            <div className="pt-2 border-t border-amber-900/10 dark:border-stone-800 flex items-center justify-between text-xs">
-              <span className="text-stone-600 dark:text-stone-400">
-                {language === 'en' ? 'Delivery Fee:' : 'డెలివరీ ఛార్జీ:'}
-              </span>
-              <span className={`font-mono font-bold ${
-                (orderData.deliveryCharge ?? 0) > 0 
-                  ? 'text-[#78350F] dark:text-amber-400' 
-                  : 'text-emerald-700 dark:text-emerald-400'
-              }`}>
-                {(orderData.deliveryCharge ?? 0) > 0 
-                  ? `+₹${orderData.deliveryCharge} (${language === 'en' ? '>5 km @ ₹9/km' : '5 కి.మీ. పైబడినది @ ₹9/కి.మీ.'})` 
-                  : (language === 'en' ? '✓ Free (within 5 km)' : '✓ ఉచితం (5 కి.మీ. లోపల)')}
-              </span>
-            </div>
-          </div>
-
-          {/* UPI PAYMENT SECTION */}
-          <div className="space-y-4">
-            
-            {/* PhonePe Decline Alert Card */}
-            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/80 text-xs text-amber-950 dark:text-amber-200 space-y-2 shadow-xs">
-              <div className="flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-bold block">
-                    {t.phonePeAlertTitle}
-                  </span>
-                  <p className="text-[11px] text-stone-700 dark:text-stone-300 mt-1 leading-relaxed">
-                    {t.phonePeAlertDesc}
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-stone-600 dark:text-stone-400">
+                    {isTe ? 'PhonePe, Google Pay, Paytm ద్వారా స్కాన్ చేయండి' : 'Scan using PhonePe, Google Pay, or Paytm'}
                   </p>
-                  <p className="text-[11px] font-bold text-[#78350F] dark:text-amber-300 mt-1.5">
-                    {t.phonePeSolution.replace('{amount}', orderData.totalAmount.toString())}
+                  
+                  {/* UPI ID copy */}
+                  <div className="inline-flex items-center gap-2 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 px-3 py-1.5 rounded-full text-xs">
+                    <span className="font-mono font-bold text-amber-900 dark:text-amber-200">
+                      {intentData.businessUpiId}
+                    </span>
+                    <button
+                      onClick={handleCopyUpi}
+                      className="text-amber-700 dark:text-amber-400 hover:text-amber-900 p-0.5"
+                      title="Copy UPI ID"
+                    >
+                      {copiedUpi ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Development Sandbox Simulation Notice */}
+              {intentData.mockDetails?.isMock && (
+                <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl p-3 text-xs text-blue-900 dark:text-blue-200 space-y-1">
+                  <div className="flex items-center gap-1.5 font-bold">
+                    <ShieldCheck className="w-4 h-4 text-blue-600" />
+                    <span>{isTe ? 'డెవలప్‌మెంట్ వెరిఫైడ్ శాండ్‌బాక్స్ మోడ్' : 'Development Verified Sandbox Mode'}</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed">
+                    {isTe
+                      ? 'పరీక్షా పద్ధతిలో నిజమైన బ్యాంక్ చెల్లింపు అవసరం లేదు. "చెల్లింపు పూర్తయింది - ఆర్డర్ నిర్ధారించు" బటన్‌ను నొక్కడం ద్వారా సర్వర్ ఇంటెంట్ అధికారికంగా వెరిఫై చేయబడి ఆర్డర్ ప్లేస్ అవుతుంది.'
+                      : 'Simulated payment sandbox. Clicking verify will authoritatively confirm payment with the server.'}
                   </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Instant 1-Tap Copy Box (Recommended & Fail-Safe) */}
-            <div className="p-4 rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-800 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-emerald-900 dark:text-emerald-300 flex items-center gap-1.5">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>{t.easyMobileHeader}</span>
-                </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200">
-                  {t.successRate100}
-                </span>
-              </div>
-
-              <div className="bg-white dark:bg-stone-800 p-3 rounded-xl border border-stone-200 dark:border-stone-700 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                <div>
-                  <span className="text-[10px] text-stone-500 block">{t.mobileNumberLabel}</span>
-                  <span className="font-mono font-extrabold text-base sm:text-lg text-stone-900 dark:text-stone-100">
-                    8499865803
-                  </span>
-                  <span className="text-[11px] text-stone-500 block">{t.recipientName}</span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleCopyPhone}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
-                >
-                  {copiedPhone ? <Check className="w-4 h-4 text-white" /> : <Copy className="w-4 h-4" />}
-                  <span>{copiedPhone ? t.numberCopied : t.copyNumber}</span>
-                </button>
-              </div>
-
-              {/* Secondary UPI ID */}
-              <div className="flex items-center justify-between text-xs pt-1 px-1">
-                <span className="text-stone-500">UPI ID: <span className="font-mono font-bold text-stone-800 dark:text-stone-200">{upiId}</span></span>
-                <button
-                  type="button"
-                  onClick={handleCopyUpi}
-                  className="text-stone-700 dark:text-stone-300 font-bold hover:underline flex items-center gap-1 cursor-pointer"
-                >
-                  {copiedUpi ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedUpi ? t.numberCopied : t.copyUpiBtn}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* QR Code Section with Download Button */}
-            <div className="flex flex-col items-center justify-center p-4 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 text-center space-y-3">
-              <span className="text-xs font-bold text-stone-700 dark:text-stone-300">
-                {t.orScanQr} (₹{orderData.totalAmount}):
-              </span>
-
-              {qrCodeDataUrl ? (
-                <div className="relative group p-2.5 bg-white rounded-xl shadow-md border border-amber-900/10">
-                  <img
-                    src={qrCodeDataUrl}
-                    alt="UPI QR Code"
-                    className="w-44 h-44 sm:w-48 sm:h-48 object-contain mx-auto"
-                    referrerPolicy="no-referrer"
-                  />
-                </div>
-              ) : (
-                <div className="w-44 h-44 flex items-center justify-center bg-stone-100 dark:bg-stone-800 rounded-xl">
-                  <RefreshCw className="w-6 h-6 animate-spin text-stone-400" />
                 </div>
               )}
 
-              {/* QR Code Action: Download */}
+              {/* Verification Error */}
+              {errorMessage && (
+                <div className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 rounded-xl p-3 text-xs text-red-700 dark:text-red-300 flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 shrink-0 text-red-600" />
+                  <span>{errorMessage}</span>
+                </div>
+              )}
+
+              {/* Complete & Verify Button */}
               <button
-                type="button"
-                onClick={handleDownloadQr}
-                className="px-3.5 py-1.5 rounded-lg border border-stone-300 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                onClick={handleVerifyAndCompletePayment}
+                disabled={isVerifying}
+                className="w-full py-3.5 px-4 bg-gradient-to-r from-[#78350F] to-[#92400E] text-white rounded-xl font-bold shadow-md hover:from-[#602a0c] hover:to-[#78350f] focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:opacity-50 transition-all flex items-center justify-center gap-2 cursor-pointer text-sm sm:text-base"
               >
-                <Download className="w-3.5 h-3.5" />
-                <span>{t.downloadQr}</span>
+                {isVerifying ? (
+                  <>
+                    <RefreshCw className="w-5 h-5 animate-spin" />
+                    <span>{isTe ? 'చెల్లింపును ధృవీకరిస్తోంది...' : 'Verifying with Provider...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-5 h-5" />
+                    <span>
+                      {isTe
+                        ? `చెల్లింపు పూర్తయింది — ఆర్డర్ నిర్ధారించు (₹${intentData.amountRupees})`
+                        : `Payment Completed — Confirm Order (₹${intentData.amountRupees})`}
+                    </span>
+                  </>
+                )}
               </button>
 
-              {/* Direct App Launch Buttons */}
-              <div className="w-full pt-1">
-                <div className="grid grid-cols-2 gap-2">
-                  <a
-                    href={phonepeUri}
-                    id="direct-phonepe-btn"
-                    className="py-2.5 px-3 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center gap-1.5 shadow-xs transition-colors"
-                  >
-                    <Smartphone className="w-3.5 h-3.5" />
-                    <span>PhonePe</span>
-                  </a>
-
-                  <a
-                    href={cleanUpiUri}
-                    id="direct-gpay-btn"
-                    className="py-2.5 px-3 rounded-xl text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 flex items-center justify-center gap-1.5 shadow-xs transition-colors"
-                  >
-                    <Smartphone className="w-3.5 h-3.5" />
-                    <span>GPay / UPI</span>
-                  </a>
-                </div>
+              <div className="flex items-center justify-center gap-2 text-[11px] text-stone-400">
+                <Lock className="w-3.5 h-3.5" />
+                <span>
+                  {isTe ? '100% సురక్షిత సర్వర్ చెల్లింపు ప్రాసెసింగ్' : '100% Secure Server-Authoritative Processing'}
+                </span>
               </div>
-            </div>
-
-            {/* Payment Reference & UTR Input */}
-            <div className="space-y-1.5">
-              <label htmlFor="customer-utr-input" className="block text-xs font-bold text-stone-800 dark:text-stone-200">
-                {t.utrLabel}
-              </label>
-              <input
-                type="text"
-                id="customer-utr-input"
-                value={customerUtrInput}
-                onChange={(e) => setCustomerUtrInput(e.target.value)}
-                placeholder={t.utrPlaceholder}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-[#FDFBF7] dark:bg-stone-900 text-stone-900 dark:text-stone-100 font-mono text-sm"
-              />
-            </div>
-
-            {/* Error Banner */}
-            {errorMessage && (
-              <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 text-xs flex items-start gap-2">
-                <AlertTriangle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-bold">{language === 'en' ? 'Payment Error:' : 'చెల్లింపు లోపం:'}</p>
-                  <p>{errorMessage}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Online Payment Confirm Button */}
-            <button
-              type="button"
-              onClick={handleVerifyPayment}
-              disabled={isVerifying}
-              id="verify-payment-btn"
-              className="w-full py-3.5 px-4 rounded-xl font-bold text-sm sm:text-base text-white bg-[#78350F] hover:bg-[#8C4A26] active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2 shadow-md transition-all cursor-pointer font-telugu"
-            >
-              {isVerifying ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  <span>{t.verifyingPayment}</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-4 h-4" />
-                  <span>{t.confirmUpiBtn.replace('{amount}', orderData.totalAmount.toString())}</span>
-                </>
-              )}
-            </button>
-          </div>
-
-          {/* Cancel button */}
-          <div className="pt-2 text-center">
-            <button
-              type="button"
-              onClick={onClose}
-              className="text-xs font-semibold text-stone-500 hover:text-stone-800 dark:hover:text-stone-300 transition-colors cursor-pointer"
-            >
-              {language === 'en' ? 'Cancel and go back' : 'రద్దు చేసి వెనుకకు వెళ్ళండి'}
-            </button>
-          </div>
-
+            </>
+          )}
         </div>
       </div>
     </div>

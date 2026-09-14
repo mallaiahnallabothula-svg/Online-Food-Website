@@ -34,11 +34,12 @@ export const CustomerFeedbackView: React.FC<CustomerFeedbackViewProps> = ({
 
   const filteredFeedbacks = feedbacks.filter((fb) => {
     const matchesStar = filterStar === 'ALL' || fb.rating === filterStar;
+    const commentText = fb.comment || fb.comments || '';
     const matchesSearch =
       !searchTerm ||
       fb.customerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       fb.orderId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      fb.comments?.toLowerCase().includes(searchTerm.toLowerCase());
+      commentText.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesStar && matchesSearch;
   });
 
@@ -222,7 +223,7 @@ export const CustomerFeedbackView: React.FC<CustomerFeedbackViewProps> = ({
               {/* Aspects Tags */}
               {fb.aspects && fb.aspects.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">
-                  {fb.aspects.map((tagId) => (
+                  {fb.aspects.map((tagId: string) => (
                     <span
                       key={tagId}
                       className="px-2 py-0.5 rounded-full text-xs font-medium bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-stone-700"
@@ -234,9 +235,9 @@ export const CustomerFeedbackView: React.FC<CustomerFeedbackViewProps> = ({
               )}
 
               {/* Comments */}
-              {fb.comments ? (
+              {(fb.comment || fb.comments) ? (
                 <p className="text-sm text-stone-800 dark:text-stone-200 italic bg-[#FAF4EA]/50 dark:bg-stone-900/50 p-3 rounded-xl border border-amber-900/5 dark:border-stone-800">
-                  "{fb.comments}"
+                  "{fb.comment || fb.comments}"
                 </p>
               ) : (
                 <span className="text-xs text-stone-400 italic">వ్యాఖ్యలు లేవు (నక్షత్రాల రేటింగ్ మాత్రమే ఇవ్వబడింది).</span>

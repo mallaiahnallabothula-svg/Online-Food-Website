@@ -15,7 +15,10 @@ export const ExportReportsModal: React.FC<ExportReportsModalProps> = ({ orders, 
   const [successNotice, setSuccessNotice] = useState<string>('');
 
   const filteredOrders = dateFilter
-    ? orders.filter(o => o.createdAt.startsWith(dateFilter) || o.deliveryDate.includes(dateFilter))
+    ? orders.filter(o => {
+        const cDate = o.createdAt || o.createdAtUtc || o.createdAtIST || '';
+        return cDate.startsWith(dateFilter) || (o.deliveryDate && o.deliveryDate.includes(dateFilter));
+      })
     : orders;
 
   const handleExport = () => {
@@ -120,7 +123,7 @@ export const ExportReportsModal: React.FC<ExportReportsModalProps> = ({ orders, 
           <div className="flex justify-between">
             <span>మొత్తం ఆదాయం:</span>
             <span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">
-              ₹{filteredOrders.reduce((s, o) => s + o.totalPaid, 0)}
+              ₹{filteredOrders.reduce((s, o) => s + (o.totalAmount || o.totalPaid || 0), 0)}
             </span>
           </div>
         </div>

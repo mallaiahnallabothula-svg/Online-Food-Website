@@ -11,6 +11,8 @@ interface OrderFormProps {
     quantity: number;
     jowarQuantity: number;
     chapathiQuantity: number;
+    subtotal?: number;
+    deliveryCharge?: number;
     totalAmount: number;
     karamSelection: KaramSelection;
     karamQuantities: { karivepakuGrams: number; aviseGinjaluGrams: number };
@@ -141,7 +143,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const [mobileNumber, setMobileNumber] = useState<string>('');
   const [address, setAddress] = useState<string>('');
   const [landmark, setLandmark] = useState<string>('');
-  const [selectedPresetArea, setSelectedPresetArea] = useState<string>(PRESET_LOCALITIES[0].nameTe);
+  const [selectedPresetArea, setSelectedPresetArea] = useState<string>(PRESET_LOCALITIES[0]?.nameTe || '');
   const [customLocationLink, setCustomLocationLink] = useState<string>('');
   const [currentDistanceKm, setCurrentDistanceKm] = useState<number>(0.5);
 
@@ -261,7 +263,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const handleQuickDemoFill = () => {
     setCustomerName(language === 'en' ? 'Suresh Kumar' : 'సురేష్ కుమార్');
     setMobileNumber('8499865803');
-    setSelectedPresetArea(language === 'en' ? PRESET_LOCALITIES[0].nameEn : PRESET_LOCALITIES[0].nameTe);
+    setSelectedPresetArea(language === 'en' ? (PRESET_LOCALITIES[0]?.nameEn || '') : (PRESET_LOCALITIES[0]?.nameTe || ''));
     setCurrentDistanceKm(0.5);
     setDeliveryEligibility({
       isEligible: true,

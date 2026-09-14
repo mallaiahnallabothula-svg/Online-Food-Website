@@ -1,18 +1,21 @@
 /**
- * CSV and PDF Export Utilities for Sri Mallikarjuna Jonna Rottelu
+ * CSV and PDF Export Utilities for Mana Enti Vanta
  */
 import jsPDF from 'jspdf';
 import { Order } from '../types';
 
-export function exportOrdersToCSV(orders: Order[], filenamePrefix: string = 'SMJR_Orders'): void {
+export function exportOrdersToCSV(orders: Order[], filenamePrefix: string = 'MEV_Orders'): void {
   const headers = [
     'Order ID',
     'Order Date (IST)',
     'Customer Name',
     'Mobile',
     'Jowar Rotis Quantity',
-    'Price per Roti',
-    'Total Paid (INR)',
+    'Chapathis Quantity',
+    'Total Items',
+    'Subtotal (INR)',
+    'Delivery Charge (INR)',
+    'Total Amount (INR)',
     'Karivepaku Karam (g)',
     'Avise Karam (g)',
     'Payment Status',
@@ -30,24 +33,42 @@ export function exportOrdersToCSV(orders: Order[], filenamePrefix: string = 'SMJ
     return `"${s}"`;
   };
 
-  const rows = orders.map(order => [
-    escapeCSV(order.id),
-    escapeCSV(order.createdAtIST),
-    escapeCSV(order.customer.name),
-    escapeCSV(`+91 ${order.customer.mobile}`),
-    escapeCSV(order.quantity),
-    escapeCSV(order.pricePerRoti),
-    escapeCSV(order.totalPaid),
-    escapeCSV(order.karamQuantities.karivepakuGrams),
-    escapeCSV(order.karamQuantities.aviseGinjaluGrams),
-    escapeCSV(order.paymentStatus),
-    escapeCSV(order.paymentReference),
-    escapeCSV(order.deliveryDate),
-    escapeCSV(order.deliveryWindow),
-    escapeCSV(order.fulfillmentStatus),
-    escapeCSV(order.customer.address),
-    escapeCSV(order.customer.landmark || '')
-  ]);
+  const rows = orders.map(order => {
+    const custName = order.customer?.name || order.customerName || '';
+    const custMobile = order.customer?.mobile || order.customerMobile || '';
+    const custAddress = order.customer?.address || order.address || '';
+    const custLandmark = order.customer?.landmark || order.landmark || '';
+    const jowarQty = order.jowarQuantity ?? (order.chapathiQuantity ? 0 : (order.quantity || 0));
+    const chapathiQty = order.chapathiQuantity ?? 0;
+    const totalItems = order.totalItems || (jowarQty + chapathiQty);
+    const totalAmount = order.totalAmount || order.totalPaid || 0;
+    const karivepaku = order.karamQuantities?.karivepakuGrams || order.karivepakuGrams || 0;
+    const avise = order.karamQuantities?.aviseGinjaluGrams || order.aviseGrams || 0;
+    const dateIst = order.createdAtIST || order.createdAtIst || order.createdAt || '';
+    const payRef = order.providerPaymentId || order.paymentReference || '';
+
+    return [
+      escapeCSV(order.id),
+      escapeCSV(dateIst),
+      escapeCSV(custName),
+      escapeCSV(custMobile ? `+91 ${custMobile}` : ''),
+      escapeCSV(jowarQty),
+      escapeCSV(chapathiQty),
+      escapeCSV(totalItems),
+      escapeCSV(order.subtotal || 0),
+      escapeCSV(order.deliveryCharge || 0),
+      escapeCSV(totalAmount),
+      escapeCSV(karivepaku),
+      escapeCSV(avise),
+      escapeCSV(order.paymentStatus),
+      escapeCSV(payRef),
+      escapeCSV(order.deliveryDate),
+      escapeCSV(order.deliveryWindow),
+      escapeCSV(order.fulfillmentStatus),
+      escapeCSV(custAddress),
+      escapeCSV(custLandmark)
+    ];
+  });
 
   const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -60,7 +81,7 @@ export function exportOrdersToCSV(orders: Order[], filenamePrefix: string = 'SMJ
   document.body.removeChild(link);
 }
 
-export function exportOrdersToPDF(orders: Order[], filenamePrefix: string = 'SMJR_Orders_Report'): void {
+export function exportOrdersToPDF(orders: Order[], filenamePrefix: string = 'MEV_Orders_Report'): void {
   const doc = new jsPDF({
     orientation: 'landscape',
     unit: 'mm',
@@ -70,23 +91,23 @@ export function exportOrdersToPDF(orders: Order[], filenamePrefix: string = 'SMJ
   // Brand Header
   doc.setFontSize(16);
   doc.setTextColor(120, 53, 15); // #78350F
-  doc.text('Sri Mallikarjuna Palle Jonna Rottelu - Orders & Fulfillment Report', 14, 15);
+  doc.text('Mana Enti Vanta (మన ఇంటి వంట) - Orders & Fulfillment Report', 14, 15);
 
   doc.setFontSize(10);
   doc.setTextColor(80, 80, 80);
   doc.text(`Generated On: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST | Contact: +91 8499865803`, 14, 22);
 
   // Summary Metrics
-  const totalRevenue = orders.reduce((sum, o) => sum + o.totalPaid, 0);
-  const totalRotis = orders.reduce((sum, o) => sum + o.quantity, 0);
-  const totalKarivepaku = orders.reduce((sum, o) => sum + o.karamQuantities.karivepakuGrams, 0);
-  const totalAvise = orders.reduce((sum, o) => sum + o.karamQuantities.aviseGinjaluGrams, 0);
+  const totalRevenue = orders.reduce((sum, o) => sum + (o.totalAmount || o.totalPaid || 0), 0);
+  const totalItems = orders.reduce((sum, o) => sum + (o.totalItems || o.quantity || 0), 0);
+  const totalKarivepaku = orders.reduce((sum, o) => sum + (o.karamQuantities?.karivepakuGrams || o.karivepakuGrams || 0), 0);
+  const totalAvise = orders.reduce((sum, o) => sum + (o.karamQuantities?.aviseGinjaluGrams || o.aviseGrams || 0), 0);
 
   doc.setFontSize(9);
   doc.setTextColor(40, 40, 40);
   doc.rect(14, 26, 268, 14);
   doc.text(`Total Orders: ${orders.length}`, 18, 33);
-  doc.text(`Total Rotis: ${totalRotis}`, 65, 33);
+  doc.text(`Total Items: ${totalItems}`, 65, 33);
   doc.text(`Total Revenue: INR ${totalRevenue}`, 115, 33);
   doc.text(`Karivepaku Karam: ${totalKarivepaku}g`, 175, 33);
   doc.text(`Avise Karam: ${totalAvise}g`, 230, 33);
@@ -103,7 +124,7 @@ export function exportOrdersToPDF(orders: Order[], filenamePrefix: string = 'SMJ
   doc.text('Order ID', 24, y);
   doc.text('Customer', 60, y);
   doc.text('Mobile', 100, y);
-  doc.text('Rotis', 125, y);
+  doc.text('Items', 125, y);
   doc.text('Free Karams', 140, y);
   doc.text('Total (INR)', 175, y);
   doc.text('Pay Ref', 195, y);
@@ -124,7 +145,7 @@ export function exportOrdersToPDF(orders: Order[], filenamePrefix: string = 'SMJ
       doc.text('Order ID', 24, y);
       doc.text('Customer', 60, y);
       doc.text('Mobile', 100, y);
-      doc.text('Rotis', 125, y);
+      doc.text('Items', 125, y);
       doc.text('Free Karams', 140, y);
       doc.text('Total (INR)', 175, y);
       doc.text('Pay Ref', 195, y);
@@ -137,17 +158,24 @@ export function exportOrdersToPDF(orders: Order[], filenamePrefix: string = 'SMJ
     doc.setFontSize(7.5);
     doc.setTextColor(50, 50, 50);
 
-    const karamsText = `${order.karamQuantities.karivepakuGrams > 0 ? `K:${order.karamQuantities.karivepakuGrams}g ` : ''}${order.karamQuantities.aviseGinjaluGrams > 0 ? `A:${order.karamQuantities.aviseGinjaluGrams}g` : ''}` || 'None';
+    const kGrams = order.karamQuantities?.karivepakuGrams || order.karivepakuGrams || 0;
+    const aGrams = order.karamQuantities?.aviseGinjaluGrams || order.aviseGrams || 0;
+    const karamsText = `${kGrams > 0 ? `K:${kGrams}g ` : ''}${aGrams > 0 ? `A:${aGrams}g` : ''}` || 'None';
+    const custName = order.customer?.name || order.customerName || 'Customer';
+    const custMobile = order.customer?.mobile || order.customerMobile || '';
+    const totalAmount = order.totalAmount || order.totalPaid || 0;
+    const payRef = order.providerPaymentId || order.paymentReference || 'VERIFIED';
+    const itemsCount = order.totalItems || order.quantity || 0;
 
     doc.text(String(index + 1), 16, y);
-    doc.text(order.id.replace('SMJR-', ''), 24, y);
-    doc.text((order.customer.name || '').slice(0, 20), 60, y);
-    doc.text(`+91 ${order.customer.mobile}`, 100, y);
-    doc.text(`${order.quantity} pcs`, 125, y);
+    doc.text(order.id.replace('SMJR-', '').replace('MEV-', ''), 24, y);
+    doc.text(custName.slice(0, 20), 60, y);
+    doc.text(custMobile ? `+91 ${custMobile}` : '', 100, y);
+    doc.text(`${itemsCount} pcs`, 125, y);
     doc.text(karamsText, 140, y);
-    doc.text(`Rs. ${order.totalPaid}`, 175, y);
-    doc.text((order.paymentReference || '').slice(0, 14), 195, y);
-    doc.text(order.deliveryWindow.slice(0, 16), 225, y);
+    doc.text(`Rs. ${totalAmount}`, 175, y);
+    doc.text(payRef.slice(0, 14), 195, y);
+    doc.text((order.deliveryWindow || '6-8 PM').slice(0, 16), 225, y);
     doc.text(order.fulfillmentStatus, 255, y);
 
     // Subtle line divider

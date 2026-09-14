@@ -201,11 +201,11 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
               <div className="p-4 rounded-xl bg-[#FAF4EA] dark:bg-stone-900 border border-amber-900/10 dark:border-stone-800 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
                 <div>
                   <span className="text-stone-500 block">కస్టమర్ పేరు:</span>
-                  <strong className="text-stone-900 dark:text-stone-100">{selectedOrder.customer.name}</strong>
+                  <strong className="text-stone-900 dark:text-stone-100">{selectedOrder.customer?.name || selectedOrder.customerName || 'కస్టమర్'}</strong>
                 </div>
                 <div>
                   <span className="text-stone-500 block">రొట్టెల పరిమాణం:</span>
-                  <strong className="text-[#78350F] dark:text-amber-400 font-mono text-sm">{selectedOrder.quantity} రొట్టెలు (₹{selectedOrder.totalPaid})</strong>
+                  <strong className="text-[#78350F] dark:text-amber-400 font-mono text-sm">{selectedOrder.totalItems || selectedOrder.quantity || 0} వస్తువులు (₹{selectedOrder.totalAmount || selectedOrder.totalPaid || 0})</strong>
                 </div>
                 <div>
                   <span className="text-stone-500 block">డెలివరీ తేదీ:</span>

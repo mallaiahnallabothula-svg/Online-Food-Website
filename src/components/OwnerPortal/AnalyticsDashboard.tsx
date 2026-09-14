@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, DollarSign, Package, Gift, Clock, BarChart3, PieChart, Activity, Star } from 'lucide-react';
+import { Package, Gift, BarChart3, PieChart, Star } from 'lucide-react';
 import { AnalyticsData } from '../../types';
 
 interface AnalyticsDashboardProps {
@@ -15,10 +15,31 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
     );
   }
 
-  // Calculate status percentages
-  const total = analytics.totalOrders || 1;
-  const statusCounts = analytics.ordersByStatus || { NEW: 0, PREPARING: 0, OUT_FOR_DELIVERY: 0, DELIVERED: 0 };
-  const maxHourlyCount = Math.max(...analytics.hourlyOrderDistribution.map(h => h.count), 1);
+  const summary = analytics.summary || {
+    totalRevenueRupees: 0,
+    totalOrders: 0,
+    totalItems: 0,
+    totalJowarRotis: 0,
+    totalChapathis: 0,
+    totalKarivepakuGrams: 0,
+    totalAviseGrams: 0,
+    todayOrdersCount: 0,
+    todayRevenueRupees: 0,
+    averageOrderValueRupees: 0,
+  };
+
+  const statusCounts = analytics.ordersByStatus || {
+    RECEIVED: 0,
+    PREPARING: 0,
+    OUT_FOR_DELIVERY: 0,
+    DELIVERED: 0,
+    CANCELLED: 0,
+  };
+
+  const hourlyList = analytics.hourlyOrderDistribution || [];
+  const maxHourlyCount = Math.max(...hourlyList.map(h => h.count), 1);
+  const avgRating = analytics.feedbackSummary?.averageRating || 5.0;
+  const totalReviews = analytics.feedbackSummary?.totalReviews || 0;
 
   return (
     <div className="space-y-6 font-telugu">
@@ -29,31 +50,31 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
         <div className="bg-white dark:bg-[#211E1A] p-4 sm:p-5 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-xs">
           <div className="flex items-center justify-between text-stone-500 dark:text-stone-400 mb-2">
             <span className="text-xs font-semibold">మొత్తం ఆదాయం</span>
-            <span className="p-1.5 sm:p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400">
+            <span className="p-1.5 sm:p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 font-bold">
               ₹
             </span>
           </div>
           <div className="text-xl sm:text-2xl font-extrabold text-stone-900 dark:text-stone-100 font-mono">
-            ₹{analytics.totalRevenue}
+            ₹{summary.totalRevenueRupees}
           </div>
           <div className="text-[11px] text-emerald-600 font-semibold mt-1">
-            నేటి రాబడి: ₹{analytics.todayRevenue}
+            నేటి రాబడి: ₹{summary.todayRevenueRupees} ({summary.todayOrdersCount} ఆర్డర్లు)
           </div>
         </div>
 
-        {/* Total Rotis Sold */}
+        {/* Total Rotis & Chapathis */}
         <div className="bg-white dark:bg-[#211E1A] p-4 sm:p-5 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-xs">
           <div className="flex items-center justify-between text-stone-500 dark:text-stone-400 mb-2">
-            <span className="text-xs font-semibold">విక్రయించిన రొట్టెలు</span>
+            <span className="text-xs font-semibold">విక్రయాలు (పదార్థాలు)</span>
             <span className="p-1.5 sm:p-2 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400">
               <Package className="w-4 h-4" />
             </span>
           </div>
           <div className="text-xl sm:text-2xl font-extrabold text-stone-900 dark:text-stone-100 font-mono">
-            {analytics.totalRotisSold}
+            {summary.totalItems}
           </div>
           <div className="text-[11px] text-stone-500 mt-1">
-            మొత్తం ఆర్డర్లు: {analytics.totalOrders}
+            {summary.totalJowarRotis} జొన్న + {summary.totalChapathis} చపాతీ
           </div>
         </div>
 
@@ -66,11 +87,11 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
             </span>
           </div>
           <div className="text-xl sm:text-2xl font-extrabold text-[#78350F] dark:text-amber-400 font-mono flex items-baseline gap-1">
-            {analytics.averageRating ? analytics.averageRating.toFixed(1) : '5.0'}
+            {avgRating.toFixed(1)}
             <span className="text-xs text-stone-400 font-normal">/ 5.0</span>
           </div>
           <div className="text-[11px] text-stone-500 mt-1">
-            {analytics.totalFeedbacks || 0} కస్టమర్ సమీక్షలు
+            {totalReviews} కస్టమర్ సమీక్షలు
           </div>
         </div>
 
@@ -83,7 +104,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
             </span>
           </div>
           <div className="text-xl sm:text-2xl font-extrabold text-emerald-700 dark:text-emerald-400 font-mono">
-            {analytics.totalKarivepakuGrams} <span className="text-xs font-normal">గ్రా.</span>
+            {summary.totalKarivepakuGrams} <span className="text-xs font-normal">గ్రా.</span>
           </div>
           <div className="text-[11px] text-stone-500 mt-1">
             ఉచితంగా అందించినది
@@ -99,7 +120,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
             </span>
           </div>
           <div className="text-xl sm:text-2xl font-extrabold text-[#78350F] dark:text-amber-400 font-mono">
-            {analytics.totalAviseGrams} <span className="text-xs font-normal">గ్రా.</span>
+            {summary.totalAviseGrams} <span className="text-xs font-normal">గ్రా.</span>
           </div>
           <div className="text-[11px] text-stone-500 mt-1">
             ఉచితంగా అందించినది
@@ -110,7 +131,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
       {/* Visual Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        {/* Hourly Order Volume Chart (11 AM to 4 PM IST Peak Distribution) */}
+        {/* Hourly Order Volume Chart (Peak Distribution) */}
         <div className="lg:col-span-8 bg-white dark:bg-[#211E1A] p-6 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-xs">
           <div className="flex items-center justify-between mb-4">
             <div>
@@ -123,14 +144,14 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
           </div>
 
           <div className="pt-4 space-y-4">
-            {analytics.hourlyOrderDistribution.map((slot) => {
+            {hourlyList.map((slot) => {
               const pct = Math.max((slot.count / maxHourlyCount) * 100, 4);
               return (
-                <div key={slot.hour} className="space-y-1">
+                <div key={slot.hourSlot} className="space-y-1">
                   <div className="flex justify-between text-xs font-semibold">
-                    <span className="text-stone-700 dark:text-stone-300">{slot.label}</span>
+                    <span className="text-stone-700 dark:text-stone-300">{slot.hourSlot}</span>
                     <span className="font-mono text-stone-900 dark:text-stone-100">
-                      {slot.count} ఆర్డర్లు {slot.revenue > 0 ? `(₹${slot.revenue})` : ''}
+                      {slot.count} ఆర్డర్లు
                     </span>
                   </div>
                   <div className="w-full bg-stone-100 dark:bg-stone-800 h-6 rounded-lg overflow-hidden flex items-center p-1">
@@ -162,9 +183,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
 
             <div className="space-y-3">
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-xs">
-                <span className="font-bold text-blue-900 dark:text-blue-200">కొత్త ఆర్డర్లు (New)</span>
+                <span className="font-bold text-blue-900 dark:text-blue-200">ఆర్డర్ అందింది (Received)</span>
                 <span className="font-mono font-bold text-blue-800 dark:text-blue-300 text-sm">
-                  {statusCounts.NEW || 0}
+                  {statusCounts.RECEIVED || 0}
                 </span>
               </div>
 

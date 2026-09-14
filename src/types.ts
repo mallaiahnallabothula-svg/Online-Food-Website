@@ -1,21 +1,23 @@
 /**
- * Types and interfaces for Sri Mallikarjuna Jonna Rottelu
+ * Types and interfaces for Mana Enti Vanta / మన ఇంటి వంట
  */
 
-export type FulfillmentStatus = 'NEW' | 'PREPARING' | 'OUT_FOR_DELIVERY' | 'DELIVERED';
-export type PaymentStatus = 'PENDING' | 'VERIFIED' | 'FAILED' | 'CANCELLED' | 'PAY_ON_DELIVERY';
+export type FulfillmentStatus = 'RECEIVED' | 'PREPARING' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'CANCELLED';
+export type PaymentStatus = 'PAID' | 'FAILED' | 'REFUNDED' | 'PAY_ON_DELIVERY';
 export type AdminRole = 'ADMIN' | 'STAFF';
 
 export interface OrderFeedback {
   id: string;
   orderId: string;
   rating: number; // 1 to 5
-  comments: string;
-  aspects?: string[]; // e.g. 'TASTE_SOFTNESS', 'KARIVEPAKU_KARAM', 'AVISE_KARAM', 'ON_TIME_DELIVERY', 'PACKAGING', 'HOT_AND_FRESH'
+  comment: string;
+  comments?: string; // alias for comment
+  aspects?: string[];
   customerName?: string;
   customerMobile?: string;
   createdAt: string;
-  createdAtIST: string;
+  createdAtIST?: string;
+  isPublic?: boolean;
 }
 
 export interface KaramSelection {
@@ -27,7 +29,7 @@ export interface CustomerDetails {
   name: string;
   mobile: string; // 10 digits
   address: string;
-  landmark: string;
+  landmark?: string;
   locationLink?: string;
   latitude?: number;
   longitude?: number;
@@ -35,83 +37,129 @@ export interface CustomerDetails {
 }
 
 export interface Order {
-  id: string; // e.g. SMJR-20260910-4821
-  createdAt: string; // ISO string
-  createdAtIST: string; // Formatted IST
-  quantity: number; // Total rotis + chapathis (backward compatible)
-  jowarQuantity?: number; // Jowar Rotis count (min 5 if selected, ₹30 each)
-  chapathiQuantity?: number; // Chapathis count (min 5 if selected, ₹10 each)
-  pricePerRoti: number; // 30
+  id: string; // e.g. SMJR-20260914-1001
+  customerAccessToken?: string;
+  createdAtUtc?: string;
+  createdAtIst?: string;
+  createdAt?: string;
+  createdAtIST?: string;
+  deliveryDate: string; // YYYY-MM-DD
+  deliveryWindow: string; // "18:00-20:00" or localized
+  jowarQuantity: number; // Jowar Rotis count (min 5 if chosen, ₹30 each)
+  chapathiQuantity: number; // Chapathis count (min 5 if chosen, ₹10 each)
+  totalItems: number;
+  quantity?: number; // Total alias
+  jowarUnitPrice: number; // 30
+  chapathiUnitPrice: number; // 10
+  pricePerRoti?: number; // 30
   pricePerChapathi?: number; // 10
-  subtotal?: number; // Food items subtotal
-  deliveryCharge?: number; // Delivery charge: ₹0 if <= 5km, ₹9/km above 5km
-  totalPaid: number;
-  karamSelection: KaramSelection;
-  karamQuantities: {
+  subtotal: number; // Food items subtotal
+  deliveryCharge: number; // Delivery charge: ₹0 if <= 5km, ₹9/km above 5km
+  totalAmount: number; // Final total in rupees
+  totalPaid?: number; // Alias for totalAmount
+  currency?: string;
+  karamSelection?: KaramSelection;
+  karivepakuGrams?: number;
+  aviseGrams?: number;
+  karamQuantities?: {
     karivepakuGrams: number;
     aviseGinjaluGrams: number;
   };
-  customer: CustomerDetails;
-  deliveryDate: string; // Formatted date (e.g., "10 సెప్టెంబర్ 2026")
-  deliveryWindow: string; // "సాయంత్రం 6–8 గంటలు"
-  paymentStatus: PaymentStatus;
-  paymentReference: string;
-  paymentVerifiedAt?: string;
+  customer?: CustomerDetails;
+  customerName?: string;
+  customerMobile?: string;
+  address?: string;
+  landmark?: string;
+  distanceKm?: number;
+  locationLink?: string;
+  paymentStatus: PaymentStatus | string;
+  paymentProvider?: string;
+  providerPaymentId?: string;
+  paymentReference?: string;
   fulfillmentStatus: FulfillmentStatus;
-  statusUpdatedAt?: string;
-  statusUpdatedBy?: string;
-  isCustomerReceived?: boolean;
   receivedAt?: string;
   receivedAtIST?: string;
+  receivedBy?: string;
+  isCustomerReceived?: boolean;
+  updatedAt?: string;
+  updatedBy?: string;
   feedback?: OrderFeedback;
 }
 
 export interface AuditLog {
   id: string;
-  timestamp: string;
-  timestampIST: string;
-  type: 'PAYMENT_VERIFIED' | 'ORDER_CREATED' | 'STATUS_UPDATED' | 'PAYMENT_FAILED' | 'LOGIN_ATTEMPT' | 'EXPORT_GENERATED' | 'ORDER_RECEIVED' | 'FEEDBACK_SUBMITTED';
-  orderId?: string;
+  actorType: string;
+  actorId: string;
+  actor?: string;
+  action: string;
+  targetType: string;
+  targetId: string;
+  details: any;
   amount?: number;
-  paymentReference?: string;
-  details: string;
-  actor: string;
+  ip?: string | null;
+  createdAt: string;
 }
 
 export interface AnalyticsData {
-  totalRevenue: number;
-  totalOrders: number;
-  totalRotisSold: number;
-  totalKarivepakuGrams: number;
-  totalAviseGrams: number;
-  todayOrdersCount: number;
-  todayRevenue: number;
-  ordersByStatus: Record<FulfillmentStatus, number>;
-  hourlyOrderDistribution: { hour: number; label: string; count: number; revenue: number }[];
-  dailyTrends: { date: string; orders: number; revenue: number; rotis: number }[];
+  totalRevenue?: number;
+  todayRevenue?: number;
+  totalOrders?: number;
+  totalRotisSold?: number;
+  totalKarivepakuGrams?: number;
+  totalAviseGrams?: number;
   averageRating?: number;
   totalFeedbacks?: number;
-  ratingDistribution?: Record<number, number>;
+  summary?: {
+    totalRevenueRupees: number;
+    totalOrders: number;
+    totalItems: number;
+    totalJowarRotis: number;
+    totalChapathis: number;
+    totalKarivepakuGrams: number;
+    totalAviseGrams: number;
+    todayOrdersCount: number;
+    todayRevenueRupees: number;
+    averageOrderValueRupees: number;
+  };
+  ordersByStatus?: Record<string, number>;
+  hourlyOrderDistribution?: Array<{ hour?: number; label?: string; hourSlot?: string; count: number; revenue?: number }>;
+  dailyTrends?: Array<{ date: string; dateFormatted: string; orders: number; revenue: number }>;
+  feedbackSummary?: {
+    averageRating: number;
+    totalReviews: number;
+    ratingCounts: { [star: number]: number };
+  };
 }
 
 export interface OrderingHoursStatus {
   isOpen: boolean;
-  currentTimeIST: string;
-  currentHourIST: number;
-  currentMinuteIST: number;
-  openTimeStr: string;
-  openTimeStrEn?: string;
-  closeTimeStr: string;
-  closeTimeStrEn?: string;
-  nextOpenMessage: string;
-  nextOpenMessageEn?: string;
-  deliveryWindowStr: string;
-  deliveryWindowStrEn?: string;
+  isLiveBatchHours?: boolean;
+  currentIstTime?: string;
+  currentTimeIST?: string;
+  currentIstHour?: number;
+  currentHourIST?: number;
+  currentMinuteIST?: number;
+  openHour?: number;
+  closeHour?: number;
   deliveryDate?: string;
   deliveryDateEn?: string;
+  deliveryDateFormattedTe?: string;
+  deliveryDateFormattedEn?: string;
+  deliveryWindowTe?: string;
+  deliveryWindowEn?: string;
+  nextOrderingWindowIst?: string;
+  nextOrderingWindowTe?: string;
+  nextOrderingWindowEn?: string;
+  openTimeStr?: string;
+  openTimeStrEn?: string;
+  closeTimeStr?: string;
+  closeTimeStrEn?: string;
+  nextOpenMessage?: string;
+  nextOpenMessageEn?: string;
+  deliveryWindowStr?: string;
+  deliveryWindowStrEn?: string;
   currentDateIST?: string;
   currentDateISTEn?: string;
   deliveryWindow?: string;
-  deliveryWindowEn?: string;
-  isLiveBatchHours?: boolean;
+  [key: string]: any;
 }

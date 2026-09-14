@@ -20,6 +20,10 @@
         "./*"
       ]
     },
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
     "allowImportingTsExtensions": true,
     "noEmit": true
   }

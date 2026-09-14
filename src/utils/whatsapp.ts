@@ -10,18 +10,21 @@ export const OWNER_PHONE_DISPLAY = '+91 8499865803';
 export function buildWhatsAppTicket(order: Order, lang: 'te' | 'en' = 'te'): string {
   // Free karams string formatting
   const karamLines: string[] = [];
-  if (order.karamSelection.karivepaku && order.karamQuantities.karivepakuGrams > 0) {
+  const karivepakuGrams = order.karamQuantities?.karivepakuGrams || order.karivepakuGrams || 0;
+  const aviseGrams = order.karamQuantities?.aviseGinjaluGrams || order.aviseGrams || 0;
+
+  if (order.karamSelection?.karivepaku && karivepakuGrams > 0) {
     karamLines.push(
       lang === 'en'
-        ? `• Curry Leaf Podi (కరివేపాకు కారం): ${order.karamQuantities.karivepakuGrams}g`
-        : `• కరివేపాకు కారం: ${order.karamQuantities.karivepakuGrams} గ్రా.`
+        ? `• Curry Leaf Podi (కరివేపాకు కారం): ${karivepakuGrams}g`
+        : `• కరివేపాకు కారం: ${karivepakuGrams} గ్రా.`
     );
   }
-  if (order.karamSelection.aviseGinjalu && order.karamQuantities.aviseGinjaluGrams > 0) {
+  if (order.karamSelection?.aviseGinjalu && aviseGrams > 0) {
     karamLines.push(
       lang === 'en'
-        ? `• Flax Seeds Podi (అవిసె గింజల కారం): ${order.karamQuantities.aviseGinjaluGrams}g`
-        : `• అవిసె గింజల కారం: ${order.karamQuantities.aviseGinjaluGrams} గ్రా.`
+        ? `• Flax Seeds Podi (అవిసె గింజల కారం): ${aviseGrams}g`
+        : `• అవిసె గింజల కారం: ${aviseGrams} గ్రా.`
     );
   }
 
@@ -29,9 +32,7 @@ export function buildWhatsAppTicket(order: Order, lang: 'te' | 'en' = 'te'): str
     ? karamLines.join('\n')
     : (lang === 'en' ? 'None selected' : 'ఏమీ ఎంచుకోలేదు');
 
-  const paymentStatusLine = order.paymentStatus === 'PAY_ON_DELIVERY'
-    ? (lang === 'en' ? '💵 Pay on Delivery' : '💵 డెలివరీ వద్ద చెల్లింపు')
-    : (lang === 'en' ? '✅ Online UPI — Verified Payment (No COD)' : '✅ ఆన్‌లైన్ UPI — చెల్లింపు పూర్తయింది (క్యాష్ ఆన్ డెలివరీ లేదు)');
+  const paymentStatusLine = (lang === 'en' ? '✅ Online UPI — Verified Payment (No COD)' : '✅ ఆన్‌లైన్ UPI — చెల్లింపు పూర్తయింది (క్యాష్ ఆన్ డెలివరీ లేదు)');
 
   // Delivery charge line
   const deliveryChargeLineEn = typeof order.deliveryCharge === 'number' && order.deliveryCharge > 0
@@ -42,23 +43,36 @@ export function buildWhatsAppTicket(order: Order, lang: 'te' | 'en' = 'te'): str
     : '🚚 *డెలివరీ:* ఉచితం (5 కి.మీ. పరిధి లోపల)';
 
   // Compute location map URL
+  const cust = order.customer || {
+    name: order.customerName || 'Customer',
+    mobile: order.customerMobile || '',
+    address: order.address || '',
+    landmark: order.landmark || '',
+    locationLink: order.locationLink || '',
+    distanceKm: order.distanceKm || 0,
+    latitude: undefined,
+    longitude: undefined,
+  };
+
   let mapUrl = '';
-  if (order.customer.locationLink && order.customer.locationLink.trim().length > 0) {
-    mapUrl = order.customer.locationLink.trim();
-  } else if (order.customer.latitude && order.customer.longitude) {
-    mapUrl = `https://maps.google.com/?q=${order.customer.latitude},${order.customer.longitude}`;
-  } else if (order.customer.address && order.customer.address.trim().length > 0) {
-    mapUrl = `https://maps.google.com/?q=${encodeURIComponent(order.customer.address.trim() + ', Kollur')}`;
+  if (cust.locationLink && cust.locationLink.trim().length > 0) {
+    mapUrl = cust.locationLink.trim();
+  } else if (cust.latitude && cust.longitude) {
+    mapUrl = `https://maps.google.com/?q=${cust.latitude},${cust.longitude}`;
+  } else if (cust.address && cust.address.trim().length > 0) {
+    mapUrl = `https://maps.google.com/?q=${encodeURIComponent(cust.address.trim() + ', Kollur')}`;
   }
 
   // Items breakdown
   const itemsLinesTe: string[] = [];
   const itemsLinesEn: string[] = [];
 
-  const jowarQty = typeof order.jowarQuantity === 'number' ? order.jowarQuantity : (order.chapathiQuantity ? 0 : order.quantity);
+  const jowarQty = typeof order.jowarQuantity === 'number' ? order.jowarQuantity : (order.chapathiQuantity ? 0 : (order.quantity || 0));
   const chapathiQty = typeof order.chapathiQuantity === 'number' ? order.chapathiQuantity : 0;
   const rotiPrice = order.pricePerRoti || 30;
   const chapathiPrice = order.pricePerChapathi || 10;
+  const totalAmount = order.totalAmount || order.totalPaid || 0;
+  const paymentRef = order.providerPaymentId || order.paymentReference || 'UPI-ONLINE-VERIFIED';
 
   if (jowarQty > 0) {
     itemsLinesTe.push(`🫓 *జొన్న రొట్టెలు (Jowar Rotis):* ${jowarQty} రొట్టెలు (₹${rotiPrice} చొప్పున = ₹${jowarQty * rotiPrice})`);
@@ -69,8 +83,8 @@ export function buildWhatsAppTicket(order: Order, lang: 'te' | 'en' = 'te'): str
     itemsLinesEn.push(`🥞 *Fresh Chapathis:* ${chapathiQty} chapathis (₹${chapathiPrice} each = ₹${chapathiQty * chapathiPrice})`);
   }
   if (itemsLinesTe.length === 0) {
-    itemsLinesTe.push(`🫓 *జొన్న రొట్టెలు:* ${order.quantity} రొట్టెలు (₹${rotiPrice} చొప్పున)`);
-    itemsLinesEn.push(`🫓 *Jowar Rotis:* ${order.quantity} rotis (₹${rotiPrice} each)`);
+    itemsLinesTe.push(`🫓 *జొన్న రొట్టెలు:* ${order.quantity || 5} రొట్టెలు (₹${rotiPrice} చొప్పున)`);
+    itemsLinesEn.push(`🫓 *Jowar Rotis:* ${order.quantity || 5} rotis (₹${rotiPrice} each)`);
   }
 
   if (lang === 'en') {
@@ -80,24 +94,24 @@ export function buildWhatsAppTicket(order: Order, lang: 'te' | 'en' = 'te'): str
       'WhatsApp Order Ticket to: +91 8499865803',
       '================================',
       `🎫 *Order ID:* ${order.id}`,
-      `📅 *Order Placed Time:* ${order.createdAtIST}`,
+      `📅 *Order Placed Time:* ${order.createdAtIST || order.createdAtIst || ''}`,
       '',
       '*CUSTOMER & DELIVERY DETAILS:*',
-      `👤 *Customer Name:* ${order.customer.name}`,
-      `📞 *Mobile Number:* +91 ${order.customer.mobile}`,
-      `📍 *Customer Address:* ${order.customer.address}`,
+      `👤 *Customer Name:* ${cust.name}`,
+      `📞 *Mobile Number:* +91 ${cust.mobile}`,
+      `📍 *Customer Address:* ${cust.address}`,
     ];
 
-    if (order.customer.landmark && order.customer.landmark.trim().length > 0) {
-      parts.push(`🏠 *Landmark:* ${order.customer.landmark.trim()}`);
+    if (cust.landmark && cust.landmark.trim().length > 0) {
+      parts.push(`🏠 *Landmark:* ${cust.landmark.trim()}`);
     }
 
     if (mapUrl) {
       parts.push(`🗺️ *Current Location / Maps Link:* ${mapUrl}`);
     }
 
-    if (typeof order.customer.distanceKm === 'number' && order.customer.distanceKm > 0) {
-      parts.push(`📏 *Distance from Kollur Center:* ${order.customer.distanceKm} km`);
+    if (typeof cust.distanceKm === 'number' && cust.distanceKm > 0) {
+      parts.push(`📏 *Distance from Kollur Center:* ${cust.distanceKm} km`);
     }
 
     parts.push(
@@ -108,13 +122,13 @@ export function buildWhatsAppTicket(order: Order, lang: 'te' | 'en' = 'te'): str
       '🎁 *Free Items (Complimentary Karams):*',
       freeKaramSection,
       '',
-      `💰 *Total Amount:* ₹${order.totalPaid}`,
+      `💰 *Total Amount:* ₹${totalAmount}`,
       deliveryChargeLineEn,
       `💳 *Payment Method:* ${paymentStatusLine}`,
-      `🔖 *Payment Ref / UTR:* ${order.paymentReference}`,
+      `🔖 *Payment Ref / UTR:* ${paymentRef}`,
       '',
       `🚚 *Delivery Date:* ${order.deliveryDate}`,
-      `🕕 *Delivery Time:* ${order.deliveryWindow}`,
+      `🕕 *Delivery Time:* ${order.deliveryWindow || '6:00 PM - 8:00 PM'}`,
       '================================',
       '✅ Please prepare fresh rotis & chapathis and dispatch on time.'
     );
@@ -129,24 +143,24 @@ export function buildWhatsAppTicket(order: Order, lang: 'te' | 'en' = 'te'): str
     'యజమానికి వాట్సాప్ ఆర్డర్ టికెట్: +91 8499865803',
     '================================',
     `🎫 *ఆర్డర్ ID (Order ID):* ${order.id}`,
-    `📅 *ఆర్డర్ చేసిన సమయం:* ${order.createdAtIST}`,
+    `📅 *ఆర్డర్ చేసిన సమయం:* ${order.createdAtIST || order.createdAtIst || ''}`,
     '',
     '*కస్టమర్ & డెలివరీ వివరాలు:*',
-    `👤 *కస్టమర్ పేరు (Customer Name):* ${order.customer.name}`,
-    `📞 *మొబైల్ నంబర్ (Mobile Number):* +91 ${order.customer.mobile}`,
-    `📍 *కస్టమర్ చిరునామా (Delivery Address):* ${order.customer.address}`,
+    `👤 *కస్టమర్ పేరు (Customer Name):* ${cust.name}`,
+    `📞 *మొబైల్ నంబర్ (Mobile Number):* +91 ${cust.mobile}`,
+    `📍 *కస్టమర్ చిరునామా (Delivery Address):* ${cust.address}`,
   ];
 
-  if (order.customer.landmark && order.customer.landmark.trim().length > 0) {
-    parts.push(`🏠 *ల్యాండ్‌మార్క్ (Landmark):* ${order.customer.landmark.trim()}`);
+  if (cust.landmark && cust.landmark.trim().length > 0) {
+    parts.push(`🏠 *ల్యాండ్‌మార్క్ (Landmark):* ${cust.landmark.trim()}`);
   }
 
   if (mapUrl) {
     parts.push(`🗺️ *లైవ్ లొకేషన్ / గూగుల్ మ్యాప్స్ లింక్ (Maps Link):* ${mapUrl}`);
   }
 
-  if (typeof order.customer.distanceKm === 'number' && order.customer.distanceKm > 0) {
-    parts.push(`📏 *కొల్లూరు సెంటర్ నుండి దూరం:* ${order.customer.distanceKm} కి.మీ.`);
+  if (typeof cust.distanceKm === 'number' && cust.distanceKm > 0) {
+    parts.push(`📏 *కొల్లూరు సెంటర్ నుండి దూరం:* ${cust.distanceKm} కి.మీ.`);
   }
 
   parts.push(
@@ -157,13 +171,13 @@ export function buildWhatsAppTicket(order: Order, lang: 'te' | 'en' = 'te'): str
     '🎁 *ఉచిత వస్తువులు (Free Karams):*',
     freeKaramSection,
     '',
-    `💰 *మొత్తం బిల్లు (Total Amount):* ₹${order.totalPaid}`,
+    `💰 *మొత్తం బిల్లు (Total Amount):* ₹${totalAmount}`,
     deliveryChargeLineTe,
     `💳 *చెల్లింపు విధానం (Payment Method):* ${paymentStatusLine}`,
-    `🔖 *పేమెంట్ రిఫరెన్స్ / UTR:* ${order.paymentReference}`,
+    `🔖 *పేమెంట్ రిఫరెన్స్ / UTR:* ${paymentRef}`,
     '',
     `🚚 *డెలివరీ తేదీ (Delivery Date):* ${order.deliveryDate}`,
-    `🕕 *డెలివరీ సమయం (Delivery Time):* ${order.deliveryWindow}`,
+    `🕕 *డెలివరీ సమయం (Delivery Time):* ${order.deliveryWindow || '6:00 PM - 8:00 PM'}`,
     '================================',
     '✅ దయచేసి ఈ ఆర్డర్ కోసం తాజా వేడివేడి రొట్టెలు, చపాతీలను తయారుచేసి సమయానికి డెలివరీ చేయగలరు.'
   );
