@@ -5,7 +5,7 @@ import { BrandEmblem } from '../BrandEmblem';
 import { useLanguage } from '../../context/LanguageContext';
 
 interface AdminLoginProps {
-  onLoginSuccess: (token: string, role: AdminRole) => void;
+  onLoginSuccess: (role: AdminRole, user?: any) => void;
   onCancel: () => void;
 }
 
@@ -50,7 +50,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onCancel
         return;
       }
 
-      onLoginSuccess(data.sessionToken, data.user.role);
+      onLoginSuccess(data.user.role, data.user);
     } catch (err: any) {
       setError(isTe ? 'సర్వర్‌తో కనెక్ట్ కావడం సాధ్యపడలేదు.' : 'Failed to connect to authentication server.');
     } finally {
@@ -139,9 +139,6 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onCancel
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-            <p className="text-[11px] text-stone-400 mt-1">
-              {isTe ? 'డిఫాల్ట్ అడ్మిన్ పాస్‌వర్డ్: ManaEntiVanta@2026' : 'Default admin password: ManaEntiVanta@2026'}
-            </p>
           </div>
 
           <div className="pt-2 flex flex-col gap-2">

@@ -4,20 +4,21 @@ import {
   getOrderByCustomerToken,
   markOrderReceivedByCustomer,
   submitOrderFeedback,
+  formatCustomerSafeOrder,
 } from '../services/orderService.ts';
 import { customerActionRateLimiter } from '../middleware/rateLimit.ts';
 
 export const customerRouter = Router();
 
-// Track / Lookup Order by high-entropy access token or Order ID
+// Track / Lookup Order by high-entropy customer access token
 customerRouter.get(['/:token', '/orders/:token'], customerActionRateLimiter, async (req: Request, res: Response) => {
   const { token } = req.params;
 
-  if (!token || token.length < 6) {
+  if (!token || token.length < 16) {
     return res.status(400).json({
       error: {
         code: 'INVALID_TOKEN',
-        message: 'Invalid customer tracking token or Order ID.',
+        message: 'Invalid or missing customer tracking access token.',
       },
     });
   }
@@ -28,23 +29,23 @@ customerRouter.get(['/:token', '/orders/:token'], customerActionRateLimiter, asy
     return res.status(404).json({
       error: {
         code: 'ORDER_NOT_FOUND',
-        message: 'No order matching this tracking token was found.',
+        message: 'No order matching this tracking access token was found.',
       },
     });
   }
 
-  res.json({ order });
+  res.json({ order: formatCustomerSafeOrder(order) });
 });
 
 // Customer confirms order receipt
 customerRouter.post(['/:token/received', '/orders/:token/received'], customerActionRateLimiter, async (req: Request, res: Response) => {
   const { token } = req.params;
 
-  if (!token || token.length < 6) {
+  if (!token || token.length < 16) {
     return res.status(400).json({
       error: {
         code: 'INVALID_TOKEN',
-        message: 'Invalid customer access token or Order ID.',
+        message: 'Invalid or missing customer access token.',
       },
     });
   }
@@ -66,11 +67,11 @@ customerRouter.post(['/:token/received', '/orders/:token/received'], customerAct
 customerRouter.post(['/:token/feedback', '/orders/:token/feedback'], customerActionRateLimiter, async (req: Request, res: Response) => {
   const { token } = req.params;
 
-  if (!token || token.length < 6) {
+  if (!token || token.length < 16) {
     return res.status(400).json({
       error: {
         code: 'INVALID_TOKEN',
-        message: 'Invalid customer access token or Order ID.',
+        message: 'Invalid or missing customer access token.',
       },
     });
   }

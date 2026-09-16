@@ -5,6 +5,7 @@ import {
   logoutSession,
   requireAuth,
   requireRole,
+  requireAdminCsrf,
   extractSessionToken,
   AuthenticatedRequest,
 } from '../auth/index.ts';
@@ -38,7 +39,7 @@ adminRouter.post('/login', authRateLimiter, async (req: AuthenticatedRequest, re
 
   const loginResult = await loginAdmin(username, password, ip, userAgent);
 
-  if (!loginResult.success || !loginResult.sessionToken || !loginResult.user) {
+  if (!loginResult.success || !loginResult.sessionCookie || !loginResult.user) {
     return res.status(401).json({
       error: {
         code: 'AUTH_FAILED',
@@ -49,7 +50,7 @@ adminRouter.post('/login', authRateLimiter, async (req: AuthenticatedRequest, re
   }
 
   // Set secure HttpOnly cookie
-  res.cookie('admin_session', loginResult.sessionToken, {
+  res.cookie('admin_session', loginResult.sessionCookie, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
@@ -57,14 +58,14 @@ adminRouter.post('/login', authRateLimiter, async (req: AuthenticatedRequest, re
     path: '/',
   });
 
+  // Never return raw sessionToken in JSON response
   res.json({
     success: true,
     user: loginResult.user,
-    sessionToken: loginResult.sessionToken, // Also returned for API clients/tests
   });
 });
 
-adminRouter.post('/logout', async (req: AuthenticatedRequest, res: Response) => {
+adminRouter.post('/logout', requireAdminCsrf, async (req: AuthenticatedRequest, res: Response) => {
   const token = extractSessionToken(req);
   if (token) {
     await logoutSession(token);
@@ -181,7 +182,7 @@ adminRouter.get('/orders', requireAuth, async (req: AuthenticatedRequest, res: R
 });
 
 // Update Order Fulfillment Status
-adminRouter.patch('/orders/:id/status', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+adminRouter.patch('/orders/:id/status', requireAuth, requireAdminCsrf, async (req: AuthenticatedRequest, res: Response) => {
   const orderId = String(req.params.id || '');
   if (!orderId) {
     return res.status(400).json({ error: { code: 'INVALID_ID', message: 'Order ID is required.' } });
@@ -321,7 +322,7 @@ adminRouter.get('/audit-logs', requireAuth, requireRole(['ADMIN']), async (req: 
 });
 
 // CSV Export
-adminRouter.post('/exports/csv', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+adminRouter.post('/exports/csv', requireAuth, requireAdminCsrf, async (req: AuthenticatedRequest, res: Response) => {
   const dateFilter = req.body.date as string | undefined;
   const csv = await generateOrdersCsv(dateFilter);
 

@@ -32,7 +32,7 @@ export default function App() {
 
   // Active view: 'CUSTOMER' | 'OWNER_LOGIN' | 'OWNER_DASHBOARD'
   const [currentView, setCurrentView] = useState<'CUSTOMER' | 'OWNER_LOGIN' | 'OWNER_DASHBOARD'>('CUSTOMER');
-  const [adminToken, setAdminToken] = useState<string | null>(() => localStorage.getItem('smjr_admin_token'));
+  const [isAuthenticatedAdmin, setIsAuthenticatedAdmin] = useState<boolean>(false);
   const [adminRole, setAdminRole] = useState<AdminRole>('ADMIN');
 
   // Checkout flow state
@@ -48,11 +48,27 @@ export default function App() {
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
   const [isInstallModalOpen, setIsInstallModalOpen] = useState<boolean>(false);
 
+  // Check initial admin session status from server cookie
+  useEffect(() => {
+    fetch('/api/admin/me', { credentials: 'include' })
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data?.user) {
+          setIsAuthenticatedAdmin(true);
+          setAdminRole(data.user.role);
+          if (window.location.hash === '#owner' || window.location.hash === '#admin') {
+            setCurrentView('OWNER_DASHBOARD');
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Listen to #owner or #admin in URL for owner direct access
   useEffect(() => {
     const checkHash = () => {
       if (window.location.hash === '#owner' || window.location.hash === '#admin') {
-        if (adminToken) {
+        if (isAuthenticatedAdmin) {
           setCurrentView('OWNER_DASHBOARD');
         } else {
           setCurrentView('OWNER_LOGIN');
@@ -62,7 +78,7 @@ export default function App() {
     checkHash();
     window.addEventListener('hashchange', checkHash);
     return () => window.removeEventListener('hashchange', checkHash);
-  }, [adminToken]);
+  }, [isAuthenticatedAdmin]);
 
   // Sync dark mode class with html root
   useEffect(() => {
@@ -144,17 +160,25 @@ export default function App() {
   };
 
   // Admin login handler
-  const handleLoginSuccess = (token: string, role: AdminRole) => {
-    setAdminToken(token);
+  const handleLoginSuccess = (role: AdminRole) => {
+    setIsAuthenticatedAdmin(true);
     setAdminRole(role);
-    localStorage.setItem('smjr_admin_token', token);
     setCurrentView('OWNER_DASHBOARD');
   };
 
-  const handleAdminLogout = () => {
-    setAdminToken(null);
-    localStorage.removeItem('smjr_admin_token');
+  const handleAdminLogout = async () => {
+    try {
+      await fetch('/api/admin/logout', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+      });
+    } catch {}
+    setIsAuthenticatedAdmin(false);
     setCurrentView('CUSTOMER');
+    if (window.location.hash === '#owner' || window.location.hash === '#admin') {
+      window.location.hash = '';
+    }
   };
 
   return (
@@ -172,7 +196,7 @@ export default function App() {
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode(prev => !prev)}
         onOpenOwnerPortal={() => {
-          if (adminToken) {
+          if (isAuthenticatedAdmin) {
             setCurrentView('OWNER_DASHBOARD');
           } else {
             setCurrentView('OWNER_LOGIN');
@@ -272,7 +296,7 @@ export default function App() {
             {/* Discreet Owner Access Link (Non-public) */}
             <button
               onClick={() => {
-                if (adminToken) {
+                if (isAuthenticatedAdmin) {
                   setCurrentView('OWNER_DASHBOARD');
                 } else {
                   setCurrentView('OWNER_LOGIN');

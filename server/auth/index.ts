@@ -16,13 +16,23 @@ export interface AuthenticatedRequest extends Request {
   requestId?: string;
 }
 
-// In-memory brute-force defense tracker
+// In-memory brute-force defense tracker (both IP and Account based)
 interface LoginAttemptRecord {
   attempts: number;
   lastAttempt: number;
   lockoutUntil: number;
 }
 const loginAttempts = new Map<string, LoginAttemptRecord>();
+
+// Periodic automatic cleanup of stale sessions in database (every 15 minutes)
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    cleanupStaleSessions().catch(() => {});
+  }, 15 * 60 * 1000).unref();
+}
+
+// Dummy hash for constant-time comparison against nonexistent users
+const DUMMY_BCRYPT_HASH = '$2a$10$wK1Fm8.9w1H45fVqP7gQe.u3rPzHhYh0GzH2K6Z1VbS0sXb8qU3uW';
 
 export async function loginAdmin(
   username: string,
@@ -31,22 +41,40 @@ export async function loginAdmin(
   userAgent?: string
 ): Promise<{
   success: boolean;
-  sessionToken?: string;
+  sessionCookie?: string;
   user?: AuthenticatedUser;
   error?: string;
   lockedUntil?: number;
 }> {
   const now = Date.now();
-  const attemptRecord = loginAttempts.get(ip) || { attempts: 0, lastAttempt: now, lockoutUntil: 0 };
+  const cleanUsername = (username || '').toLowerCase().trim();
+  const ipKey = `ip:${ip}`;
+  const userKey = `user:${cleanUsername}`;
 
-  if (attemptRecord.lockoutUntil > now) {
-    const waitSeconds = Math.ceil((attemptRecord.lockoutUntil - now) / 1000);
+  // Check IP-based lockout
+  const ipRecord = loginAttempts.get(ipKey) || { attempts: 0, lastAttempt: now, lockoutUntil: 0 };
+  if (ipRecord.lockoutUntil > now) {
+    const waitSeconds = Math.ceil((ipRecord.lockoutUntil - now) / 1000);
     return {
       success: false,
       error: `Too many failed attempts. Account temporarily locked. Please retry in ${waitSeconds} seconds.`,
-      lockedUntil: attemptRecord.lockoutUntil,
+      lockedUntil: ipRecord.lockoutUntil,
     };
   }
+
+  // Check Account-based lockout
+  const userRecord = loginAttempts.get(userKey) || { attempts: 0, lastAttempt: now, lockoutUntil: 0 };
+  if (userRecord.lockoutUntil > now) {
+    const waitSeconds = Math.ceil((userRecord.lockoutUntil - now) / 1000);
+    return {
+      success: false,
+      error: `Too many failed attempts. Account temporarily locked. Please retry in ${waitSeconds} seconds.`,
+      lockedUntil: userRecord.lockoutUntil,
+    };
+  }
+
+  // Auto clean stale expired sessions on login attempt
+  cleanupStaleSessions().catch(() => {});
 
   const db = getDb();
   const res = await db.execute({
@@ -55,12 +83,23 @@ export async function loginAdmin(
   });
 
   if (res.rows.length === 0) {
-    attemptRecord.attempts += 1;
-    attemptRecord.lastAttempt = now;
-    if (attemptRecord.attempts >= 5) {
-      attemptRecord.lockoutUntil = now + 15 * 60 * 1000; // 15-minute lockout
+    // Constant-time compare to prevent user enumeration
+    await bcrypt.compare(passwordPlain || '', DUMMY_BCRYPT_HASH);
+
+    ipRecord.attempts += 1;
+    ipRecord.lastAttempt = now;
+    userRecord.attempts += 1;
+    userRecord.lastAttempt = now;
+
+    if (ipRecord.attempts >= 5) {
+      ipRecord.lockoutUntil = now + 15 * 60 * 1000;
     }
-    loginAttempts.set(ip, attemptRecord);
+    if (userRecord.attempts >= 5) {
+      userRecord.lockoutUntil = now + 15 * 60 * 1000;
+    }
+
+    loginAttempts.set(ipKey, ipRecord);
+    loginAttempts.set(userKey, userRecord);
     return { success: false, error: 'Invalid username or password credentials.' };
   }
 
@@ -68,30 +107,43 @@ export async function loginAdmin(
   const isValidPassword = await bcrypt.compare(passwordPlain, String(userRow.password_hash));
 
   if (!isValidPassword) {
-    attemptRecord.attempts += 1;
-    attemptRecord.lastAttempt = now;
-    if (attemptRecord.attempts >= 5) {
-      attemptRecord.lockoutUntil = now + 15 * 60 * 1000;
+    ipRecord.attempts += 1;
+    ipRecord.lastAttempt = now;
+    userRecord.attempts += 1;
+    userRecord.lastAttempt = now;
+
+    if (ipRecord.attempts >= 5) {
+      ipRecord.lockoutUntil = now + 15 * 60 * 1000;
     }
-    loginAttempts.set(ip, attemptRecord);
+    if (userRecord.attempts >= 5) {
+      userRecord.lockoutUntil = now + 15 * 60 * 1000;
+    }
+
+    loginAttempts.set(ipKey, ipRecord);
+    loginAttempts.set(userKey, userRecord);
     return { success: false, error: 'Invalid username or password credentials.' };
   }
 
-  // Successful login -> Reset rate limiter for this IP
-  loginAttempts.delete(ip);
+  // Successful login -> Reset rate limiter for both this IP and this account
+  loginAttempts.delete(ipKey);
+  loginAttempts.delete(userKey);
 
-  // Generate 256-bit secure session ID
-  const sessionToken = `sess_${crypto.randomBytes(32).toString('hex')}`;
+  // Generate 256-bit secure session ID (raw token returned only for HttpOnly cookie)
+  const rawSessionToken = crypto.randomBytes(32).toString('hex');
+  const sessionTokenHash = crypto.createHash('sha256').update(rawSessionToken).digest('hex');
+  const sessionId = `SESS-${crypto.randomBytes(8).toString('hex')}`;
   const sessionDurationMs = 24 * 60 * 60 * 1000; // 24 hours
   const expiresAt = new Date(now + sessionDurationMs).toISOString();
   const createdAt = new Date(now).toISOString();
 
+  // Store only the session hash in database, never the raw token
   await db.execute({
-    sql: `INSERT INTO admin_sessions (id, user_id, expires_at, created_at, user_agent, ip)
-          VALUES (?, ?, ?, ?, ?, ?)`,
-    args: [sessionToken, String(userRow.id), expiresAt, createdAt, userAgent || null, ip],
+    sql: `INSERT INTO admin_sessions (id, session_token_hash, user_id, expires_at, created_at, user_agent, ip)
+          VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    args: [sessionId, sessionTokenHash, String(userRow.id), expiresAt, createdAt, userAgent || null, ip],
   });
 
+  // Audit log using distinct sessionId, never the session token
   await db.execute({
     sql: `INSERT INTO audit_logs (id, actor_type, actor_id, action, target_type, target_id, details, ip, created_at)
           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -101,7 +153,7 @@ export async function loginAdmin(
       String(userRow.username),
       'ADMIN_LOGIN_SUCCESS',
       'ADMIN_SESSION',
-      sessionToken,
+      sessionId,
       JSON.stringify({ username }),
       ip,
       createdAt,
@@ -110,7 +162,7 @@ export async function loginAdmin(
 
   return {
     success: true,
-    sessionToken,
+    sessionCookie: rawSessionToken,
     user: {
       id: String(userRow.id),
       username: String(userRow.username),
@@ -127,14 +179,15 @@ export async function validateSession(sessionToken: string): Promise<Authenticat
 
   const db = getDb();
   const nowUtc = new Date().toISOString();
+  const tokenHash = crypto.createHash('sha256').update(sessionToken.trim()).digest('hex');
 
   const res = await db.execute({
     sql: `SELECT s.id as session_id, s.expires_at, u.id, u.username, u.role, u.name
           FROM admin_sessions s
           JOIN admin_users u ON s.user_id = u.id
-          WHERE s.id = ? AND s.expires_at > ?
+          WHERE s.session_token_hash = ? AND s.expires_at > ?
           LIMIT 1`,
-    args: [sessionToken, nowUtc],
+    args: [tokenHash, nowUtc],
   });
 
   if (res.rows.length === 0) {
@@ -153,23 +206,85 @@ export async function validateSession(sessionToken: string): Promise<Authenticat
 export async function logoutSession(sessionToken: string): Promise<void> {
   if (!sessionToken) return;
   const db = getDb();
+  const tokenHash = crypto.createHash('sha256').update(sessionToken.trim()).digest('hex');
   await db.execute({
-    sql: 'DELETE FROM admin_sessions WHERE id = ?',
-    args: [sessionToken],
+    sql: 'DELETE FROM admin_sessions WHERE session_token_hash = ?',
+    args: [tokenHash],
   });
 }
 
+export async function cleanupStaleSessions(): Promise<void> {
+  try {
+    const db = getDb();
+    const nowUtc = new Date().toISOString();
+    await db.execute({
+      sql: 'DELETE FROM admin_sessions WHERE expires_at <= ?',
+      args: [nowUtc],
+    });
+  } catch {}
+}
+
 export function extractSessionToken(req: Request): string | null {
-  // 1. Check HttpOnly cookie
-  if (req.cookies && req.cookies.admin_session) {
-    return req.cookies.admin_session;
-  }
-  // 2. Check Authorization header
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    return authHeader.substring(7).trim();
+  // Purely HttpOnly cookie authentication - raw tokens are never accepted via Authorization headers
+  if (req.cookies && typeof req.cookies.admin_session === 'string' && req.cookies.admin_session.trim().length > 0) {
+    return req.cookies.admin_session.trim();
   }
   return null;
+}
+
+// CSRF / Same-Origin validation for state-changing admin requests
+export function requireAdminCsrf(req: Request, res: Response, next: NextFunction) {
+  if (['POST', 'PATCH', 'PUT', 'DELETE'].includes(req.method)) {
+    const origin = req.headers.origin;
+    const referer = req.headers.referer;
+    const rawHost = (req.headers['x-forwarded-host'] as string) || req.headers.host || '';
+    const host = (rawHost.split(',')[0] || '').trim().toLowerCase();
+    const secFetchSite = req.headers['sec-fetch-site'];
+
+    // Reject explicit cross-site requests signaled by browser security metadata
+    if (secFetchSite === 'cross-site') {
+      return res.status(403).json({
+        error: { code: 'CSRF_FORBIDDEN', message: 'Cross-site request blocked by browser Sec-Fetch-Site security.' },
+      });
+    }
+
+    if (origin) {
+      try {
+        const originUrl = new URL(origin);
+        if (host && originUrl.host.toLowerCase() !== host) {
+          return res.status(403).json({
+            error: { code: 'CSRF_FORBIDDEN', message: 'Cross-origin admin request rejected.' },
+          });
+        }
+      } catch {
+        return res.status(403).json({
+          error: { code: 'CSRF_FORBIDDEN', message: 'Invalid origin header.' },
+        });
+      }
+    } else if (referer) {
+      try {
+        const refererUrl = new URL(referer);
+        if (host && refererUrl.host.toLowerCase() !== host) {
+          return res.status(403).json({
+            error: { code: 'CSRF_FORBIDDEN', message: 'Cross-origin admin request rejected.' },
+          });
+        }
+      } catch {
+        return res.status(403).json({
+          error: { code: 'CSRF_FORBIDDEN', message: 'Invalid referer header.' },
+        });
+      }
+    } else if (process.env.NODE_ENV === 'production') {
+      // In production, require either Origin, Referer, or custom header
+      const customHeader = req.headers['x-requested-with'];
+      if (!customHeader) {
+        return res.status(403).json({
+          error: { code: 'CSRF_FORBIDDEN', message: 'Missing origin or custom header on state mutation.' },
+        });
+      }
+    }
+  }
+  next();
 }
 
 // Authentication Middleware

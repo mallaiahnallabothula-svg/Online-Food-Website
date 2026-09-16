@@ -3,7 +3,8 @@
  */
 
 export type FulfillmentStatus = 'RECEIVED' | 'PREPARING' | 'OUT_FOR_DELIVERY' | 'DELIVERED' | 'CANCELLED';
-export type PaymentStatus = 'PAID' | 'FAILED' | 'REFUNDED' | 'PAY_ON_DELIVERY';
+export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED' | 'PAY_ON_DELIVERY';
+export type OrderStatus = 'PENDING' | 'PAID' | 'CONFIRMED' | 'TICKET_GENERATED';
 export type AdminRole = 'ADMIN' | 'STAFF';
 
 export interface OrderFeedback {
@@ -73,6 +74,9 @@ export interface Order {
   distanceKm?: number;
   locationLink?: string;
   paymentStatus: PaymentStatus | string;
+  orderStatus?: OrderStatus;
+  ticketText?: string;
+  ticketGeneratedAt?: string;
   paymentProvider?: string;
   providerPaymentId?: string;
   paymentReference?: string;

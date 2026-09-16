@@ -6,7 +6,8 @@ export const BUSINESS_CONFIG = {
     taglineEn: 'Authentic Village Tastes & Wholesome Health',
     phone: '8499865803',
     whatsapp: '918499865803',
-    upiId: '8499865803@ybl',
+    // Centrally configured authoritative UPI ID [nmallaiah12@axl]
+    upiId: (process.env.BUSINESS_UPI_ID || 'nmallaiah12@axl').replace(/[\[\]]/g, '').trim(),
   },
   kitchen: {
     name: 'Kollur Central Kitchen',

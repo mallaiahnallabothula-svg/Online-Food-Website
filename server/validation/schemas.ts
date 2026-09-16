@@ -53,15 +53,24 @@ export const CreatePaymentIntentSchema = z.object({
 });
 
 export const VerifyPaymentSchema = z.object({
-  intentId: z.string().min(5, 'Intent ID is required'),
-  providerPaymentId: z.string().min(3, 'Provider payment ID is required'),
-  providerSignature: z.string().optional(),
-  mockVerificationToken: z.string().optional(),
+  intentId: z.string().trim().min(5, 'Intent ID is required').max(100),
+  providerPaymentId: z.string().trim().min(3, 'Provider payment ID is required').max(100),
+  providerSignature: z.string().trim().max(256).optional(),
+  mockVerificationToken: z.string().trim().max(100).optional(),
 });
 
 export const CustomerFeedbackSchema = z.object({
-  rating: z.number().int().min(1, 'Rating must be between 1 and 5').max(5, 'Rating must be between 1 and 5'),
-  comment: z.string().trim().max(2000, 'Comment must be under 2000 characters').optional(),
+  rating: z
+    .number()
+    .int('Rating must be an integer between 1 and 5')
+    .min(1, 'Rating must be between 1 and 5')
+    .max(5, 'Rating must be between 1 and 5'),
+  comment: z
+    .string()
+    .trim()
+    .max(500, 'Comment must be under 500 characters')
+    .optional()
+    .transform((val) => (val ? val.replace(/<[^>]*>?/gm, '').trim() : undefined)),
 });
 
 export const UpdateOrderStatusSchema = z.object({

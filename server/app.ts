@@ -10,6 +10,9 @@ import { adminRouter } from './routes/adminRoutes.ts';
 export function createExpressApp() {
   const app = express();
 
+  // Trust first proxy hop (Cloud Run / Nginx reverse proxy)
+  app.set('trust proxy', 1);
+
   // 1. Security Headers
   app.use(
     helmet({
@@ -18,8 +21,13 @@ export function createExpressApp() {
     })
   );
 
-  // 2. Request size limit & JSON Parser
-  app.use(express.json({ limit: '100kb' }));
+  // 2. Request size limit & JSON Parser (with rawBody capture for webhook verification)
+  app.use(express.json({
+    limit: '100kb',
+    verify: (req: any, _res, buf) => {
+      req.rawBody = buf;
+    },
+  }));
   app.use(express.urlencoded({ extended: true, limit: '100kb' }));
 
   // 3. Cookie Parser

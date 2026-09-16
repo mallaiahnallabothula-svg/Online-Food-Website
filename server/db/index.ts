@@ -1,4 +1,4 @@
-import { createClient, Client } from '@libsql/client';
+import { createClient, type Client } from '@libsql/client';
 import path from 'path';
 import fs from 'fs';
 import bcrypt from 'bcryptjs';
@@ -6,6 +6,28 @@ import crypto from 'crypto';
 import { DB_SCHEMA } from './schema.ts';
 
 let dbClient: Client | null = null;
+
+export async function withDbRetry<T>(fn: () => Promise<T>, maxRetries = 5): Promise<T> {
+  let attempt = 0;
+  while (true) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      attempt++;
+      const isBusy =
+        err?.message?.includes('SQLITE_BUSY') ||
+        err?.code === 'SQLITE_BUSY' ||
+        err?.message?.includes('database is locked') ||
+        err?.message?.includes('busy');
+      if (isBusy && attempt < maxRetries) {
+        const delay = Math.min(1000, 20 * Math.pow(2, attempt) + Math.random() * 30);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        continue;
+      }
+      throw err;
+    }
+  }
+}
 
 export function getDb(): Client {
   if (!dbClient) {
@@ -23,6 +45,12 @@ export function getDb(): Client {
 
 export async function initDb(): Promise<void> {
   const db = getDb();
+
+  // Configure SQLite performance and concurrency
+  try {
+    await db.execute('PRAGMA journal_mode = WAL;');
+    await db.execute('PRAGMA busy_timeout = 5000;');
+  } catch {}
   
   // Execute schema statements
   const statements = DB_SCHEMA.split(';')
@@ -40,8 +68,21 @@ export async function initDb(): Promise<void> {
   });
 
   if (existingAdmin.rows.length === 0) {
-    const defaultPassword = process.env.ADMIN_DEFAULT_PASSWORD || 'ManaEntiVanta@2026';
-    const passwordHash = await bcrypt.hash(defaultPassword, 10);
+    const isProduction = process.env.NODE_ENV === 'production';
+    let initialPassword = process.env.ADMIN_INITIAL_PASSWORD || process.env.ADMIN_DEFAULT_PASSWORD;
+
+    if (!initialPassword) {
+      if (isProduction) {
+        console.error('[DB] CRITICAL: No administrator user found and ADMIN_INITIAL_PASSWORD is not set in environment.');
+        return;
+      } else {
+        // In local development only, generate a secure random one-time password
+        initialPassword = `Dev_${crypto.randomBytes(8).toString('hex')}!`;
+        console.warn(`[DB] DEVELOPMENT NOTICE: Generated one-time admin password for 'admin': ${initialPassword}`);
+      }
+    }
+
+    const passwordHash = await bcrypt.hash(initialPassword, 12);
     const adminId = `USR-${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
 
     await db.execute({

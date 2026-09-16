@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 
 interface RateLimitConfig {
   windowMs: number;
@@ -77,4 +77,10 @@ export const customerActionRateLimiter = createRateLimiter({
   windowMs: 10 * 60 * 1000, // 10 mins
   maxRequests: 60,
   message: 'Too many customer requests. Please try again shortly.',
+});
+
+export const statusPollingRateLimiter = createRateLimiter({
+  windowMs: 5 * 60 * 1000, // 5 mins
+  maxRequests: 240, // allows 1 request every 1.25s for 5 mins
+  message: 'Too many status check requests. Please slow down.',
 });

@@ -17,8 +17,10 @@ export const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ order, onN
   const [copied, setCopied] = useState<boolean>(false);
   const [copiedToken, setCopiedToken] = useState<boolean>(false);
   const [autoOpened, setAutoOpened] = useState<boolean>(false);
-  const ticketText = buildWhatsAppTicket(currentOrder, language);
-  const whatsappUrl = getWhatsAppUrl(currentOrder, language);
+  const ticketText = currentOrder.ticketText || buildWhatsAppTicket(currentOrder, language);
+  const whatsappUrl = currentOrder.ticketText
+    ? `https://wa.me/${OWNER_PHONE}?text=${encodeURIComponent(currentOrder.ticketText)}`
+    : getWhatsAppUrl(currentOrder, language);
 
   const totalPaid = currentOrder.totalAmount || currentOrder.totalPaid || 0;
   const isTe = language !== 'en';

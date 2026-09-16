@@ -5,8 +5,12 @@
       (function() {
         var isViteMsg = function(arg) {
           if (!arg) return false;
-          var str = typeof arg === 'string' ? arg : (arg.message || arg.stack || '');
-          return typeof str === 'string' && (str.indexOf('[vite]') !== -1 || str.indexOf('failed to connect to websocket') !== -1 || str.indexOf('WebSocket') !== -1);
+          var str = typeof arg === 'string' ? arg : (arg.message || arg.stack || (arg.toString ? arg.toString() : ''));
+          return typeof str === 'string' && (
+            str.indexOf('[vite]') !== -1 ||
+            str.indexOf('failed to connect to websocket') !== -1 ||
+            str.indexOf('vite-hmr') !== -1
+          );
         };
         ['error', 'warn'].forEach(function(method) {
           var orig = console[method];

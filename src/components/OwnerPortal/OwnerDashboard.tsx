@@ -129,7 +129,10 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
     try {
       const res = await fetch(`/api/admin/orders/${orderId}/status`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
         credentials: 'include',
         body: JSON.stringify({ status: newStatus }),
       });
@@ -151,7 +154,10 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
     try {
       const res = await fetch('/api/admin/exports/csv', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
         credentials: 'include',
         body: JSON.stringify({ date: dateFilter || undefined }),
       });
@@ -178,6 +184,9 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
     try {
       await fetch('/api/admin/logout', {
         method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+        },
         credentials: 'include',
       });
     } catch {}
