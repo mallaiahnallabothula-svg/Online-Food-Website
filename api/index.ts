@@ -19,6 +19,10 @@ export default async function handler(req: Request, res: Response) {
     await initialization;
     app(req, res);
   } catch {
-    res.status(503).json({ error: { code: 'SERVICE_UNAVAILABLE', message: 'Orders are temporarily unavailable. Please try again later.' } });
+    // Vercel helpers are disabled to preserve the signed webhook bytes.
+    res.statusCode = 503;
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store');
+    res.end(JSON.stringify({ error: { code: 'SERVICE_UNAVAILABLE', message: 'Orders are temporarily unavailable. Please try again later.' } }));
   }
 }
