@@ -47,6 +47,10 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [dateFilter, setDateFilter] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
+  const [errorMessage, setErrorMessage] = useState('');
+  const latestRequest = useRef(0);
   
   // Audio chime settings
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
@@ -58,10 +62,13 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
 
   // Fetch orders, analytics, audit logs, and feedback with credentials: 'include'
   const fetchDashboardData = async (isManualRefresh: boolean = false) => {
+    const request = ++latestRequest.current;
     if (isManualRefresh) setIsRefreshing(true);
     try {
       // 1. Orders
       const qParams = new URLSearchParams();
+      qParams.set('page', String(page));
+      qParams.set('limit', '20');
       if (statusFilter !== 'ALL') qParams.append('status', statusFilter);
       if (dateFilter) qParams.append('date', dateFilter);
       if (searchQuery.trim()) qParams.append('search', searchQuery.trim());
@@ -71,7 +78,11 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
       });
       if (ordersRes.ok) {
         const data = await ordersRes.json();
+        if (request !== latestRequest.current) return;
         const incomingOrders: Order[] = data.orders || [];
+        setPagination({ total: data.pagination?.total || 0, totalPages: data.pagination?.totalPages || 1 });
+        if (page > (data.pagination?.totalPages || 1)) setPage(data.pagination?.totalPages || 1);
+        setErrorMessage('');
 
         // Check if new order arrived and trigger audio chime
         if (previousOrdersCountRef.current > 0 && incomingOrders.length > previousOrdersCountRef.current) {
@@ -84,6 +95,9 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
       } else if (ordersRes.status === 401) {
         onLogout();
         return;
+      } else {
+        const error = await ordersRes.json().catch(() => ({}));
+        throw new Error(error.error?.message || 'Unable to load orders. Please refresh.');
       }
 
       // 2. Analytics
@@ -109,9 +123,9 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
         }
       }
     } catch (err) {
-      console.error('Error fetching dashboard data:', err);
+      if (request === latestRequest.current) setErrorMessage(err instanceof Error ? err.message : 'Unable to load orders. Please refresh.');
     } finally {
-      if (isManualRefresh) setIsRefreshing(false);
+      if (request === latestRequest.current) setIsRefreshing(false);
     }
   };
 
@@ -121,11 +135,12 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
       fetchDashboardData(false);
     }, 12000); // 12-second live refresh
     return () => clearInterval(interval);
-  }, [statusFilter, dateFilter, searchQuery]);
+  }, [statusFilter, dateFilter, searchQuery, page]);
 
   // Update order fulfillment status (authoritative actor derived from session on server)
   const handleStatusChange = async (orderId: string, newStatus: FulfillmentStatus) => {
     setUpdatingOrderId(orderId);
+    setErrorMessage('');
     try {
       const res = await fetch(`/api/admin/orders/${orderId}/status`, {
         method: 'PATCH',
@@ -140,9 +155,12 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
       if (res.ok) {
         setOrders(prev => prev.map(o => o.id === orderId ? { ...o, fulfillmentStatus: newStatus } : o));
         fetchDashboardData(false);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setErrorMessage(data.error?.message || 'Unable to update this order. Please refresh and retry.');
       }
     } catch (err) {
-      console.error('Failed to update status:', err);
+      setErrorMessage('Unable to update this order. Check your connection and retry.');
     } finally {
       setUpdatingOrderId(null);
     }
@@ -172,9 +190,12 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setErrorMessage(data.error?.message || 'Unable to export orders. Please retry.');
       }
     } catch (err) {
-      console.error('Export failed:', err);
+      setErrorMessage('Unable to export orders. Check your connection and retry.');
     } finally {
       setIsExportingCsv(false);
     }
@@ -212,6 +233,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6 font-telugu">
+      {errorMessage && <div role="alert" className="p-4 rounded-xl bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300 text-sm">{errorMessage}</div>}
       
       {/* Top Header Bar */}
       <div className="bg-white dark:bg-[#211E1A] p-4 sm:p-6 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -286,7 +308,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
               : 'border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
           }`}
         >
-          {isTe ? 'ఆర్డర్లు' : 'Orders'} ({orders.length})
+          {isTe ? 'ఆర్డర్లు' : 'Orders'} ({pagination.total})
         </button>
 
         <button
@@ -340,7 +362,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
               <input
                 type="text"
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => { setSearchQuery(e.target.value); setPage(1); }}
                 placeholder={isTe ? 'ఆర్డర్ ID, కస్టమర్ పేరు లేదా మొబైల్ శోధించండి...' : 'Search by ID, name, or phone...'}
                 className="w-full pl-9 pr-3 py-2 bg-stone-50 dark:bg-[#1A1816] border border-stone-300 dark:border-stone-700 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-amber-500"
               />
@@ -351,7 +373,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
               <span className="text-xs font-semibold text-stone-500">స్టేటస్:</span>
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
                 className="py-1.5 px-3 bg-stone-50 dark:bg-[#1A1816] border border-stone-300 dark:border-stone-700 rounded-xl text-xs font-semibold text-stone-800 dark:text-stone-200"
               >
                 <option value="ALL">అన్నీ (All)</option>
@@ -369,12 +391,12 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
               <input
                 type="date"
                 value={dateFilter}
-                onChange={(e) => setDateFilter(e.target.value)}
+                onChange={(e) => { setDateFilter(e.target.value); setPage(1); }}
                 className="py-1.5 px-2 bg-stone-50 dark:bg-[#1A1816] border border-stone-300 dark:border-stone-700 rounded-xl text-xs text-stone-800 dark:text-stone-200"
               />
               {dateFilter && (
                 <button
-                  onClick={() => setDateFilter('')}
+                  onClick={() => { setDateFilter(''); setPage(1); }}
                   className="text-xs text-stone-400 hover:text-stone-600"
                 >
                   క్లియర్
@@ -383,6 +405,11 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
             </div>
           </div>
 
+          <div className="flex items-center justify-between text-xs">
+            <button type="button" disabled={page <= 1 || isRefreshing} onClick={() => setPage(prev => prev - 1)} className="px-3 py-2 rounded-lg bg-stone-100 dark:bg-stone-800 disabled:opacity-40">{isTe ? 'మునుపటి' : 'Previous'}</button>
+            <span>{isTe ? 'పేజీ' : 'Page'} {page} / {pagination.totalPages}</span>
+            <button type="button" disabled={page >= pagination.totalPages || isRefreshing} onClick={() => setPage(prev => prev + 1)} className="px-3 py-2 rounded-lg bg-stone-100 dark:bg-stone-800 disabled:opacity-40">{isTe ? 'తరువాతి' : 'Next'}</button>
+          </div>
           {/* Orders Cards Grid */}
           {orders.length === 0 ? (
             <div className="bg-white dark:bg-[#211E1A] p-12 text-center rounded-2xl border border-stone-200 dark:border-stone-800 space-y-2">
@@ -402,8 +429,9 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                 const customerMobile = order.customerMobile || order.customer?.mobile || '';
                 const customerAddress = order.address || order.customer?.address || '';
                 const customerLandmark = order.landmark || order.customer?.landmark || '';
-                const distanceKm = order.distanceKm || 0.8;
+                const distanceKm = order.distanceKm ?? 0.8;
                 const totalPaid = order.totalAmount || order.totalPaid || 0;
+                const canFulfill = order.paymentStatus === 'PAID' && !['DELIVERED', 'CANCELLED'].includes(order.fulfillmentStatus);
 
                 return (
                   <div
@@ -418,8 +446,8 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                             {order.id}
                           </span>
                           {getStatusBadge(order.fulfillmentStatus)}
-                          <span className="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-mono">
-                            PAID
+                          <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold font-mono ${order.paymentStatus === 'PAID' ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300' : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'}`}>
+                            {order.paymentStatus}
                           </span>
                         </div>
                         <div className="text-xs text-stone-400 mt-1 flex items-center gap-2">
@@ -532,7 +560,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
 
                       <div className="flex flex-wrap items-center gap-1.5">
                         <button
-                          disabled={isUpdating || order.fulfillmentStatus === 'PREPARING'}
+                          disabled={isUpdating || !canFulfill || order.fulfillmentStatus !== 'RECEIVED'}
                           onClick={() => handleStatusChange(order.id, 'PREPARING')}
                           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
                             order.fulfillmentStatus === 'PREPARING'
@@ -544,7 +572,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                         </button>
 
                         <button
-                          disabled={isUpdating || order.fulfillmentStatus === 'OUT_FOR_DELIVERY'}
+                          disabled={isUpdating || !canFulfill || order.fulfillmentStatus !== 'PREPARING'}
                           onClick={() => handleStatusChange(order.id, 'OUT_FOR_DELIVERY')}
                           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
                             order.fulfillmentStatus === 'OUT_FOR_DELIVERY'
@@ -556,7 +584,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                         </button>
 
                         <button
-                          disabled={isUpdating || order.fulfillmentStatus === 'DELIVERED'}
+                          disabled={isUpdating || !canFulfill || order.fulfillmentStatus !== 'OUT_FOR_DELIVERY'}
                           onClick={() => handleStatusChange(order.id, 'DELIVERED')}
                           className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
                             order.fulfillmentStatus === 'DELIVERED'
@@ -568,7 +596,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                         </button>
 
                         <button
-                          disabled={isUpdating || order.fulfillmentStatus === 'CANCELLED'}
+                          disabled={isUpdating || ['DELIVERED', 'CANCELLED'].includes(order.fulfillmentStatus)}
                           onClick={() => handleStatusChange(order.id, 'CANCELLED')}
                           className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
                             order.fulfillmentStatus === 'CANCELLED'

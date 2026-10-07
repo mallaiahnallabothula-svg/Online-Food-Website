@@ -59,9 +59,9 @@ setInterval(() => {
   }
 }, 60 * 1000);
 
-export async function getIntent(intentId: string): Promise<PaymentIntent | undefined> {
+export async function getIntent(intentId: string, allowExpired = false): Promise<PaymentIntent | undefined> {
   const cached = paymentIntentsMap.get(intentId);
-  if (cached) return cached;
+  if (cached && (allowExpired || cached.expiresAt >= Date.now())) return cached;
 
   try {
     const db = getDb();
@@ -75,7 +75,7 @@ export async function getIntent(intentId: string): Promise<PaymentIntent | undef
     if (res.rows.length === 0) return undefined;
     const row = res.rows[0]!;
 
-    if (Number(row.expires_at) < Date.now()) {
+    if (!allowExpired && Number(row.expires_at) < Date.now()) {
       return undefined;
     }
 
@@ -124,8 +124,8 @@ export async function getIntent(intentId: string): Promise<PaymentIntent | undef
         mobile: String(oRow.customer_mobile),
         address: String(oRow.address),
         landmark: oRow.landmark ? String(oRow.landmark) : '',
-        latitude: oRow.latitude ? Number(oRow.latitude) : undefined,
-        longitude: oRow.longitude ? Number(oRow.longitude) : undefined,
+        latitude: Number(oRow.latitude),
+        longitude: Number(oRow.longitude),
         locationLink: oRow.location_link ? String(oRow.location_link) : undefined,
       },
     };
@@ -137,9 +137,9 @@ export async function getIntent(intentId: string): Promise<PaymentIntent | undef
   }
 }
 
-export async function findIntentByOrderId(orderIdOrProviderOrderId: string): Promise<PaymentIntent | undefined> {
+export async function findIntentByOrderId(orderIdOrProviderOrderId: string, allowExpired = false): Promise<PaymentIntent | undefined> {
   for (const intent of paymentIntentsMap.values()) {
-    if (intent.orderId === orderIdOrProviderOrderId || intent.providerOrderId === orderIdOrProviderOrderId) {
+    if ((allowExpired || intent.expiresAt >= Date.now()) && (intent.orderId === orderIdOrProviderOrderId || intent.providerOrderId === orderIdOrProviderOrderId)) {
       return intent;
     }
   }
@@ -154,7 +154,7 @@ export async function findIntentByOrderId(orderIdOrProviderOrderId: string): Pro
     );
 
     if (res.rows.length > 0) {
-      return await getIntent(String(res.rows[0]?.id));
+      return await getIntent(String(res.rows[0]?.id), allowExpired);
     }
   } catch {}
 
@@ -182,8 +182,14 @@ export function calculateAuthoritativePricing(
   const chapathiQty = input.chapathiQuantity;
   const totalItems = jowarQty + chapathiQty;
 
-  if (totalItems < 1) {
-    throw new Error('Please select at least 1 roti or chapathi.');
+  if (totalItems < BUSINESS_CONFIG.limits.minItems || [jowarQty, chapathiQty].some(quantity => quantity > 0 && quantity < 5)) {
+    throw new Error('Please select at least 5 of each chosen item.');
+  }
+  if (!Number.isFinite(input.customer.latitude) || !Number.isFinite(input.customer.longitude)) {
+    throw new Error('Please select a delivery location.');
+  }
+  if (totalItems <= 10 && input.karamSelection.karivepaku && input.karamSelection.aviseGinjalu) {
+    throw new Error('Choose one complimentary karam for orders of up to 10 items.');
   }
 
   const jowarUnitPricePaisa = BUSINESS_CONFIG.prices.jowarRotiPaisa;
@@ -191,9 +197,9 @@ export function calculateAuthoritativePricing(
   const subtotalPaisa = jowarQty * jowarUnitPricePaisa + chapathiQty * chapathiUnitPricePaisa;
 
   // 3. Compute complimentary Podi/Karam weights:
-  // For each 5 items (jowar + chapathi), customer receives 50g free podi.
+  // Match the menu: 20g per complete set of five for each selected karam.
   const multiplier = Math.floor(totalItems / 5);
-  const totalFreeGrams = multiplier * 50;
+  const totalFreeGrams = multiplier * 20;
 
   let karivepakuGrams = 0;
   let aviseGinjaluGrams = 0;
@@ -203,8 +209,8 @@ export function calculateAuthoritativePricing(
     const hasAvise = Boolean(input.karamSelection?.aviseGinjalu);
 
     if (hasKarivepaku && hasAvise) {
-      karivepakuGrams = Math.floor(totalFreeGrams / 2);
-      aviseGinjaluGrams = totalFreeGrams - karivepakuGrams;
+      karivepakuGrams = totalFreeGrams;
+      aviseGinjaluGrams = totalFreeGrams;
     } else if (hasKarivepaku) {
       karivepakuGrams = totalFreeGrams;
     } else if (hasAvise) {
@@ -286,6 +292,10 @@ export async function createPaymentIntent(
   const hasRazorpayKeys = Boolean(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
   const useMockProvider = !hasRazorpayKeys || process.env.PAYMENT_PROVIDER === 'mock';
 
+  if (process.env.NODE_ENV === 'production' && useMockProvider) {
+    throw new Error('Online payments are not configured. Please contact the business before paying.');
+  }
+
   if (useMockProvider) {
     const mockVerificationToken = `mock_sec_${crypto.randomBytes(24).toString('hex')}`;
     const intent: PaymentIntent = {
@@ -303,7 +313,7 @@ export async function createPaymentIntent(
     intent.orderId = pending.orderId;
     intent.customerAccessToken = pending.customerAccessToken;
 
-    const amountRupees = Math.round(pricing.totalAmountPaisa / 100);
+    const amountRupees = (pricing.totalAmountPaisa / 100);
     const upiUri = `upi://pay?pa=${BUSINESS_CONFIG.brand.upiId}&pn=${encodeURIComponent('Mana Enti Vanta')}&am=${amountRupees}&cu=INR&tr=${pending.orderId}&tn=${encodeURIComponent('Mana Enti Vanta ' + pending.orderId)}`;
     intent.upiUri = upiUri;
 
@@ -339,8 +349,8 @@ export async function createPaymentIntent(
       provider: 'mock',
       amountPaisa: pricing.totalAmountPaisa,
       amountRupees,
-      subtotalRupees: Math.round(pricing.subtotalPaisa / 100),
-      deliveryChargeRupees: Math.round(pricing.deliveryChargePaisa / 100),
+      subtotalRupees: (pricing.subtotalPaisa / 100),
+      deliveryChargeRupees: (pricing.deliveryChargePaisa / 100),
       distanceKm: pricing.deliveryDistanceKm,
       currency: 'INR',
       businessUpiId: BUSINESS_CONFIG.brand.upiId,
@@ -400,7 +410,7 @@ export async function createPaymentIntent(
   const providerOrderId = rpData.id;
   intent.providerOrderId = providerOrderId;
 
-  const amountRupees = Math.round(pricing.totalAmountPaisa / 100);
+  const amountRupees = (pricing.totalAmountPaisa / 100);
   const upiUri = `upi://pay?pa=${BUSINESS_CONFIG.brand.upiId}&pn=${encodeURIComponent('Mana Enti Vanta')}&am=${amountRupees}&cu=INR&tr=${pending.orderId}&tn=${encodeURIComponent('Mana Enti Vanta ' + pending.orderId)}`;
   intent.upiUri = upiUri;
 
@@ -409,7 +419,7 @@ export async function createPaymentIntent(
   // Fail-closed: Persist payment intent to SQLite
   const db = getDb();
   await withDbRetry(async () =>
-    db.execute({
+    db.batch([{
       sql: `INSERT INTO payment_intents (
         id, order_id, provider, provider_order_id, mock_verification_token,
         amount_paisa, currency, created_at, expires_at, is_verified
@@ -425,7 +435,10 @@ export async function createPaymentIntent(
         intent.createdAt,
         intent.expiresAt,
       ],
-    })
+    }, {
+      sql: 'UPDATE orders SET provider_order_id = ? WHERE id = ?',
+      args: [providerOrderId, pending.orderId],
+    }], 'write')
   );
 
   return {
@@ -436,8 +449,8 @@ export async function createPaymentIntent(
     provider: 'razorpay',
     amountPaisa: pricing.totalAmountPaisa,
     amountRupees,
-    subtotalRupees: Math.round(pricing.subtotalPaisa / 100),
-    deliveryChargeRupees: Math.round(pricing.deliveryChargePaisa / 100),
+    subtotalRupees: (pricing.subtotalPaisa / 100),
+    deliveryChargeRupees: (pricing.deliveryChargePaisa / 100),
     distanceKm: pricing.deliveryDistanceKm,
     currency: 'INR',
     businessUpiId: BUSINESS_CONFIG.brand.upiId,
@@ -458,6 +471,7 @@ export async function verifyPaymentIntent(
 ): Promise<{
   verified: boolean;
   intent?: PaymentIntent;
+  payment?: { amountPaisa: number; currency: string; providerOrderId?: string };
   reason?: string;
 }> {
   const intent = await getIntent(intentId);
@@ -469,10 +483,6 @@ export async function verifyPaymentIntent(
   if (Date.now() > intent.expiresAt) {
     paymentIntentsMap.delete(intentId);
     return { verified: false, reason: 'Payment intent has expired.' };
-  }
-
-  if (intent.isVerified) {
-    return { verified: false, reason: 'Payment intent has already been verified.' };
   }
 
   const isProduction = process.env.NODE_ENV === 'production';
@@ -493,21 +503,9 @@ export async function verifyPaymentIntent(
       return { verified: false, reason: 'Invalid mock verification token.' };
     }
 
-    // Clear token upon successful verification to prevent replay
-    intent.mockVerificationToken = undefined;
-    intent.isVerified = true;
-
-    try {
-      const db = getDb();
-      await withDbRetry(async () =>
-        db.execute({
-          sql: 'UPDATE payment_intents SET is_verified = 1, mock_verification_token = NULL WHERE id = ?',
-          args: [intentId],
-        })
-      );
-    } catch {}
-
-    return { verified: true, intent };
+    // Verification is read-only. Consume the intent only in the order transaction,
+    // so a failed database write can safely be retried with the same receipt.
+    return { verified: true, intent, payment: { amountPaisa: intent.orderPricing.totalAmountPaisa, currency: 'INR' } };
   }
 
   if (intent.provider === 'razorpay') {
@@ -532,19 +530,26 @@ export async function verifyPaymentIntent(
       return { verified: false, reason: 'Provider payment cryptographic signature verification failed.' };
     }
 
-    intent.isVerified = true;
-
     try {
-      const db = getDb();
-      await withDbRetry(async () =>
-        db.execute({
-          sql: 'UPDATE payment_intents SET is_verified = 1 WHERE id = ?',
-          args: [intentId],
-        })
-      );
-    } catch {}
-
-    return { verified: true, intent };
+      const keyId = process.env.RAZORPAY_KEY_ID;
+      if (!keyId) return { verified: false, reason: 'Server payment configuration is incomplete.' };
+      const response = await fetch(`https://api.razorpay.com/v1/payments/${encodeURIComponent(providerPaymentId)}`, {
+        headers: { Authorization: 'Basic ' + Buffer.from(`${keyId}:${secret}`).toString('base64') },
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!response.ok) return { verified: false, reason: 'Payment status could not be checked with the gateway. Please retry.' };
+      const payment: any = await response.json();
+      if (payment.id !== providerPaymentId || payment.order_id !== intent.providerOrderId ||
+          payment.currency !== 'INR' || payment.amount !== intent.orderPricing.totalAmountPaisa) {
+        return { verified: false, reason: 'Payment does not match this order or its amount.' };
+      }
+      if (payment.status !== 'captured' || payment.captured !== true) {
+        return { verified: false, reason: 'Payment has not been captured yet. Please wait for confirmation.' };
+      }
+      return { verified: true, intent, payment: { amountPaisa: payment.amount, currency: payment.currency, providerOrderId: payment.order_id } };
+    } catch {
+      return { verified: false, reason: 'Payment status could not be checked with the gateway. Please retry.' };
+    }
   }
 
   return { verified: false, reason: 'Unsupported payment provider verification.' };

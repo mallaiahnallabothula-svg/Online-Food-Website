@@ -14,7 +14,8 @@ import { OrderTrackingModal } from './components/OrderTrackingModal';
 import { BrandEmblem } from './components/BrandEmblem';
 import { usePWAInstall } from './hooks/usePWAInstall';
 import { OrderingHoursStatus, Order, AdminRole } from './types';
-import { getISTTime, getInitialOrderingStatus } from './utils/time';
+import { getInitialOrderingStatus, normalizeOrderingStatus } from './utils/time';
+import { persistCustomerOrder } from './utils/checkout';
 import { useLanguage } from './context/LanguageContext';
 import { Phone, Clock, Lock, Smartphone } from 'lucide-react';
 
@@ -28,7 +29,6 @@ export default function App() {
 
   // Ordering Hours Status - Initialized synchronously so OrderForm NEVER disappears in deployment
   const [hoursStatus, setHoursStatus] = useState<OrderingHoursStatus>(getInitialOrderingStatus);
-  const [allowOutsideHours, setAllowOutsideHours] = useState<boolean>(false);
 
   // Active view: 'CUSTOMER' | 'OWNER_LOGIN' | 'OWNER_DASHBOARD'
   const [currentView, setCurrentView] = useState<'CUSTOMER' | 'OWNER_LOGIN' | 'OWNER_DASHBOARD'>('CUSTOMER');
@@ -97,21 +97,31 @@ export default function App() {
       const res = await fetch('/api/status');
       if (res.ok) {
         const data = await res.json();
-        if (data && typeof data.isOpen === 'boolean') {
-          setHoursStatus(data);
+        if (data && typeof data.isOpen === 'boolean' && /^\d{4}-\d{2}-\d{2}$/.test(data.deliveryDate)) {
+          setHoursStatus(normalizeOrderingStatus(data));
           return;
         }
       }
     } catch {}
 
-    // Synchronous fallback ensures ordering is never interrupted
-    setHoursStatus(getInitialOrderingStatus());
+    setHoursStatus({
+      ...getInitialOrderingStatus(),
+      nextOpenMessage: 'ఆర్డరింగ్ సేవ అందుబాటులో లేదు. కనెక్షన్ తిరిగి వచ్చినప్పుడు ప్రయత్నించండి.',
+      nextOpenMessageEn: 'The ordering service is unavailable. Please retry when the connection returns.',
+    });
   };
 
   useEffect(() => {
     fetchStatus();
     const timer = setInterval(fetchStatus, 30000); // 30s poll
-    return () => clearInterval(timer);
+    const handleOffline = () => setHoursStatus({ ...getInitialOrderingStatus(), nextOpenMessage: 'ఇంటర్నెట్ కనెక్షన్ అవసరం.', nextOpenMessageEn: 'An internet connection is required to order.' });
+    window.addEventListener('online', fetchStatus);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener('online', fetchStatus);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   // Smooth scroll to order section
@@ -125,6 +135,7 @@ export default function App() {
 
   // Payment initiate
   const handleProceedToPayment = (orderPayload: any) => {
+    if (!hoursStatus.isOpen || hoursStatus.apiAvailable !== true || !navigator.onLine) return;
     setPendingOrderData(orderPayload);
     setIsPaymentModalOpen(true);
   };
@@ -137,13 +148,17 @@ export default function App() {
 
     // Store in customer local orders list for tracking & feedback
     try {
+      if (newConfirmedOrder.customerAccessToken) {
+        persistCustomerOrder(newConfirmedOrder.id, newConfirmedOrder.customerAccessToken);
+      }
       const stored = localStorage.getItem('smjr_customer_orders');
       const list = stored ? JSON.parse(stored) : [];
       const updatedList = [
         {
           id: newConfirmedOrder.id,
+          customerAccessToken: newConfirmedOrder.customerAccessToken,
           date: newConfirmedOrder.deliveryDate || newConfirmedOrder.createdAtIST,
-          qty: newConfirmedOrder.quantity,
+          qty: newConfirmedOrder.totalItems || newConfirmedOrder.quantity,
           status: newConfirmedOrder.fulfillmentStatus
         },
         ...list.filter((item: any) => item.id !== newConfirmedOrder.id)
@@ -224,20 +239,17 @@ export default function App() {
               <>
                 <HeroSection
                   onScrollToOrder={handleScrollToOrder}
-                  isOpen={hoursStatus.isOpen || allowOutsideHours}
+                  isOpen={hoursStatus.isOpen}
                   onOpenInstallModal={() => setIsInstallModalOpen(true)}
                   isInstalled={isInstalled}
                 />
 
                 <OrderingHoursBanner
                   status={hoursStatus}
-                  allowOutsideHoursForTesting={allowOutsideHours}
-                  onToggleAllowOutsideHours={(val) => setAllowOutsideHours(val)}
                 />
 
                 <OrderForm
                   hoursStatus={hoursStatus}
-                  allowOutsideHours={allowOutsideHours}
                   onProceedToPayment={handleProceedToPayment}
                 />
               </>
@@ -286,8 +298,8 @@ export default function App() {
               </p>
               <p className="text-[11px] text-stone-500 dark:text-stone-400">
                 {language === 'te' 
-                  ? 'కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధిలో ఉచిత డెలివరీ | ఆన్‌లైన్ UPI & డెలివరీ వద్ద నగదు'
-                  : 'Free delivery within 5 km radius from Kolluru | Online UPI & Pay on Delivery'}
+                  ? 'కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధిలో ఉచిత డెలివరీ | ఆన్‌లైన్ UPI చెల్లింపు'
+                  : 'Free delivery within 5 km radius from Kolluru | Online UPI payment'}
               </p>
             </div>
           </div>

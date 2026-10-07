@@ -52,7 +52,7 @@ export function calculateDelivery(latitude?: number, longitude?: number, default
   let distanceKm = 0;
 
   if (typeof latitude === 'number' && typeof longitude === 'number') {
-    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
       return {
         eligible: false,
         distanceKm: 0,
@@ -100,7 +100,7 @@ export function calculateDelivery(latitude?: number, longitude?: number, default
     eligible: true,
     distanceKm,
     deliveryChargePaisa,
-    deliveryChargeRupees: Math.round(deliveryChargePaisa / 100),
+    deliveryChargeRupees: deliveryChargePaisa / 100,
     freeRadiusKm: deliveryConfig.freeRadiusKm,
     maxRadiusKm: deliveryConfig.maxRadiusKm,
     calculationMethod: 'geodesic_haversine',

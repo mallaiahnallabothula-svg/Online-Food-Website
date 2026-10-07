@@ -293,7 +293,7 @@ export const translations: Record<Language, Translations> = {
 
     // Ordering Hours Banner
     orderingHoursTitle: 'ఆర్డరింగ్ సమయాలు',
-    ordersAcceptingTitle: 'ఆర్డర్లు స్వీకరించబడుతున్నాయి (రోజంతా ఆర్డర్ చేయవచ్చు)',
+    ordersAcceptingTitle: 'ఆర్డర్లు స్వీకరించబడుతున్నాయి (11:00 AM – 4:00 PM IST)',
     ordersPausedTitle: 'ఆర్డర్ల స్వీకరణ ప్రస్తుతం నిలిపివేయబడింది',
     currentIstLabel: 'ప్రస్తుత IST సమయం:',
     before4pmLabel: 'సాయంత్రం 4:00 PM లోపు:',
@@ -363,7 +363,7 @@ export const translations: Record<Language, Translations> = {
     gpsLocationCardSub: 'లింక్ వెతకడం లేదా కాపీ చేయనవసరం లేదు — ఒకే క్లిక్‌తో మీ లొకేషన్ పొందండి',
     clickToReceiveLocation: '📍 క్లిక్ చేసి లొకేషన్ పొందండి',
     locationReceiving: 'లొకేషన్ స్వీకరిస్తోంది...',
-    gpsSuccessNotice: 'GPS లొకేషన్ లింక్ విజయవంతంగా స్వీకరించబడింది!',
+    gpsSuccessNotice: 'ఎంచుకున్న డెలివరీ లొకేషన్ లింక్ సిద్ధంగా ఉంది!',
     checkOnMap: 'మ్యాప్‌లో సరిచూడండి',
     refresh: 'రీఫ్రెష్',
     autoLocationHint: '💡 పై బటన్ నొక్కగానే మీ ఫోన్ లేదా బ్రౌజర్ నుండి ఖచ్చితమైన Google Maps లొకేషన్ లింక్ స్వయంచాలకంగా ఇక్కడ నమోదవుతుంది.',
@@ -536,7 +536,7 @@ export const translations: Record<Language, Translations> = {
 
     // Ordering Hours Banner
     orderingHoursTitle: 'Ordering Hours',
-    ordersAcceptingTitle: 'Accepting Orders (24/7 Ordering Available)',
+    ordersAcceptingTitle: 'Accepting Orders (11:00 AM – 4:00 PM IST)',
     ordersPausedTitle: 'Orders Currently Paused',
     currentIstLabel: 'Current IST:',
     before4pmLabel: 'Before 4:00 PM:',
@@ -606,7 +606,7 @@ export const translations: Record<Language, Translations> = {
     gpsLocationCardSub: 'No need to search or copy — receive live GPS location in one tap',
     clickToReceiveLocation: '📍 Tap to Share Location',
     locationReceiving: 'Receiving location...',
-    gpsSuccessNotice: 'GPS location link successfully received!',
+    gpsSuccessNotice: 'Selected delivery location link is ready!',
     checkOnMap: 'View on Map',
     refresh: 'Refresh',
     autoLocationHint: '💡 Tapping the button above will automatically capture your precise Google Maps location link.',

@@ -31,13 +31,21 @@ export async function withDbRetry<T>(fn: () => Promise<T>, maxRetries = 5): Prom
 
 export function getDb(): Client {
   if (!dbClient) {
+    const remoteUrl = process.env.TURSO_DATABASE_URL;
+    if (remoteUrl) {
+      dbClient = createClient({ url: remoteUrl, authToken: process.env.TURSO_AUTH_TOKEN });
+      return dbClient;
+    }
+    if (process.env.VERCEL) {
+      throw new Error('A persistent database is required. Set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN.');
+    }
     const dataDir = path.join(process.cwd(), 'data');
     if (!fs.existsSync(dataDir)) {
       fs.mkdirSync(dataDir, { recursive: true });
     }
-    const dbPath = path.join(dataDir, 'mana_enti_vanta.db');
+    const dbPath = process.env.LOCAL_DATABASE_PATH || path.join(dataDir, 'mana_enti_vanta.db');
     dbClient = createClient({
-      url: `file:${dbPath}`,
+      url: dbPath === ':memory:' ? ':memory:' : `file:${dbPath}`,
     });
   }
   return dbClient;
@@ -73,8 +81,7 @@ export async function initDb(): Promise<void> {
 
     if (!initialPassword) {
       if (isProduction) {
-        console.error('[DB] CRITICAL: No administrator user found and ADMIN_INITIAL_PASSWORD is not set in environment.');
-        return;
+        throw new Error('Set ADMIN_INITIAL_PASSWORD before initializing the production database.');
       } else {
         // In local development only, generate a secure random one-time password
         initialPassword = `Dev_${crypto.randomBytes(8).toString('hex')}!`;
@@ -86,7 +93,7 @@ export async function initDb(): Promise<void> {
     const adminId = `USR-${crypto.randomBytes(6).toString('hex').toUpperCase()}`;
 
     await db.execute({
-      sql: `INSERT INTO admin_users (id, username, password_hash, role, name, created_at)
+      sql: `INSERT OR IGNORE INTO admin_users (id, username, password_hash, role, name, created_at)
             VALUES (?, ?, ?, ?, ?, ?)`,
       args: [adminId, 'admin', passwordHash, 'ADMIN', 'Owner Admin', new Date().toISOString()],
     });

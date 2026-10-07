@@ -79,7 +79,7 @@ export async function loginAdmin(
   const db = getDb();
   const res = await db.execute({
     sql: 'SELECT id, username, password_hash, role, name FROM admin_users WHERE username = ? LIMIT 1',
-    args: [username],
+    args: [cleanUsername],
   });
 
   if (res.rows.length === 0) {
@@ -154,7 +154,7 @@ export async function loginAdmin(
       'ADMIN_LOGIN_SUCCESS',
       'ADMIN_SESSION',
       sessionId,
-      JSON.stringify({ username }),
+      JSON.stringify({ username: cleanUsername }),
       ip,
       createdAt,
     ],

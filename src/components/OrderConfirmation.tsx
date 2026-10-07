@@ -23,6 +23,8 @@ export const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ order, onN
     : getWhatsAppUrl(currentOrder, language);
 
   const totalPaid = currentOrder.totalAmount || currentOrder.totalPaid || 0;
+  const karivepakuGrams = currentOrder.karamQuantities?.karivepakuGrams ?? currentOrder.karivepakuGrams ?? 0;
+  const aviseGrams = currentOrder.karamQuantities?.aviseGinjaluGrams ?? currentOrder.aviseGrams ?? 0;
   const isTe = language !== 'en';
 
   // Automatically attempt opening WhatsApp to owner (8499865803) upon order placement
@@ -169,11 +171,11 @@ export const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ order, onN
           <div className="p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60 text-xs text-emerald-900 dark:text-emerald-200">
             <span className="font-bold block mb-1">🎁 {isTe ? 'ఉచితంగా అందించిన కారాలు:' : 'Complimentary Karams:'}</span>
             <div className="flex flex-wrap gap-3">
-              {currentOrder.karivepakuGrams ? (
-                <span>✓ {isTe ? 'కరివేపాకు కారం' : 'Curry Leaf Karam'} ({currentOrder.karivepakuGrams} {t.gramsUnit})</span>
+              {karivepakuGrams ? (
+                <span>✓ {isTe ? 'కరివేపాకు కారం' : 'Curry Leaf Karam'} ({karivepakuGrams} {t.gramsUnit})</span>
               ) : null}
-              {currentOrder.aviseGrams ? (
-                <span>✓ {isTe ? 'అవిసె గింజల కారం' : 'Flax Seed Karam'} ({currentOrder.aviseGrams} {t.gramsUnit})</span>
+              {aviseGrams ? (
+                <span>✓ {isTe ? 'అవిసె గింజల కారం' : 'Flax Seed Karam'} ({aviseGrams} {t.gramsUnit})</span>
               ) : null}
             </div>
           </div>

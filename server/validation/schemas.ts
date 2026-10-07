@@ -6,8 +6,8 @@ export const CoordinatesSchema = z.object({
 });
 
 export const DeliveryCalculationSchema = z.object({
-  latitude: z.number().min(-90).max(90).optional(),
-  longitude: z.number().min(-180).max(180).optional(),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
   areaName: z.string().max(200).optional(),
   customerAddress: z.string().max(500).optional(),
 });
@@ -17,8 +17,8 @@ export const CustomerDetailsSchema = z.object({
   mobile: z.string().regex(/^[6-9]\d{9}$/, 'Must be a valid 10-digit Indian mobile number'),
   address: z.string().trim().min(5, 'Delivery address must be at least 5 characters').max(500, 'Delivery address must be under 500 characters'),
   landmark: z.string().trim().max(200, 'Landmark must be under 200 characters').optional().default(''),
-  latitude: z.number().min(-90).max(90).optional(),
-  longitude: z.number().min(-180).max(180).optional(),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
   locationLink: z.string().url('Location link must be a valid URL').max(500).optional()
     .refine((url) => !url || url.startsWith('https://'), 'Location URL must use HTTPS')
     .refine((url) => {
@@ -47,8 +47,8 @@ export const CreatePaymentIntentSchema = z.object({
     aviseGinjalu: z.boolean(),
   }),
   customer: CustomerDetailsSchema,
-}).refine((data) => data.jowarQuantity + data.chapathiQuantity >= 1, {
-  message: 'At least 1 roti or chapathi must be selected',
+}).refine((data) => data.jowarQuantity + data.chapathiQuantity >= 5 && [data.jowarQuantity, data.chapathiQuantity].every(quantity => quantity === 0 || quantity >= 5), {
+  message: 'Select at least 5 of each chosen item',
   path: ['jowarQuantity'],
 });
 

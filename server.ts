@@ -1,3 +1,5 @@
+import 'dotenv/config';
+
 // Clean up global __dirname contamination from container environment if present
 if (typeof (globalThis as any).__dirname !== 'undefined' && (globalThis as any).__dirname === '.') {
   delete (globalThis as any).__dirname;
@@ -12,7 +14,7 @@ import { initDb } from './server/db/index.ts';
 import { seedDevelopmentData } from './server/db/seed.ts';
 import { validateServerConfig } from './server/config/validate.ts';
 
-const PORT = 3000;
+const PORT = Number(process.env.PORT || 3000);
 
 async function startServer() {
   try {
@@ -29,7 +31,7 @@ async function startServer() {
     const app = createExpressApp();
 
     // 4. Vite middleware for development / Static file serving for production
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== 'production' && process.env.SERVE_STATIC !== '1') {
       const vite = await createViteServer({
         server: {
           middlewareMode: true,
@@ -90,8 +92,9 @@ async function startServer() {
       });
     }
 
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`[Mana Enti Vanta] Server running at http://0.0.0.0:${PORT}`);
+    const host = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1';
+    app.listen(PORT, host, () => {
+      console.log(`[Mana Enti Vanta] Server running at http://${host}:${PORT}`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);
