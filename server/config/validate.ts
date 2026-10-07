@@ -14,6 +14,9 @@ export function validateServerConfig(): void {
     if (process.env.VERCEL_ENV === 'production' && !process.env.RAZORPAY_KEY_ID.startsWith('rzp_live_')) {
       throw new Error('The production website requires live Razorpay keys. Use test keys only in previews.');
     }
+    if (process.env.VERCEL_ENV === 'preview' && !process.env.RAZORPAY_KEY_ID.startsWith('rzp_test_')) {
+      throw new Error('The preview website requires Razorpay test keys. Live payments are only allowed in production.');
+    }
   }
   // 1. Business configuration validation
   if (!BUSINESS_CONFIG.brand.upiId || !BUSINESS_CONFIG.brand.upiId.includes('@')) {
