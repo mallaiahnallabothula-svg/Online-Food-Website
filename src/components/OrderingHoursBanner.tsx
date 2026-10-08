@@ -41,7 +41,9 @@ export const OrderingHoursBanner: React.FC<OrderingHoursBannerProps> = ({
             <div className="space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-bold text-base sm:text-lg font-telugu">
-                  {status.isOpen ? t.ordersAcceptingTitle : t.ordersPausedTitle}
+                  {status.testMode
+                    ? (language === 'en' ? 'Razorpay Test checkout' : 'Razorpay టెస్ట్ చెకౌట్')
+                    : status.isOpen ? t.ordersAcceptingTitle : t.ordersPausedTitle}
                 </h3>
                 <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-stone-200/80 dark:bg-stone-800 text-stone-800 dark:text-stone-300">
                   {t.currentIstLabel} {status.currentTimeIST}

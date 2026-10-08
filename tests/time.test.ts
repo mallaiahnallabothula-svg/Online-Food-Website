@@ -1,5 +1,33 @@
-import { describe, it, expect } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import { getOrderingStatus, formatIstDate } from '../server/services/timeService.ts';
+
+afterEach(() => vi.unstubAllEnvs());
+
+describe('Hosted test checkout hours', () => {
+  it.each([9, 17])('allows a Razorpay Test preview at %i:00 IST and labels it as a test', hour => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('VERCEL_ENV', 'preview');
+    vi.stubEnv('RAZORPAY_KEY_ID', 'rzp_test_fixture');
+    const status = getOrderingStatus(new Date(Date.UTC(2026, 9, 8, hour)));
+    expect(status).toMatchObject({ isOpen: true, testMode: true });
+    expect(status.nextOrderingWindowEn).toContain('No real money');
+  });
+
+  it.each([
+    ['production', 'rzp_live_fixture'],
+    ['production', 'rzp_test_fixture'],
+    ['preview', 'rzp_live_fixture'],
+    ['preview', ''],
+    [undefined, 'rzp_test_fixture'],
+  ])('keeps closed hours for environment %s and key %s', (environment, key) => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('VERCEL_ENV', environment);
+    vi.stubEnv('RAZORPAY_KEY_ID', key);
+    vi.stubEnv('DEV_ALWAYS_OPEN_ORDERING', 'true');
+    expect(getOrderingStatus(new Date(Date.UTC(2026, 9, 8, 9))))
+      .toMatchObject({ isOpen: false, testMode: false });
+  });
+});
 
 describe('Time Service & Ordering Windows (11:00 - 16:00 IST)', () => {
   it('identifies store as OPEN during ordering window (e.g. 12:30 IST)', () => {

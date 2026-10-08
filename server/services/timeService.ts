@@ -2,6 +2,7 @@ import { BUSINESS_CONFIG } from '../config/business.ts';
 
 export interface OrderingStatus {
   isOpen: boolean;
+  testMode: boolean;
   currentIstTime: string;
   currentIstHour: number;
   openHour: number;
@@ -39,10 +40,12 @@ export function getOrderingStatus(overrideDate?: Date): OrderingStatus {
   const openHour = BUSINESS_CONFIG.ordering.openHour; // 11
   const closeHour = BUSINESS_CONFIG.ordering.closeHour; // 16
 
-  // In dev/test mode ONLY, allow query/header/env override if explicitly configured
+  // Hosted test checkout may run at any hour; live deployments retain the business schedule.
+  const testMode = process.env.VERCEL_ENV === 'preview'
+    && process.env.RAZORPAY_KEY_ID?.startsWith('rzp_test_') === true;
   const devAllowAlwaysOpen = process.env.NODE_ENV !== 'production' && process.env.DEV_ALWAYS_OPEN_ORDERING === 'true';
 
-  const isOpen = devAllowAlwaysOpen || (hourFraction >= openHour && hourFraction < closeHour);
+  const isOpen = testMode || devAllowAlwaysOpen || (hourFraction >= openHour && hourFraction < closeHour);
 
   // Delivery date is today if ordering before cutoff, or next day if after cutoff
   const deliveryDateObj = new Date(istDate.getTime());
@@ -72,7 +75,11 @@ export function getOrderingStatus(overrideDate?: Date): OrderingStatus {
   let nextWindowTe = '';
   let nextWindowEn = '';
 
-  if (isOpen) {
+  if (testMode) {
+    nextWindowIst = 'Test checkout is available at any hour. No real money or food delivery.';
+    nextWindowTe = 'టెస్ట్ ఆర్డర్లు ఎప్పుడైనా చేయవచ్చు. నిజమైన డబ్బు చెల్లింపు లేదా ఆహార డెలివరీ ఉండదు.';
+    nextWindowEn = nextWindowIst;
+  } else if (isOpen) {
     nextWindowIst = `ఈ రోజు సాయంత్రం ${closeHour}:00 (4:00 PM) వరకు తెరిచి ఉంటుంది`;
     nextWindowTe = `ఈ రోజు సాయంత్రం 4:00 గంటల వరకు ఆర్డర్లు స్వీకరించబడతాయి`;
     nextWindowEn = `Open until 4:00 PM today`;
@@ -90,6 +97,7 @@ export function getOrderingStatus(overrideDate?: Date): OrderingStatus {
 
   return {
     isOpen,
+    testMode,
     currentIstTime: timeStr,
     currentIstHour: currentHour,
     openHour,

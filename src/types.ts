@@ -137,6 +137,7 @@ export interface AnalyticsData {
 
 export interface OrderingHoursStatus {
   isOpen: boolean;
+  testMode?: boolean;
   isLiveBatchHours?: boolean;
   currentIstTime?: string;
   currentTimeIST?: string;
