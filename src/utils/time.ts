@@ -1,6 +1,4 @@
-/**
- * Asia/Kolkata (IST) Time and Date Utilities for Telugu Food Ordering
- */
+import type { OrderingHoursStatus } from '../types';
 
 export interface ISTTimeInfo {
   year: number;
@@ -17,134 +15,76 @@ export interface ISTTimeInfo {
   nextOpenMessageEn: string;
 }
 
-const TELUGU_MONTHS = [
-  'జనవరి', 'ఫిబ్రవరి', 'మార్చి', 'ఏప్రిల్', 'మే', 'జూన్',
-  'జూలై', 'ఆగస్టు', 'సెప్టెంబర్', 'అక్టోబర్', 'నవంబర్', 'డిసెంబర్'
-];
+const IST_OFFSET_MS = 330 * 60 * 1000;
+const TELUGU_MONTHS = ['జనవరి', 'ఫిబ్రవరి', 'మార్చి', 'ఏప్రిల్', 'మే', 'జూన్', 'జూలై', 'ఆగస్టు', 'సెప్టెంబర్', 'అక్టోబర్', 'నవంబర్', 'డిసెంబర్'];
+const ENGLISH_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+const pad = (n: number) => String(n).padStart(2, '0');
 
-const ENGLISH_MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-];
+function formatDate(date: Date, months: string[]) {
+  return `${date.getUTCDate()} ${months[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
+}
 
-/**
- * Returns current IST time representation
- */
-export function getISTTime(mockOffsetMinutes: number = 0): ISTTimeInfo {
-  const now = new Date(Date.now() + mockOffsetMinutes * 60 * 1000);
-  
-  // Format into Asia/Kolkata parts
-  const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Asia/Kolkata',
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-    second: 'numeric',
-    hour12: false,
-  });
-
-  const parts = formatter.formatToParts(now);
-  const findPart = (type: string) => parseInt(parts.find(p => p.type === type)?.value || '0', 10);
-
-  const year = findPart('year');
-  const month = findPart('month') - 1; // 0-indexed
-  const date = findPart('day');
-  const hours = findPart('hour');
-  const minutes = findPart('minute');
-  const seconds = findPart('second');
-
-  // Business hours: 11:00 AM to 4:00 PM IST (11:00 - 16:00)
-  // 11 <= hours < 16 (or exactly 16:00:00)
-  const totalMinutes = hours * 60 + minutes;
-  const openMinutes = 11 * 60; // 660 mins
-  const closeMinutes = 16 * 60; // 960 mins (4:00 PM)
-
-  const isTodayDelivery = hours < 16;
-  const isLiveBatch = hours >= 11 && hours < 16;
-  const isOpen = true; // Always allow ordering 24/7
-
-  let nextOpenMessage = '';
-  let nextOpenMessageEn = '';
-  if (isTodayDelivery) {
-    if (isLiveBatch) {
-      const remainingMins = 16 * 60 - totalMinutes;
-      const remH = Math.floor(remainingMins / 60);
-      const remM = remainingMins % 60;
-      nextOpenMessage = `నేటి సాయంత్రం డెలివరీ కోసం ఆర్డర్లు అందుబాటులో ఉన్నాయి! నేటి ఆర్డర్ల ముగింపుకు ఇంకా ${remH > 0 ? `${remH} గం. ` : ''}${remM} ని. సమయం ఉంది.`;
-      nextOpenMessageEn = `Orders open for today's evening delivery! Time remaining before 4:00 PM cutoff: ${remH > 0 ? `${remH} hr ` : ''}${remM} min.`;
-    } else {
-      nextOpenMessage = 'నేటి సాయంత్రం 6:00 – 8:00 PM డెలివరీ కోసం ఆర్డర్లు స్వీకరించబడుతున్నాయి.';
-      nextOpenMessageEn = "Accepting orders for today's evening delivery (6:00 PM – 8:00 PM).";
-    }
-  } else {
-    nextOpenMessage = 'రేపటి సాయంత్రం 6:00 – 8:00 PM డెలివరీ కోసం ముందస్తు ఆర్డర్లు స్వీకరించబడుతున్నాయి.';
-    nextOpenMessageEn = "Accepting pre-orders for tomorrow's evening delivery (6:00 PM – 8:00 PM).";
-  }
-
-  // Format 12-hour AM/PM
-  const hour12 = hours % 12 || 12;
-  const ampm = hours >= 12 ? 'PM' : 'AM';
-  const pad = (n: number) => n.toString().padStart(2, '0');
-  const formattedTime = `${pad(hour12)}:${pad(minutes)} ${ampm} IST`;
-
-  const formattedDateTelugu = `${date} ${TELUGU_MONTHS[month]} ${year}`;
-  const formattedDateEnglish = `${date} ${ENGLISH_MONTHS[month]} ${year}`;
-
+export function getISTTime(mockOffsetMinutes = 0): ISTTimeInfo {
+  const ist = new Date(Date.now() + IST_OFFSET_MS + mockOffsetMinutes * 60 * 1000);
+  const hours = ist.getUTCHours();
+  const minutes = ist.getUTCMinutes();
+  const isOpen = hours >= 11 && hours < 16;
   return {
-    year,
-    month,
-    date,
-    hours,
-    minutes,
-    seconds,
-    formattedTime,
-    formattedDateTelugu,
-    formattedDateEnglish,
+    year: ist.getUTCFullYear(), month: ist.getUTCMonth(), date: ist.getUTCDate(),
+    hours, minutes, seconds: ist.getUTCSeconds(),
+    formattedTime: `${pad(hours % 12 || 12)}:${pad(minutes)} ${hours >= 12 ? 'PM' : 'AM'} IST`,
+    formattedDateTelugu: formatDate(ist, TELUGU_MONTHS),
+    formattedDateEnglish: formatDate(ist, ENGLISH_MONTHS),
     isOpen,
-    nextOpenMessage,
-    nextOpenMessageEn,
+    nextOpenMessage: isOpen ? 'ఈ రోజు సాయంత్రం 4:00 గంటల వరకు ఆర్డర్లు స్వీకరించబడతాయి' : hours < 11 ? 'ఈ రోజు ఉదయం 11:00 గంటలకు ఆర్డరింగ్ ప్రారంభమవుతుంది' : 'రేపు ఉదయం 11:00 గంటలకు ఆర్డరింగ్ ప్రారంభమవుతుంది',
+    nextOpenMessageEn: isOpen ? 'Open until 4:00 PM today' : hours < 11 ? 'Opens today at 11:00 AM IST' : 'Opens tomorrow at 11:00 AM IST',
   };
 }
 
-/**
- * Returns a complete OrderingHoursStatus object synchronously
- * Ensuring OrderForm and OrderingHoursBanner NEVER fail to render in deployment
- */
-export function getInitialOrderingStatus(): import('../types').OrderingHoursStatus {
+// Local time supplies useful labels while the API is connecting; it never authorizes checkout.
+export function getInitialOrderingStatus(): OrderingHoursStatus {
   const ist = getISTTime();
-  const isTodayDelivery = ist.hours < 16;
-  const deliveryDateLabel = isTodayDelivery ? `${ist.formattedDateTelugu} (నేడు)` : `${ist.formattedDateTelugu} (రేపు)`;
-  const deliveryDateLabelEn = isTodayDelivery ? `${ist.formattedDateEnglish} (Today)` : `${ist.formattedDateEnglish} (Tomorrow)`;
-
+  const delivery = new Date(Date.UTC(ist.year, ist.month, ist.date + (ist.hours >= 16 ? 1 : 0)));
+  const date = `${delivery.getUTCFullYear()}-${pad(delivery.getUTCMonth() + 1)}-${pad(delivery.getUTCDate())}`;
+  const dateTe = formatDate(delivery, TELUGU_MONTHS);
+  const dateEn = formatDate(delivery, ENGLISH_MONTHS);
   return {
-    isOpen: true,
-    isLiveBatchHours: ist.hours >= 11 && ist.hours < 16,
+    isOpen: false,
+    apiAvailable: false,
+    isLiveBatchHours: ist.isOpen,
     currentTimeIST: ist.formattedTime,
     currentHourIST: ist.hours,
     currentMinuteIST: ist.minutes,
-    openTimeStr: 'రోజంతా ఆర్డర్ చేయవచ్చు',
-    openTimeStrEn: '24/7 Ordering Available',
-    closeTimeStr: 'సాయంత్రం 04:00 PM (నేటి డెలివరీ కటాఫ్)',
-    closeTimeStrEn: '04:00 PM IST (Cutoff for Same-Day Delivery)',
-    nextOpenMessage: ist.nextOpenMessage,
-    nextOpenMessageEn: ist.nextOpenMessageEn,
-    deliveryWindowStr: 'సాయంత్రం 6:00 - 8:00 గంటలు',
-    deliveryWindowStrEn: 'Evening 6:00 - 8:00 PM',
+    openHour: 11, closeHour: 16,
+    deliveryDate: date,
+    deliveryDateFormattedTe: dateTe,
+    deliveryDateFormattedEn: dateEn,
+    currentDateIST: dateTe,
+    currentDateISTEn: dateEn,
     deliveryWindow: 'సాయంత్రం 6:00 - 8:00 గంటలు',
     deliveryWindowEn: 'Evening 6:00 - 8:00 PM',
-    deliveryDate: ist.formattedDateTelugu,
-    deliveryDateEn: ist.formattedDateEnglish,
-    currentDateIST: deliveryDateLabel,
-    currentDateISTEn: deliveryDateLabelEn,
+    nextOpenMessage: 'ఆర్డరింగ్ సేవకు కనెక్ట్ అవుతోంది. దయచేసి వేచి ఉండండి.',
+    nextOpenMessageEn: 'Connecting to the ordering service. Please wait.',
   };
 }
 
-/**
- * Get delivery date string for display (Telugu)
- */
-export function getDeliveryDateString(mockOffsetMinutes: number = 0): string {
+export function normalizeOrderingStatus(data: OrderingHoursStatus): OrderingHoursStatus {
+  return {
+    ...data,
+    apiAvailable: true,
+    currentTimeIST: data.currentIstTime || data.currentTimeIST,
+    currentHourIST: data.currentIstHour ?? data.currentHourIST,
+    currentDateIST: data.deliveryDateFormattedTe || data.deliveryDate,
+    currentDateISTEn: data.deliveryDateFormattedEn || data.deliveryDate,
+    nextOpenMessage: data.nextOrderingWindowTe || data.nextOrderingWindowIst || data.nextOpenMessage,
+    nextOpenMessageEn: data.nextOrderingWindowEn || data.nextOpenMessageEn,
+    deliveryWindow: data.deliveryWindowTe || data.deliveryWindow,
+    deliveryWindowEn: data.deliveryWindowEn,
+  };
+}
+
+export function getDeliveryDateString(mockOffsetMinutes = 0): string {
   const ist = getISTTime(mockOffsetMinutes);
-  return `${ist.formattedDateTelugu} (సాయంత్రం 6:00 - 8:00 గంటలు)`;
+  const delivery = new Date(Date.UTC(ist.year, ist.month, ist.date + (ist.hours >= 16 ? 1 : 0)));
+  return `${formatDate(delivery, TELUGU_MONTHS)} (సాయంత్రం 6:00 - 8:00 గంటలు)`;
 }

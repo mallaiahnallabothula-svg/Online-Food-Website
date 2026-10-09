@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Minus, Check, MapPin, AlertCircle, Sparkles, ShieldCheck, ArrowRight, Navigation, Gift, CheckCircle2, ExternalLink, Leaf } from 'lucide-react';
 import { KaramSelection, CustomerDetails, OrderingHoursStatus } from '../types';
-import { PRESET_LOCALITIES, checkKollurDeliveryEligibility, KOLLUR_CENTER } from '../data/kollurAreas';
+import { PRESET_LOCALITIES, KOLLUR_CENTER } from '../data/kollurAreas';
+import { parseGoogleMapsCoordinates } from '../utils/location';
 import { useLanguage } from '../context/LanguageContext';
 
 interface OrderFormProps {
   hoursStatus: OrderingHoursStatus;
-  allowOutsideHours: boolean;
   onProceedToPayment: (orderPayload: {
     quantity: number;
     jowarQuantity: number;
@@ -24,7 +24,6 @@ interface OrderFormProps {
 
 export const OrderForm: React.FC<OrderFormProps> = ({
   hoursStatus,
-  allowOutsideHours,
   onProceedToPayment,
 }) => {
   const { t, language } = useLanguage();
@@ -63,6 +62,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
   // Quantity Stepper Helpers
   const incrementJowar = () => {
+    if (jowarQuantity >= 500) return;
     if (jowarQuantity === 0) {
       setJowarQuantity(5);
     } else {
@@ -81,6 +81,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   };
 
   const incrementChapathi = () => {
+    if (chapathiQuantity >= 500) return;
     if (chapathiQuantity === 0) {
       setChapathiQuantity(5);
     } else {
@@ -144,7 +145,9 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const [address, setAddress] = useState<string>('');
   const [landmark, setLandmark] = useState<string>('');
   const [selectedPresetArea, setSelectedPresetArea] = useState<string>(PRESET_LOCALITIES[0]?.nameTe || '');
-  const [customLocationLink, setCustomLocationLink] = useState<string>('');
+  const [customLocationLink, setCustomLocationLink] = useState<string>(`https://maps.google.com/?q=${KOLLUR_CENTER.lat},${KOLLUR_CENTER.lng}`);
+  const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>({ latitude: KOLLUR_CENTER.lat, longitude: KOLLUR_CENTER.lng });
+  const [isCalculatingDelivery, setIsCalculatingDelivery] = useState(true);
   const [currentDistanceKm, setCurrentDistanceKm] = useState<number>(0.5);
 
   // Delivery check state
@@ -157,7 +160,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     messageTe: string;
     messageEn: string;
   }>({
-    isEligible: true,
+    isEligible: false,
     distanceKm: 0.5,
     isFreeDelivery: true,
     extraKm: 0,
@@ -172,6 +175,41 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const [locationFeedback, setLocationFeedback] = useState<string>('');
   const [showManualLocationInput, setShowManualLocationInput] = useState<boolean>(false);
 
+  useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+    setIsCalculatingDelivery(true);
+    setDeliveryEligibility(prev => ({ ...prev, isEligible: false, messageTe: 'డెలివరీ వివరాలు తనిఖీ అవుతున్నాయి...', messageEn: 'Checking delivery details...' }));
+    const updateDelivery = async () => {
+      try {
+        if (!coordinates || hoursStatus.apiAvailable !== true) throw new Error('Choose an area or use GPS to verify delivery.');
+        const response = await fetch('/api/delivery/calculate', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(coordinates), signal: controller.signal,
+        });
+        const result = await response.json();
+        if (!response.ok || typeof result.eligible !== 'boolean' || typeof result.distanceKm !== 'number') throw new Error('Delivery calculation unavailable. Please retry.');
+        if (active) {
+          setCurrentDistanceKm(result.distanceKm);
+          setDeliveryEligibility({
+            isEligible: result.eligible, distanceKm: result.distanceKm,
+            isFreeDelivery: result.deliveryChargePaisa === 0,
+            extraKm: Math.max(0, result.distanceKm - result.freeRadiusKm),
+            deliveryCharge: result.deliveryChargePaisa / 100,
+            messageTe: result.eligible ? `దూరం: ${result.distanceKm} కి.మీ. | డెలివరీ: ₹${(result.deliveryChargePaisa / 100).toFixed(2)}` : result.reasonTe,
+            messageEn: result.eligible ? `Distance: ${result.distanceKm} km | Delivery: ₹${(result.deliveryChargePaisa / 100).toFixed(2)}` : result.reason,
+          });
+        }
+      } catch {
+        if (active) setDeliveryEligibility(prev => ({ ...prev, isEligible: false, messageTe: 'డెలివరీని నిర్ధారించలేకపోయాము. ఇంటర్నెట్ తనిఖీ చేసి ప్రాంతం లేదా GPS ఎంచుకోండి.', messageEn: 'Unable to verify delivery. Check your connection and choose an area or GPS.' }));
+      } finally {
+        if (active) setIsCalculatingDelivery(false);
+      }
+    };
+    void updateDelivery();
+    return () => { active = false; controller.abort(); };
+  }, [coordinates, hoursStatus.apiAvailable]);
+
   // Calculations
   const pricePerRoti = 30;
   const pricePerChapathi = 10;
@@ -183,8 +221,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const currentDist = typeof deliveryEligibility.distanceKm === 'number' 
     ? deliveryEligibility.distanceKm 
     : (currentDistanceKm || 0.5);
-  const extraKm = currentDist > 5.0 ? Math.round((currentDist - 5.0) * 10) / 10 : 0;
-  const deliveryCharge = currentDist > 5.0 ? Math.max(9, Math.round(extraKm * 9)) : 0;
+  const extraKm = deliveryEligibility.extraKm || 0;
+  const deliveryCharge = deliveryEligibility.deliveryCharge || 0;
   const isFreeDelivery = currentDist <= 5.0;
   const totalAmount = itemsSubtotal + deliveryCharge;
 
@@ -205,12 +243,8 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     setSelectedPresetArea(areaIdentifier);
     const matched = PRESET_LOCALITIES.find(p => p.nameTe === areaIdentifier || p.nameEn === areaIdentifier);
     if (matched) {
-      setCurrentDistanceKm(matched.distanceKm);
-      const res = checkKollurDeliveryEligibility(matched.lat, matched.lng, matched.distanceKm);
-      setDeliveryEligibility(res);
-      if (!customLocationLink) {
-        setCustomLocationLink(`https://maps.google.com/?q=${matched.lat},${matched.lng}`);
-      }
+      setCoordinates({ latitude: matched.lat, longitude: matched.lng });
+      setCustomLocationLink(`https://maps.google.com/?q=${matched.lat},${matched.lng}`);
     }
   };
 
@@ -235,16 +269,14 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         setIsLocating(false);
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
-        const res = checkKollurDeliveryEligibility(lat, lng);
-        setCurrentDistanceKm(res.distanceKm);
-        setDeliveryEligibility(res);
+        setCoordinates({ latitude: lat, longitude: lng });
         const generatedLink = `https://www.google.com/maps?q=${lat.toFixed(6)},${lng.toFixed(6)}`;
         setCustomLocationLink(generatedLink);
         setSelectedPresetArea(language === 'en' ? 'GPS Detected Location' : 'GPS ద్వారా గుర్తించబడిన లొకేషన్');
         setLocationFeedback(
           language === 'en'
-            ? `Location captured successfully (${res.distanceKm} km from Kolluru)`
-            : `లొకేషన్ విజయవంతంగా స్వీకరించబడింది (${res.distanceKm} కి.మీ.)`
+            ? 'Location captured. Checking delivery with the kitchen.'
+            : 'లొకేషన్ స్వీకరించబడింది. డెలివరీ తనిఖీ అవుతోంది.'
         );
       },
       () => {
@@ -263,10 +295,11 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const handleQuickDemoFill = () => {
     setCustomerName(language === 'en' ? 'Suresh Kumar' : 'సురేష్ కుమార్');
     setMobileNumber('8499865803');
-    setSelectedPresetArea(language === 'en' ? (PRESET_LOCALITIES[0]?.nameEn || '') : (PRESET_LOCALITIES[0]?.nameTe || ''));
+    setSelectedPresetArea(PRESET_LOCALITIES[0]?.nameTe || '');
+    setCoordinates({ latitude: KOLLUR_CENTER.lat, longitude: KOLLUR_CENTER.lng });
     setCurrentDistanceKm(0.5);
     setDeliveryEligibility({
-      isEligible: true,
+      isEligible: false,
       distanceKm: 0.5,
       messageTe: 'ఉచిత డెలివరీ అందుబాటులో ఉంది (కొల్లూరు నుండి దూరం: 0.5 కి.మీ.).',
       messageEn: 'Free delivery available (Distance from Kolluru center: 0.5 km).',
@@ -306,7 +339,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
       if (!firstErrorElementId) firstErrorElementId = 'chapathi-card';
     }
 
-    if (!customerName.trim()) {
+    if (customerName.trim().length < 2) {
       errs.customerName = t.errCustomerName;
       if (!firstErrorElementId) firstErrorElementId = 'customer-name-input';
     }
@@ -315,17 +348,17 @@ export const OrderForm: React.FC<OrderFormProps> = ({
     if (!cleanMobile) {
       errs.mobileNumber = t.errMobileEmpty;
       if (!firstErrorElementId) firstErrorElementId = 'customer-mobile-input';
-    } else if (cleanMobile.length !== 10) {
+    } else if (!/^[6-9]\d{9}$/.test(cleanMobile)) {
       errs.mobileNumber = t.errMobileDigits;
       if (!firstErrorElementId) firstErrorElementId = 'customer-mobile-input';
     }
 
-    if (!address.trim()) {
+    if (address.trim().length < 5) {
       errs.address = t.errAddress;
       if (!firstErrorElementId) firstErrorElementId = 'customer-address-input';
     }
 
-    if (!deliveryEligibility.isEligible) {
+    if (!coordinates || isCalculatingDelivery || !deliveryEligibility.isEligible) {
       errs.delivery = t.errDistance;
       if (!firstErrorElementId) firstErrorElementId = 'locality-select';
     }
@@ -352,6 +385,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!hoursStatus.isOpen || hoursStatus.apiAvailable !== true || !navigator.onLine) return;
     if (!validateForm()) return;
 
     onProceedToPayment({
@@ -373,13 +407,15 @@ export const OrderForm: React.FC<OrderFormProps> = ({
         landmark: landmark.trim(),
         locationLink: customLocationLink.trim() || `https://maps.google.com/?q=${KOLLUR_CENTER.lat},${KOLLUR_CENTER.lng}`,
         distanceKm: currentDist,
+        latitude: coordinates!.latitude,
+        longitude: coordinates!.longitude,
       },
       deliveryDate: deliveryDateStr,
       deliveryWindow,
     });
   };
 
-  const isOrderBlockedByHours = !hoursStatus.isOpen && !allowOutsideHours;
+  const isOrderBlockedByHours = !hoursStatus.isOpen || hoursStatus.apiAvailable !== true;
   const currentEligibilityMessage = language === 'en' ? deliveryEligibility.messageEn : deliveryEligibility.messageTe;
 
   return (
@@ -852,6 +888,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
             <button
               type="button"
               onClick={handleQuickDemoFill}
+              hidden={!import.meta.env.DEV}
               className="px-3.5 py-1.5 rounded-xl bg-amber-100 dark:bg-stone-800 hover:bg-amber-200 dark:hover:bg-stone-700 text-[#78350F] dark:text-amber-300 font-bold text-xs flex items-center gap-1.5 transition-all self-end sm:self-auto border border-amber-300 dark:border-stone-700 font-telugu cursor-pointer"
               title={t.sampleFillTitle}
             >
@@ -938,15 +975,12 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                 onChange={(e) => handleLocalityChange(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700 bg-[#FDFBF7] dark:bg-stone-900 text-stone-900 dark:text-stone-100 focus:outline-none focus:ring-2 focus:ring-[#78350F] text-sm cursor-pointer"
               >
+                {!PRESET_LOCALITIES.some(loc => loc.nameTe === selectedPresetArea) && <option value={selectedPresetArea}>{selectedPresetArea}</option>}
                 {PRESET_LOCALITIES.map((loc) => {
                   const areaName = language === 'en' ? loc.nameEn : loc.nameTe;
-                  const tag = loc.deliveryCharge === 0 
-                    ? (language === 'en' ? '— Free Delivery (within 5 km)' : '— ఉచిత డెలివరీ (5 కి.మీ. లోపల)')
-                    : (language === 'en' ? `— Delivery +₹${loc.deliveryCharge} (Above 5 km)` : `— డెలివరీ ఛార్జీ +₹${loc.deliveryCharge} (5 కి.మీ. పైబడినది)`);
-                  const distUnit = language === 'en' ? 'km' : 'కి.మీ.';
                   return (
                     <option key={loc.nameTe} value={loc.nameTe}>
-                      {areaName} ({loc.distanceKm} {distUnit} {tag})
+                      {areaName}
                     </option>
                   );
                 })}
@@ -1032,7 +1066,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               </div>
 
               {/* Status feedback & link preview */}
-              {customLocationLink ? (
+              {customLocationLink && coordinates ? (
                 <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                   <div className="flex items-center gap-2 text-emerald-950 dark:text-emerald-200">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
@@ -1091,10 +1125,16 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                       type="text"
                       id="customer-location-link"
                       value={customLocationLink}
-                      onChange={(e) => setCustomLocationLink(e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setCustomLocationLink(value);
+                        setCoordinates(parseGoogleMapsCoordinates(value));
+                        setSelectedPresetArea(language === 'en' ? 'Custom location' : 'మీ లొకేషన్');
+                      }}
                       placeholder="https://maps.google.com/?q=..."
                       className="w-full px-3 py-2 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 text-xs font-mono"
                     />
+                    <p className="mt-1 text-xs text-stone-500">{language === 'en' ? 'Use a Google Maps link containing coordinates. For a shortened link, select your area or use GPS.' : 'కోఆర్డినేట్‌లతో ఉన్న Google Maps లింక్ వాడండి. చిన్న లింక్ అయితే ప్రాంతం లేదా GPS ఎంచుకోండి.'}</p>
                   </div>
                 )}
               </div>
@@ -1221,6 +1261,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                 <button
                   type="button"
                   onClick={handleQuickDemoFill}
+                  hidden={!import.meta.env.DEV}
                   className="px-3 py-1.5 rounded-lg bg-[#78350F] hover:bg-[#8C4A26] text-white font-bold flex items-center gap-1 text-xs self-end sm:self-auto shadow-xs cursor-pointer"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
@@ -1231,7 +1272,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
             <button
               type="submit"
-              disabled={isOrderBlockedByHours || !deliveryEligibility.isEligible}
+              disabled={isOrderBlockedByHours || isLocating || isCalculatingDelivery || !coordinates || !deliveryEligibility.isEligible}
               id="proceed-to-payment-btn"
               className="w-full py-4 px-6 rounded-xl font-bold text-base sm:text-lg text-amber-50 bg-[#78350F] hover:bg-[#8C4A26] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-amber-950/20 flex items-center justify-center gap-3 transition-all font-telugu cursor-pointer"
             >
@@ -1241,7 +1282,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
 
             {isOrderBlockedByHours && (
               <p className="text-center text-xs text-amber-800 dark:text-amber-300 font-telugu font-semibold">
-                {t.hoursClosedWarning}
+                {hoursStatus.apiAvailable === true ? t.hoursClosedWarning : (language === 'en' ? 'The ordering service is unavailable. Check your connection.' : 'ఆర్డరింగ్ సేవ అందుబాటులో లేదు. ఇంటర్నెట్ తనిఖీ చేయండి.')}
               </p>
             )}
 

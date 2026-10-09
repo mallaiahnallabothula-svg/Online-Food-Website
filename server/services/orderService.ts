@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import type { Transaction } from '@libsql/client';
 import { getDb, withDbRetry } from '../db/index.ts';
 import type { PaymentIntent } from '../payments/provider.ts';
 import { generateServerOrderTicket, type OrderForTicket } from './ticketService.ts';
@@ -65,6 +66,15 @@ export interface FormattedOrder {
     locationLink?: string;
   };
   receivedAt?: string;
+  feedback?: {
+    id: string;
+    orderId: string;
+    customerName: string;
+    rating: number;
+    comment: string;
+    createdAt: string;
+    isPublic: boolean;
+  };
   updatedAt: string;
 }
 
@@ -96,18 +106,40 @@ export function formatCustomerSafeOrder(order: FormattedOrder) {
       distanceKm: order.distanceKm,
     },
     receivedAt: order.receivedAt,
+    feedback: order.feedback,
   };
+}
+
+async function formatOrderWithFeedback(row: any): Promise<FormattedOrder> {
+  const order = formatOrderRow(row);
+  const result = await withDbRetry(() => getDb().execute({
+    sql: 'SELECT id, order_id, customer_name, rating, comment, created_at, is_public FROM feedback WHERE order_id = ? LIMIT 1',
+    args: [order.id],
+  }));
+  const feedback = result.rows[0];
+  if (feedback) {
+    order.feedback = {
+      id: String(feedback.id),
+      orderId: String(feedback.order_id),
+      customerName: String(feedback.customer_name),
+      rating: Number(feedback.rating),
+      comment: String(feedback.comment || ''),
+      createdAt: String(feedback.created_at),
+      isPublic: Boolean(feedback.is_public),
+    };
+  }
+  return order;
 }
 
 export function formatOrderRow(row: any, fallbackToken?: string): FormattedOrder {
   const jowarQty = Number(row.jowar_quantity || 0);
   const chapathiQty = Number(row.chapathi_quantity || 0);
   const totalItems = Number(row.total_items || (jowarQty + chapathiQty));
-  const jowarUnitPrice = Math.round(Number(row.jowar_unit_price_paisa || 3000) / 100);
-  const chapathiUnitPrice = Math.round(Number(row.chapathi_unit_price_paisa || 1000) / 100);
-  const subtotal = Math.round(Number(row.subtotal_paisa || 0) / 100);
-  const deliveryCharge = Math.round(Number(row.delivery_charge_paisa || 0) / 100);
-  const totalAmount = Math.round(Number(row.total_amount_paisa || 0) / 100);
+  const jowarUnitPrice = Number(row.jowar_unit_price_paisa || 3000) / 100;
+  const chapathiUnitPrice = Number(row.chapathi_unit_price_paisa || 1000) / 100;
+  const subtotal = Number(row.subtotal_paisa || 0) / 100;
+  const deliveryCharge = Number(row.delivery_charge_paisa || 0) / 100;
+  const totalAmount = Number(row.total_amount_paisa || 0) / 100;
   const karivepakuGrams = Number(row.karivepaku_grams || 0);
   const aviseGrams = Number(row.avise_grams || 0);
   const providerPaymentId = String(row.provider_payment_id || '');
@@ -264,7 +296,7 @@ export async function createPendingOrder(
         'ORDER',
         orderId,
         JSON.stringify({
-          amountRupees: Math.round(pricing.totalAmountPaisa / 100),
+          amountRupees: pricing.totalAmountPaisa / 100,
           customerMobile: customer.mobile,
           deliveryDate: pricing.deliveryDate,
         }),
@@ -291,26 +323,50 @@ export async function createPendingOrder(
  * 2. Idempotent & Atomic Order Transition:
  * PENDING → PAID → CONFIRMED → TICKET_GENERATED
  */
+export interface VerifiedOrderPayment {
+  provider: string;
+  providerPaymentId: string;
+  providerOrderId?: string;
+  providerSignature?: string;
+  amountPaisa?: number;
+  currency?: string;
+  rawPayload?: any;
+}
+
 export async function transitionOrderToTicketGenerated(
   orderIdOrIntentId: string,
-  paymentInfo: {
-    provider: string;
-    providerPaymentId: string;
-    providerSignature?: string;
-    amountPaisa?: number;
-    rawPayload?: any;
-  },
+  paymentInfo: VerifiedOrderPayment,
   actorType: 'GATEWAY_WEBHOOK' | 'GATEWAY_VERIFIER' | 'GATEWAY_AUTO_SETTLER' = 'GATEWAY_WEBHOOK'
 ): Promise<FinalOrderResult> {
-  const db = getDb();
+  return withDbRetry(async () => {
+    const transaction = await getDb().transaction('write');
+    try {
+      const result = await transitionOrderInTransaction(transaction, orderIdOrIntentId, paymentInfo, actorType);
+      await transaction.commit();
+      return result;
+    } catch (error) {
+      await transaction.rollback().catch(() => {});
+      throw error;
+    } finally {
+      transaction.close();
+    }
+  });
+}
+
+async function transitionOrderInTransaction(
+  db: Transaction,
+  orderIdOrIntentId: string,
+  paymentInfo: VerifiedOrderPayment,
+  actorType: 'GATEWAY_WEBHOOK' | 'GATEWAY_VERIFIER' | 'GATEWAY_AUTO_SETTLER' = 'GATEWAY_WEBHOOK'
+): Promise<FinalOrderResult> {
   const cleanId = orderIdOrIntentId.trim();
 
   // Find order by ID, provider_payment_id, or active token
   const safeProviderPaymentId = paymentInfo.providerPaymentId || '';
   let orderRowRes = await withDbRetry(async () =>
     db.execute({
-      sql: 'SELECT * FROM orders WHERE id = ? OR (provider_payment_id IS NOT NULL AND provider_payment_id = ?) LIMIT 1',
-      args: [cleanId, safeProviderPaymentId],
+      sql: 'SELECT * FROM orders WHERE id = ? LIMIT 1',
+      args: [cleanId],
     })
   );
 
@@ -340,6 +396,31 @@ export async function transitionOrderToTicketGenerated(
   const existingRow = orderRowRes.rows[0]!;
   const orderId = String(existingRow.id);
 
+  if (!paymentInfo.providerPaymentId) throw new Error('A verified payment identifier is required.');
+  if (paymentInfo.provider !== String(existingRow.payment_provider)) {
+    throw new Error('Payment provider does not match this order.');
+  }
+  if (paymentInfo.currency !== undefined && paymentInfo.currency !== String(existingRow.currency)) {
+    throw new Error('Payment currency does not match this order.');
+  }
+  if (paymentInfo.provider === 'razorpay') {
+    const intent = await db.execute({
+      sql: 'SELECT provider_order_id FROM payment_intents WHERE order_id = ? AND provider = ? LIMIT 1',
+      args: [orderId, 'razorpay'],
+    });
+    const expectedProviderOrder = intent.rows[0]?.provider_order_id || existingRow.provider_order_id;
+    if (!expectedProviderOrder || paymentInfo.providerOrderId !== String(expectedProviderOrder)) {
+      throw new Error('Gateway payment is not bound to this order.');
+    }
+    if (paymentInfo.currency !== 'INR' || !Number.isSafeInteger(paymentInfo.amountPaisa)) {
+      throw new Error('Verified INR payment amount is required.');
+    }
+  }
+  const totalAmountPaisa = Number(existingRow.total_amount_paisa);
+  if (paymentInfo.amountPaisa !== undefined && paymentInfo.amountPaisa !== totalAmountPaisa) {
+    throw new Error('Security Violation: Payment amount mismatch.');
+  }
+
   // SECURITY: Prevent Payment Reuse
   // Ensure the provider payment ID has not already been used for another order
   if (paymentInfo.providerPaymentId) {
@@ -362,6 +443,9 @@ export async function transitionOrderToTicketGenerated(
     existingRow.order_status === 'TICKET_GENERATED' ||
     existingRow.payment_status === 'PAID'
   ) {
+    if (String(existingRow.provider_payment_id) !== paymentInfo.providerPaymentId) {
+      throw new Error('This order was already paid using a different payment.');
+    }
     const formatted = formatOrderRow(existingRow);
     return {
       orderId,
@@ -373,31 +457,6 @@ export async function transitionOrderToTicketGenerated(
   }
 
   const nowUtc = new Date().toISOString();
-  const totalAmountPaisa = Number(existingRow.total_amount_paisa);
-
-  // SECURITY: Prevent Underpayment / Overpayment
-  // If amountPaisa is provided by the gateway, it MUST match the server-calculated order total
-  if (paymentInfo.amountPaisa !== undefined && paymentInfo.amountPaisa !== totalAmountPaisa) {
-    await withDbRetry(async () =>
-      db.execute({
-        sql: `INSERT INTO audit_logs (id, actor_type, actor_id, action, target_type, target_id, details, created_at)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        args: [
-          `AUD-${crypto.randomBytes(8).toString('hex')}`,
-          'SYSTEM',
-          actorType,
-          'PAYMENT_AMOUNT_MISMATCH',
-          'ORDER',
-          orderId,
-          JSON.stringify({ expectedPaisa: totalAmountPaisa, receivedPaisa: paymentInfo.amountPaisa }),
-          nowUtc,
-        ],
-      })
-    );
-    throw new Error(
-      `Security Violation: Payment amount mismatch. Expected ₹${totalAmountPaisa / 100}, received ₹${paymentInfo.amountPaisa / 100}`
-    );
-  }
 
   // Authoritatively format order details for ticket generation
   const orderForTicket: OrderForTicket = {
@@ -407,11 +466,11 @@ export async function transitionOrderToTicketGenerated(
     deliveryWindow: String(existingRow.delivery_window || '18:00-20:00'),
     jowarQuantity: Number(existingRow.jowar_quantity),
     chapathiQuantity: Number(existingRow.chapathi_quantity),
-    jowarUnitPrice: Math.round(Number(existingRow.jowar_unit_price_paisa) / 100),
-    chapathiUnitPrice: Math.round(Number(existingRow.chapathi_unit_price_paisa) / 100),
-    subtotal: Math.round(Number(existingRow.subtotal_paisa) / 100),
-    deliveryCharge: Math.round(Number(existingRow.delivery_charge_paisa) / 100),
-    totalAmount: Math.round(totalAmountPaisa / 100),
+    jowarUnitPrice: Number(existingRow.jowar_unit_price_paisa) / 100,
+    chapathiUnitPrice: Number(existingRow.chapathi_unit_price_paisa) / 100,
+    subtotal: Number(existingRow.subtotal_paisa) / 100,
+    deliveryCharge: Number(existingRow.delivery_charge_paisa) / 100,
+    totalAmount: totalAmountPaisa / 100,
     karivepakuGrams: Number(existingRow.karivepaku_grams),
     aviseGrams: Number(existingRow.avise_grams),
     customerName: String(existingRow.customer_name),
@@ -439,6 +498,7 @@ export async function transitionOrderToTicketGenerated(
         payment_status = 'PAID',
         order_status = 'TICKET_GENERATED',
         payment_provider = ?,
+        provider_order_id = COALESCE(?, provider_order_id),
         provider_payment_id = ?,
         fulfillment_status = 'RECEIVED',
         ticket_text = ?,
@@ -448,6 +508,7 @@ export async function transitionOrderToTicketGenerated(
       WHERE id = ?`,
       args: [
         paymentInfo.provider,
+        paymentInfo.providerOrderId || null,
         paymentInfo.providerPaymentId,
         ticketText,
         nowUtc,
@@ -459,19 +520,28 @@ export async function transitionOrderToTicketGenerated(
     // Step 2: Record Payment in payments table
     {
       sql: `INSERT INTO payments (
-        id, order_id, provider, provider_payment_id, amount_paisa, status, signature, raw_payload, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        id, order_id, provider, provider_order_id, provider_payment_id, amount_paisa, currency,
+        status, signature, raw_payload, verified_at, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         paymentRecordId,
         orderId,
         paymentInfo.provider,
+        paymentInfo.providerOrderId || null,
         paymentInfo.providerPaymentId,
         paymentInfo.amountPaisa || totalAmountPaisa,
+        paymentInfo.currency || String(existingRow.currency),
         'SUCCESS',
         paymentInfo.providerSignature || null,
         paymentInfo.rawPayload ? JSON.stringify(paymentInfo.rawPayload) : JSON.stringify({ actorType, verifiedAt: nowUtc }),
         nowUtc,
+        nowUtc,
+        nowUtc,
       ],
+    },
+    {
+      sql: 'UPDATE payment_intents SET is_verified = 1 WHERE order_id = ?',
+      args: [orderId],
     },
     // Step 3: Audit Log PENDING -> PAID
     {
@@ -489,7 +559,7 @@ export async function transitionOrderToTicketGenerated(
           previousStatus: 'PENDING',
           newStatus: 'PAID',
           providerPaymentId: paymentInfo.providerPaymentId,
-          amountRupees: Math.round(totalAmountPaisa / 100),
+          amountRupees: totalAmountPaisa / 100,
         }),
         nowUtc,
       ],
@@ -588,8 +658,8 @@ export async function getOrderStatus(tokenOrIntentId: string): Promise<{
     // 2. Check if it's an active intentId for the checkout session
     const intentRes = await withDbRetry(async () =>
       db.execute({
-        sql: 'SELECT order_id FROM payment_intents WHERE id = ? LIMIT 1',
-        args: [clean],
+        sql: 'SELECT order_id FROM payment_intents WHERE id = ? AND expires_at >= ? LIMIT 1',
+        args: [clean, Date.now()],
       })
     );
     if (intentRes.rows.length > 0) {
@@ -611,7 +681,7 @@ export async function getOrderStatus(tokenOrIntentId: string): Promise<{
   }
 
   const orderId = String(orderRow.id);
-  const formatted = formatOrderRow(orderRow);
+  const formatted = await formatOrderWithFeedback(orderRow);
   const isPaid = orderRow.payment_status === 'PAID';
   const orderStatus = (orderRow.order_status || 'TICKET_GENERATED') as FormattedOrder['orderStatus'];
   const isConfirmed = orderStatus === 'CONFIRMED' || orderStatus === 'TICKET_GENERATED';
@@ -645,6 +715,9 @@ export async function createOrderFromVerifiedPayment(
       {
         provider: intent.provider,
         providerPaymentId,
+        providerOrderId: intent.providerOrderId,
+        amountPaisa: intent.orderPricing.totalAmountPaisa,
+        currency: 'INR',
         providerSignature,
       },
       'GATEWAY_VERIFIER'
@@ -658,6 +731,9 @@ export async function createOrderFromVerifiedPayment(
     {
       provider: intent.provider,
       providerPaymentId,
+      providerOrderId: intent.providerOrderId,
+      amountPaisa: intent.orderPricing.totalAmountPaisa,
+      currency: 'INR',
       providerSignature,
     },
     'GATEWAY_VERIFIER'
@@ -687,7 +763,7 @@ export async function getOrderByCustomerToken(token: string): Promise<FormattedO
     return null;
   }
 
-  return formatOrderRow(res.rows[0]!);
+  return formatOrderWithFeedback(res.rows[0]!);
 }
 
 /**

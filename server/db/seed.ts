@@ -98,8 +98,8 @@ export async function seedDevelopmentData(): Promise<void> {
     });
 
     await db.execute({
-      sql: `INSERT INTO payments (id, order_id, provider, provider_payment_id, amount_paisa, status, signature, raw_payload, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      sql: `INSERT INTO payments (id, order_id, provider, provider_payment_id, amount_paisa, status, signature, raw_payload, verified_at, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       args: [
         `PAY-${crypto.randomBytes(8).toString('hex')}`,
         order.id,
@@ -109,6 +109,8 @@ export async function seedDevelopmentData(): Promise<void> {
         'SUCCESS',
         'dev_mock_signature',
         JSON.stringify({ simulated: true }),
+        order.createdAtUtc,
+        order.createdAtUtc,
         order.createdAtUtc
       ]
     });

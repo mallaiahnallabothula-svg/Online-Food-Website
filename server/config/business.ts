@@ -36,7 +36,7 @@ export const BUSINESS_CONFIG = {
     displayLabelEn: 'Evening 6:00 PM – 8:00 PM',
   },
   limits: {
-    minItems: 1,
+    minItems: 5,
     maxJowarQty: 500,
     maxChapathiQty: 500,
     nameMin: 2,

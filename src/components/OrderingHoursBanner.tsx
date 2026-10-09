@@ -1,18 +1,14 @@
 import React from 'react';
-import { Clock, AlertTriangle, CheckCircle, Info } from 'lucide-react';
+import { Clock, CheckCircle } from 'lucide-react';
 import { OrderingHoursStatus } from '../types';
 import { useLanguage } from '../context/LanguageContext';
 
 interface OrderingHoursBannerProps {
   status: OrderingHoursStatus;
-  allowOutsideHoursForTesting: boolean;
-  onToggleAllowOutsideHours: (val: boolean) => void;
 }
 
 export const OrderingHoursBanner: React.FC<OrderingHoursBannerProps> = ({
   status,
-  allowOutsideHoursForTesting,
-  onToggleAllowOutsideHours,
 }) => {
   const { language, t } = useLanguage();
 
@@ -45,7 +41,9 @@ export const OrderingHoursBanner: React.FC<OrderingHoursBannerProps> = ({
             <div className="space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-bold text-base sm:text-lg font-telugu">
-                  {status.isOpen ? t.ordersAcceptingTitle : t.ordersPausedTitle}
+                  {status.testMode
+                    ? (language === 'en' ? 'Razorpay Test checkout' : 'Razorpay టెస్ట్ చెకౌట్')
+                    : status.isOpen ? t.ordersAcceptingTitle : t.ordersPausedTitle}
                 </h3>
                 <span className="text-xs font-mono px-2 py-0.5 rounded-md bg-stone-200/80 dark:bg-stone-800 text-stone-800 dark:text-stone-300">
                   {t.currentIstLabel} {status.currentTimeIST}
@@ -57,35 +55,12 @@ export const OrderingHoursBanner: React.FC<OrderingHoursBannerProps> = ({
               </p>
 
               <div className="flex items-center gap-4 text-xs font-telugu text-stone-600 dark:text-stone-400 pt-0.5 flex-wrap">
-                <span>🕒 <strong>{t.before4pmLabel}</strong> {t.before4pmDesc}</span>
-                <span>🚚 <strong>{t.after4pmLabel}</strong> {t.after4pmDesc}</span>
+                <span>🕒 {language === 'en' ? 'Orders: 11:00 AM – 4:00 PM IST' : 'ఆర్డర్లు: ఉదయం 11:00 – సాయంత్రం 4:00 IST'}</span>
+                <span>🚚 {language === 'en' ? 'Delivery: 6:00 – 8:00 PM' : 'డెలివరీ: సాయంత్రం 6:00 – 8:00'}</span>
               </div>
             </div>
           </div>
 
-          {/* Testing / Override Control (useful for evaluating preview outside 11-4 IST) */}
-          {!status.isOpen && (
-            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5 bg-white/70 dark:bg-stone-900/80 p-2.5 rounded-xl border border-amber-300/60 dark:border-stone-700 text-xs font-telugu self-stretch md:self-auto">
-              <div className="flex items-center gap-1.5 text-stone-700 dark:text-stone-300">
-                <Info className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                <span>{language === 'te' ? 'ప్రివ్యూ టెస్టింగ్ కోసం సమయ నిబంధన మినహాయింపు:' : 'Testing Override:'}</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => onToggleAllowOutsideHours(!allowOutsideHoursForTesting)}
-                id="toggle-ordering-hours-override"
-                className={`px-3 py-1.5 rounded-lg font-bold transition-colors ${
-                  allowOutsideHoursForTesting
-                    ? 'bg-emerald-700 text-white hover:bg-emerald-800'
-                    : 'bg-amber-600 text-white hover:bg-amber-700'
-                }`}
-              >
-                {allowOutsideHoursForTesting 
-                  ? (language === 'te' ? 'ఆర్డరింగ్ ఎనేబుల్ అయింది' : 'Ordering Enabled') 
-                  : (language === 'te' ? 'ఆర్డరింగ్ టెస్ట్ చేయండి' : 'Test Ordering')}
-              </button>
-            </div>
-          )}
 
         </div>
       </div>

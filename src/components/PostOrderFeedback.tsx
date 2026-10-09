@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Star,
   CheckCircle2,
@@ -50,14 +50,32 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
   const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  useEffect(() => {
+    setCurrentOrder(order);
+    setRating(order.feedback?.rating || 5);
+    setComments(order.feedback?.comment || '');
+    setSelectedTags(order.feedback?.aspects || []);
+    setCustomerName(order.feedback?.customerName || order.customer?.name || order.customerName || '');
+    setIsEditing(!order.feedback);
+    setErrorMessage(null);
+    setMarkSuccessMsg(null);
+    setSubmitSuccess(false);
+  }, [order.id]);
+
+  useEffect(() => { setCurrentOrder(order); }, [order]);
+
   const isReceived = currentOrder.isCustomerReceived || currentOrder.fulfillmentStatus === 'DELIVERED' || Boolean(currentOrder.receivedAt);
 
   // Handler: Customer marks order as received
   const handleMarkAsReceived = async () => {
+    if (!currentOrder.customerAccessToken) {
+      setErrorMessage('ట్రాకింగ్ కీతో ఆర్డర్ తెరిచి మళ్లీ ప్రయత్నించండి (A tracking key is required).');
+      return;
+    }
     setIsMarkingReceived(true);
     setErrorMessage(null);
     try {
-      const targetIdentifier = currentOrder.customerAccessToken || currentOrder.id;
+      const targetIdentifier = encodeURIComponent(currentOrder.customerAccessToken);
       const res = await fetch(`/api/orders/${targetIdentifier}/received`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -97,8 +115,19 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
   // Submit Feedback Handler
   const handleSubmitFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!currentOrder.customerAccessToken) {
+      setErrorMessage('ట్రాకింగ్ కీతో ఆర్డర్ తెరిచి మళ్లీ ప్రయత్నించండి (A tracking key is required).');
+      return;
+    }
     if (!rating) {
       setErrorMessage('దయచేసి నక్షత్రాల రేటింగ్ ఎంచుకోండి.');
+      return;
+    }
+
+    const highlights = FEEDBACK_TAGS.filter(tag => selectedTags.includes(tag.id)).map(tag => tag.label);
+    const persistedComment = [comments.trim(), highlights.length ? `Highlights: ${highlights.join('; ')}` : ''].filter(Boolean).join('\n');
+    if (persistedComment.length > 500) {
+      setErrorMessage('అభిప్రాయం మరియు హైలైట్లు కలిపి 500 అక్షరాలలోపు ఉండాలి (Maximum 500 characters including highlights).');
       return;
     }
 
@@ -106,14 +135,13 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
     setErrorMessage(null);
 
     try {
-      const targetIdentifier = currentOrder.customerAccessToken || currentOrder.id;
+      const targetIdentifier = encodeURIComponent(currentOrder.customerAccessToken);
       const res = await fetch(`/api/orders/${targetIdentifier}/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           rating,
-          comment: comments.trim(),
-          aspects: selectedTags,
+          comment: persistedComment,
         }),
       });
 
@@ -123,12 +151,12 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
           id: `FDB-${Date.now()}`,
           orderId: currentOrder.id,
           rating,
-          comment: comments.trim(),
-          comments: comments.trim(),
+          comment: persistedComment,
+          comments: persistedComment,
           aspects: selectedTags,
           customerName: customerName.trim() || currentOrder.customer?.name || currentOrder.customerName || 'Customer',
           createdAt: nowIso,
-          createdAtIST: new Date().toLocaleDateString('te-IN'),
+          createdAtIST: new Date().toLocaleDateString('te-IN', { timeZone: 'Asia/Kolkata' }),
           isPublic: true,
         };
         const updated: Order = {
@@ -392,6 +420,7 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
               <textarea
                 id="feedback-comments-input"
                 rows={3}
+                maxLength={500}
                 value={comments}
                 onChange={(e) => setComments(e.target.value)}
                 placeholder="ఉదా: రొట్టెలు చాలా మెత్తగా ఉన్నాయి, కరివేపాకు కారం అదిరిపోయింది..."
@@ -412,7 +441,7 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
                   type="text"
                   id="feedback-name-input"
                   value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
+                  readOnly
                   placeholder="మీ పేరు"
                   className="w-full px-3.5 py-2 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 text-xs font-telugu"
                 />

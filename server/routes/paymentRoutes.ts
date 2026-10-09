@@ -4,7 +4,6 @@ import { CreatePaymentIntentSchema, VerifyPaymentSchema } from '../validation/sc
 import {
   createPaymentIntent,
   verifyPaymentIntent,
-  getIntent,
   findIntentByOrderId,
 } from '../payments/provider.ts';
 import {
@@ -57,10 +56,8 @@ paymentRouter.post('/webhook', async (req: any, res: Response) => {
   try {
     const webhookSignature = req.headers['x-razorpay-signature'] as string | undefined;
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET || process.env.PAYMENT_WEBHOOK_SECRET;
-    const isProduction = process.env.NODE_ENV === 'production';
-
     // Strict Fail-Closed Verification
-    if (isProduction || webhookSecret) {
+    {
       if (!webhookSecret) {
         console.error('[WEBHOOK] FAIL-CLOSED: Webhook secret is not configured in production environment.');
         return res.status(500).json({ error: 'Server payment webhook configuration missing secret.' });
@@ -86,32 +83,25 @@ paymentRouter.post('/webhook', async (req: any, res: Response) => {
     }
 
     const payload = req.body || {};
-    let providerPaymentId: string = '';
-    let orderId: string = '';
-    let amountPaisa: number | undefined;
-
-    if (payload.payload?.payment?.entity) {
-      const paymentEntity = payload.payload.payment.entity;
-      providerPaymentId = paymentEntity.id;
-      amountPaisa = typeof paymentEntity.amount === 'number' ? paymentEntity.amount : undefined;
-
-      // Check notes for orderId or lookup by provider order_id
-      orderId = paymentEntity.notes?.orderId || paymentEntity.notes?.order_id || '';
-      if (!orderId && paymentEntity.order_id) {
-        const intent = await findIntentByOrderId(paymentEntity.order_id);
-        if (intent?.orderId) {
-          orderId = intent.orderId;
-        }
-      }
-    } else if (payload.orderId || payload.order_id) {
-      orderId = payload.orderId || payload.order_id;
-      providerPaymentId = payload.paymentId || payload.payment_id || `UPI_WH_${Date.now()}`;
-      amountPaisa = typeof payload.amountPaisa === 'number' ? payload.amountPaisa : undefined;
+    if (payload.event !== 'payment.captured') {
+      return res.json({ received: true, ignored: true, reason: 'Event does not confirm a captured payment.' });
     }
-
-    if (!orderId) {
-      return res.json({ received: true, ignored: true, reason: 'No order identifier in payload' });
+    const paymentEntity = payload.payload?.payment?.entity;
+    if (!paymentEntity || paymentEntity.status !== 'captured' || paymentEntity.captured !== true ||
+        paymentEntity.currency !== 'INR' || !Number.isSafeInteger(paymentEntity.amount) || paymentEntity.amount <= 0 ||
+        typeof paymentEntity.id !== 'string' || !paymentEntity.id ||
+        typeof paymentEntity.order_id !== 'string' || !paymentEntity.order_id) {
+      return res.status(400).json({ error: 'Invalid captured payment details.' });
     }
+    // Resolve the provider order from our database, never from caller-controlled notes.
+    // A captured payment remains valid even when the checkout's 30-minute window ended.
+    const intent = await findIntentByOrderId(paymentEntity.order_id, true);
+    if (!intent?.orderId || intent.provider !== 'razorpay' || intent.providerOrderId !== paymentEntity.order_id) {
+      return res.status(400).json({ error: 'Payment does not belong to a registered checkout order.' });
+    }
+    const orderId = intent.orderId;
+    const providerPaymentId = paymentEntity.id;
+    const amountPaisa = paymentEntity.amount;
 
     // Atomically transition order: PENDING → PAID → CONFIRMED → TICKET_GENERATED
     const transitionResult = await transitionOrderToTicketGenerated(
@@ -119,6 +109,8 @@ paymentRouter.post('/webhook', async (req: any, res: Response) => {
       {
         provider: 'razorpay',
         providerPaymentId,
+        providerOrderId: paymentEntity.order_id,
+        currency: paymentEntity.currency,
         providerSignature: webhookSignature,
         amountPaisa,
         rawPayload: payload,
@@ -134,7 +126,7 @@ paymentRouter.post('/webhook', async (req: any, res: Response) => {
     });
   } catch (err: any) {
     console.error('Webhook processing error:', err);
-    return res.status(500).json({ error: 'Webhook processing failed', details: err.message });
+    return res.status(500).json({ error: 'Webhook processing failed. The gateway can safely retry.' });
   }
 });
 
@@ -219,7 +211,7 @@ paymentRouter.post('/verify', paymentRateLimiter, async (req: Request, res: Resp
     mockVerificationToken
   );
 
-  if (!verification.verified || !verification.intent) {
+  if (!verification.verified || !verification.intent || !verification.payment) {
     return res.status(400).json({
       error: {
         code: 'PAYMENT_VERIFICATION_FAILED',
@@ -237,7 +229,9 @@ paymentRouter.post('/verify', paymentRateLimiter, async (req: Request, res: Resp
         provider: verification.intent.provider,
         providerPaymentId,
         providerSignature,
-        amountPaisa: verification.intent.orderPricing.totalAmountPaisa,
+        amountPaisa: verification.payment!.amountPaisa,
+        currency: verification.payment!.currency,
+        providerOrderId: verification.payment!.providerOrderId,
       },
       'GATEWAY_VERIFIER'
     );
@@ -246,7 +240,7 @@ paymentRouter.post('/verify', paymentRateLimiter, async (req: Request, res: Resp
       success: true,
       message: 'Payment verified and order ticket generated!',
       orderId: result.orderId,
-      customerAccessToken: result.customerAccessToken,
+      customerAccessToken: verification.intent.customerAccessToken || undefined,
       order: formatCustomerSafeOrder(result.order),
       ticket: result.ticket,
       idempotent: result.idempotent,

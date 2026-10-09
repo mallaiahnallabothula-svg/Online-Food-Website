@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, Search, Package, Clock, CheckCircle2, AlertCircle, ArrowRight, MessageSquareHeart, Star } from 'lucide-react';
 import { Order } from '../types';
 import { PostOrderFeedback } from './PostOrderFeedback';
+import { persistCustomerOrder } from '../utils/checkout';
 
 interface OrderTrackingModalProps {
   isOpen: boolean;
@@ -18,59 +19,82 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [recentOrders, setRecentOrders] = useState<Array<{ id: string; date: string; qty: number; status: string }>>([]);
+  const [recentOrders, setRecentOrders] = useState<Array<{ id: string; customerAccessToken: string; date?: string; qty?: number; status?: string }>>([]);
+  const requestId = useRef(0);
 
   // Load recent orders stored locally
   useEffect(() => {
+    if (!isOpen) {
+      requestId.current += 1;
+      return;
+    }
+    setSelectedOrder(null);
+    setLoading(false);
+    setErrorMessage(null);
     try {
       const stored = localStorage.getItem('smjr_customer_orders');
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed)) {
-          setRecentOrders(parsed);
-          // If initialOrderId not provided and there is a recent order, auto-load the latest one
-          if (!initialOrderId && parsed.length > 0 && !selectedOrder) {
-            fetchOrder(parsed[0].id);
+          const authorizedOrders = parsed.filter(item => typeof item.id === 'string' && typeof item.customerAccessToken === 'string' && item.customerAccessToken.length >= 16);
+          setRecentOrders(authorizedOrders);
+          if (!initialOrderId && authorizedOrders.length > 0) {
+            setSearchId(authorizedOrders[0].customerAccessToken);
+            void fetchOrder(authorizedOrders[0].customerAccessToken);
           }
         }
-      }
+      } else setRecentOrders([]);
     } catch {}
-  }, []);
-
-  // Fetch when initialOrderId changes
-  useEffect(() => {
     if (initialOrderId) {
       setSearchId(initialOrderId);
-      fetchOrder(initialOrderId);
+      void fetchOrder(initialOrderId);
     }
-  }, [initialOrderId]);
+  }, [isOpen, initialOrderId]);
 
-  const fetchOrder = async (idToFetch: string) => {
+  const fetchOrder = async (idToFetch: string, quiet = false) => {
     const cleanId = idToFetch.trim();
     if (!cleanId) return;
+    const currentRequest = ++requestId.current;
+    if (cleanId.length < 16 || cleanId.startsWith('SMJR-')) {
+      setSelectedOrder(null);
+      setLoading(false);
+      setErrorMessage('ఆర్డర్ నంబర్ బదులు కన్ఫర్మేషన్‌లో ఇచ్చిన ట్రాకింగ్ కీ నమోదు చేయండి (Enter your tracking key).');
+      return;
+    }
 
-    setLoading(true);
+    if (!quiet) setLoading(true);
     setErrorMessage(null);
+    if (!quiet) setSelectedOrder(null);
 
     try {
       const res = await fetch(`/api/orders/${encodeURIComponent(cleanId)}`);
       if (res.ok) {
         const data = await res.json();
+        if (currentRequest !== requestId.current) return;
         if (data.order) {
-          setSelectedOrder(data.order);
+          const order = { ...data.order, customerAccessToken: cleanId };
+          setSelectedOrder(previous => ({ ...order, feedback: order.feedback || (previous?.id === order.id ? previous?.feedback : undefined) }));
+          persistCustomerOrder(order.id, cleanId);
         } else {
           setErrorMessage('ఆర్డర్ కనుగొనబడలేదు.');
         }
       } else {
         const err = await res.json();
-        setErrorMessage(err.message || 'ఈ నంబర్‌తో ఆర్డర్ వివరాలు లభించలేదు.');
+        if (currentRequest === requestId.current) setErrorMessage(err.error?.message || err.message || 'ఈ కీతో ఆర్డర్ వివరాలు లభించలేదు.');
       }
     } catch (e) {
-      setErrorMessage('సర్వర్ కనెక్షన్ లోపం ఏర్పడింది. దయచేసి మళ్లీ ప్రయత్నించండి.');
+      if (currentRequest === requestId.current) setErrorMessage('సర్వర్ కనెక్షన్ లోపం ఏర్పడింది. దయచేసి మళ్లీ ప్రయత్నించండి.');
     } finally {
-      setLoading(false);
+      if (!quiet && currentRequest === requestId.current) setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!isOpen || !selectedOrder?.customerAccessToken) return;
+    const token = selectedOrder.customerAccessToken;
+    const timer = setInterval(() => { void fetchOrder(token, true); }, 15000);
+    return () => clearInterval(timer);
+  }, [isOpen, selectedOrder?.customerAccessToken]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,7 +157,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
           {/* Search Bar */}
           <form onSubmit={handleSearch} className="space-y-2">
             <label className="block text-xs font-bold text-stone-700 dark:text-stone-300">
-              ఆర్డర్ నంబర్ ద్వారా వెతకండి (Enter Order ID):
+              ట్రాకింగ్ కీ ద్వారా వెతకండి (Enter tracking key):
             </label>
             <div className="flex gap-2">
               <div className="relative flex-1">
@@ -141,7 +165,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                   type="text"
                   value={searchId}
                   onChange={(e) => setSearchId(e.target.value)}
-                  placeholder="e.g. SMJR-20260911-2176"
+                  placeholder="ఆర్డర్ కన్ఫర్మేషన్‌లో ఇచ్చిన కీ / Tracking key"
                   className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 text-xs sm:text-sm font-mono focus:ring-2 focus:ring-amber-500 outline-hidden"
                 />
                 <Search className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
@@ -169,8 +193,8 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                     key={rec.id}
                     type="button"
                     onClick={() => {
-                      setSearchId(rec.id);
-                      fetchOrder(rec.id);
+                      setSearchId(rec.customerAccessToken);
+                      fetchOrder(rec.customerAccessToken);
                     }}
                     className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
                       selectedOrder?.id === rec.id
@@ -179,7 +203,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                     }`}
                   >
                     <span>{rec.id}</span>
-                    <span className="text-[10px] text-stone-500 font-telugu font-normal">({rec.qty} రొట్టెలు)</span>
+                    {rec.qty != null && <span className="text-[10px] text-stone-500 font-telugu font-normal">({rec.qty} రొట్టెలు)</span>}
                   </button>
                 ))}
               </div>
@@ -215,6 +239,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
 
               {/* Embed PostOrderFeedback for this order */}
               <PostOrderFeedback
+                key={selectedOrder.id}
                 order={selectedOrder}
                 onOrderUpdated={handleOrderUpdated}
               />
@@ -224,7 +249,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
           {!selectedOrder && !loading && !errorMessage && (
             <div className="p-8 text-center text-stone-400 dark:text-stone-500 text-xs sm:text-sm space-y-2">
               <Package className="w-10 h-10 mx-auto text-stone-300 dark:text-stone-600" />
-              <p>ఆర్డర్ నంబర్ ఎంటర్ చేసి మీ డెలివరీ స్థితిని తనిఖీ చేయండి మరియు ఫీడ్‌బ్యాక్ ఇవ్వండి.</p>
+              <p>ట్రాకింగ్ కీ ఎంటర్ చేసి మీ డెలివరీ స్థితిని తనిఖీ చేయండి మరియు ఫీడ్‌బ్యాక్ ఇవ్వండి.</p>
             </div>
           )}
 

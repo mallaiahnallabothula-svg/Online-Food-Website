@@ -16,8 +16,8 @@ describe('Payment Provider & Authoritative Security', () => {
 
   it('creates and persists a payment intent with authoritative UPI ID nmallaiah12@axl', async () => {
     const intentResult = await createPaymentIntent({
-      jowarQuantity: 2,
-      chapathiQuantity: 2,
+      jowarQuantity: 5,
+      chapathiQuantity: 5,
       karamSelection: { karivepaku: true, aviseGinjalu: false },
       customer: {
         name: 'Venkatesh',
@@ -49,7 +49,7 @@ describe('Payment Provider & Authoritative Security', () => {
 
   it('rejects verification when verification token is invalid or corrupted', async () => {
     const intentResult = await createPaymentIntent({
-      jowarQuantity: 3,
+      jowarQuantity: 5,
       chapathiQuantity: 0,
       karamSelection: { karivepaku: true, aviseGinjalu: false },
       customer: {
@@ -57,6 +57,8 @@ describe('Payment Provider & Authoritative Security', () => {
         mobile: '9988776655',
         address: 'Kollur Center',
         landmark: 'Opposite Community Hall',
+        latitude: 17.4782,
+        longitude: 78.2323,
       },
     });
 
@@ -71,9 +73,9 @@ describe('Payment Provider & Authoritative Security', () => {
     expect(result.reason).toContain('Invalid');
   });
 
-  it('verifies intent successfully with authentic verification token and marks is_verified', async () => {
+  it('verifies receipts without consuming them before settlement', async () => {
     const intentResult = await createPaymentIntent({
-      jowarQuantity: 2,
+      jowarQuantity: 5,
       chapathiQuantity: 0,
       karamSelection: { karivepaku: true, aviseGinjalu: false },
       customer: {
@@ -81,6 +83,8 @@ describe('Payment Provider & Authoritative Security', () => {
         mobile: '9988776655',
         address: 'Kollur Center',
         landmark: 'Near Water Tank',
+        latitude: 17.4782,
+        longitude: 78.2323,
       },
     });
 
@@ -96,28 +100,30 @@ describe('Payment Provider & Authoritative Security', () => {
 
     expect(result.verified).toBe(true);
     expect(result.intent?.intentId).toBe(intentResult.intentId);
-    expect(result.intent?.isVerified).toBe(true);
+    expect(result.intent?.isVerified).not.toBe(true);
 
-    // Replay attack prevention: second verification must be rejected
+    // Repeating receipt verification is safe; settlement supplies idempotency.
     const replayResult = await verifyPaymentIntent(
       intentResult.intentId,
       'pay_realmock123',
       undefined,
       validToken
     );
-    expect(replayResult.verified).toBe(false);
+    expect(replayResult.verified).toBe(true);
   });
 
   it('rejects transition to ticket generated when payment amount mismatches authoritative order total', async () => {
     const intentResult = await createPaymentIntent({
-      jowarQuantity: 2,
-      chapathiQuantity: 2,
+      jowarQuantity: 5,
+      chapathiQuantity: 5,
       karamSelection: { karivepaku: true, aviseGinjalu: false },
       customer: {
         name: 'Suresh',
         mobile: '9876543210',
         address: 'Kollur',
         landmark: 'Opposite Panchayat Office',
+        latitude: 17.4782,
+        longitude: 78.2323,
       },
     });
 

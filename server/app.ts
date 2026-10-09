@@ -1,3 +1,4 @@
+import 'express-async-errors';
 import express, { Request, Response, NextFunction } from 'express';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
@@ -32,6 +33,10 @@ export function createExpressApp() {
 
   // 3. Cookie Parser
   app.use(cookieParser());
+  app.use('/api', (_req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store');
+    next();
+  });
 
   // 4. Request ID & Request Logger Middleware
   app.use((req: any, res: Response, next: NextFunction) => {

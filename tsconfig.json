@@ -25,6 +25,7 @@
     "noImplicitOverride": true,
     "noFallthroughCasesInSwitch": true,
     "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
     "noEmit": true
   }
 }
