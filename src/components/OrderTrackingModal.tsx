@@ -3,6 +3,7 @@ import { X, Search, Package, Clock, CheckCircle2, AlertCircle, ArrowRight, Messa
 import { Order } from '../types';
 import { PostOrderFeedback } from './PostOrderFeedback';
 import { persistCustomerOrder } from '../utils/checkout';
+import { useLanguage } from '../context/LanguageContext';
 
 interface OrderTrackingModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
   onClose,
   initialOrderId,
 }) => {
+  const { language, t } = useLanguage();
   const [searchId, setSearchId] = useState<string>(initialOrderId || '');
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -134,10 +136,10 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
             </div>
             <div>
               <h2 className="text-lg font-bold text-[#451A03] dark:text-amber-100">
-                నా ఆర్డర్ స్థితి & ఫీడ్‌బ్యాక్
+                {t.trackFeedbackBtn}
               </h2>
               <p className="text-xs text-stone-500 dark:text-stone-400">
-                ఆర్డర్ డెలివరీ నిర్ధారణ & రేటింగ్
+                {language === 'te' ? 'మీ ఆర్డర్ స్థితి, డెలివరీ వివరాలు & ఫీడ్‌బ్యాక్' : 'Track your order, delivery status & feedback'}
               </p>
             </div>
           </div>
@@ -153,6 +155,11 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
 
         {/* Modal Body */}
         <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+          <p className="text-sm text-stone-600 dark:text-stone-300">
+            {language === 'te'
+              ? 'ఈ ఫోన్ / బ్రౌజర్‌లో చేసిన ఆర్డర్‌ను కింద ఎంచుకోండి. వేరే పరికరంలో చూడాలంటే ఆర్డర్ కన్ఫర్మేషన్‌లో ఇచ్చిన ప్రైవేట్ ట్రాకింగ్ కీ నమోదు చేయండి. ఆ కీని ఇతరులతో పంచుకోవద్దు. ఆర్డర్ తెరిచి ఉన్నప్పుడు స్థితి ప్రతి 15 సెకన్లకు అప్‌డేట్ అవుతుంది.'
+              : 'Choose an order saved on this phone / browser below. On another device, enter the private tracking key from your order confirmation. Keep that key private. While an order is open, its status refreshes every 15 seconds.'}
+          </p>
           
           {/* Search Bar */}
           <form onSubmit={handleSearch} className="space-y-2">
@@ -185,10 +192,10 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
           {recentOrders.length > 0 && (
             <div className="space-y-2">
               <span className="text-xs font-bold text-stone-500 dark:text-stone-400 block">
-                ఈ పరికరంలో చేసిన తాజా ఆర్డర్లు (Recent Orders):
+                {language === 'te' ? 'ఈ పరికరంలో సేవ్ అయిన మీ ఆర్డర్లు:' : 'Your orders saved on this device:'}
               </span>
               <div className="flex flex-wrap gap-2">
-                {recentOrders.slice(0, 4).map((rec) => (
+                {recentOrders.map((rec) => (
                   <button
                     key={rec.id}
                     type="button"
@@ -249,7 +256,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
           {!selectedOrder && !loading && !errorMessage && (
             <div className="p-8 text-center text-stone-400 dark:text-stone-500 text-xs sm:text-sm space-y-2">
               <Package className="w-10 h-10 mx-auto text-stone-300 dark:text-stone-600" />
-              <p>ట్రాకింగ్ కీ ఎంటర్ చేసి మీ డెలివరీ స్థితిని తనిఖీ చేయండి మరియు ఫీడ్‌బ్యాక్ ఇవ్వండి.</p>
+              <p>{language === 'te' ? 'ఇక్కడ మీ ఆర్డర్ కనిపించడం లేదా? ఆర్డర్ చేసిన ఫోన్ / బ్రౌజర్‌లో తెరవండి లేదా మీ ప్రైవేట్ ట్రాకింగ్ కీతో వెతకండి.' : 'Cannot see your order? Open this page on the phone / browser you ordered from, or search with your private tracking key.'}</p>
             </div>
           )}
 

@@ -107,11 +107,11 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onOpenOrderTracker}
               id="header-track-order-btn"
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg text-[#78350F] dark:text-amber-300 bg-amber-50 hover:bg-amber-100 dark:bg-stone-800 dark:hover:bg-stone-700 border border-amber-300/80 dark:border-stone-700 transition-colors font-telugu cursor-pointer"
-              title="ఆర్డర్ స్థితి & ఫీడ్‌బ్యాక్ / Order Feedback"
+              title="నా ఆర్డర్లు — ఆర్డర్ స్థితి చూడండి / My Orders — Track your order"
             >
-              <MessageSquareHeart className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
+              <ShoppingBag className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
               <span className="hidden sm:inline">{t.trackFeedbackBtn}</span>
-              <span className="sm:hidden">Feedback</span>
+              <span className="sm:hidden">{t.trackFeedbackBtn}</span>
             </button>
           )}
 

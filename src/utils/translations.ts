@@ -258,7 +258,7 @@ export const translations: Record<Language, Translations> = {
     // Header & Navigation
     ordersOpenStatus: 'ఆర్డర్లు అందుబాటులో ఉన్నాయి (11 AM - 4 PM)',
     ordersClosedStatus: 'నేటి డెలివరీ ఆర్డర్లు ముగిశాయి',
-    trackFeedbackBtn: 'ఆర్డర్ ఫీడ్‌బ్యాక్',
+    trackFeedbackBtn: 'నా ఆర్డర్లు',
     androidAppBtn: 'Android యాప్',
     callOwnerBtn: 'కాల్ చేయండి',
     orderPageBtn: 'ఆర్డరింగ్ పేజీ',
@@ -501,7 +501,7 @@ export const translations: Record<Language, Translations> = {
     // Header & Navigation
     ordersOpenStatus: 'Orders Open (11:00 AM - 4:00 PM)',
     ordersClosedStatus: 'Orders Closed for Today',
-    trackFeedbackBtn: 'Order Feedback',
+    trackFeedbackBtn: 'My Orders',
     androidAppBtn: 'Android App',
     callOwnerBtn: 'Call',
     orderPageBtn: 'Order Page',
