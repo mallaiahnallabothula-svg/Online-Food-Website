@@ -201,60 +201,92 @@ adminRouter.patch('/orders/:id/status', requireAuth, requireAdminCsrf, async (re
 
   const newStatus = parsed.data.status;
   const db = getDb();
+  // Match the existing Owner Dashboard progression; cancellation is not fulfillment
+  // and remains possible for unpaid orders as in the current UI.
+  const allowedTransitions: Record<string, string[]> = {
+    RECEIVED: ['PREPARING', 'CANCELLED'],
+    PREPARING: ['OUT_FOR_DELIVERY', 'CANCELLED'],
+    OUT_FOR_DELIVERY: ['DELIVERED', 'CANCELLED'],
+    DELIVERED: [],
+    CANCELLED: [],
+  };
 
-  const existingRes = await db.execute({
-    sql: 'SELECT id, fulfillment_status FROM orders WHERE id = ? LIMIT 1',
-    args: [orderId],
-  });
-
-  if (existingRes.rows.length === 0) {
-    return res.status(404).json({
-      error: {
-        code: 'NOT_FOUND',
-        message: `Order ${orderId} not found.`,
-      },
+  // Keep validation, the update and the audit entry in one transaction so
+  // concurrent staff requests cannot skip a state or process an unpaid order.
+  const transaction = await db.transaction('write');
+  try {
+    const existingRes = await transaction.execute({
+      sql: 'SELECT id, payment_status, fulfillment_status FROM orders WHERE id = ? LIMIT 1',
+      args: [orderId],
     });
+    if (existingRes.rows.length === 0) {
+      await transaction.rollback();
+      return res.status(404).json({
+        error: { code: 'NOT_FOUND', message: `Order ${orderId} not found.` },
+      });
+    }
+
+    const oldStatus = String(existingRes.rows[0]?.fulfillment_status);
+    const paymentStatus = String(existingRes.rows[0]?.payment_status);
+    if (!allowedTransitions[oldStatus]?.includes(newStatus)) {
+      await transaction.rollback();
+      return res.status(409).json({
+        error: {
+          code: 'INVALID_STATUS_TRANSITION',
+          message: `Cannot change order status from ${oldStatus} to ${newStatus}.`,
+        },
+      });
+    }
+    if (newStatus !== 'CANCELLED' && paymentStatus !== 'PAID') {
+      await transaction.rollback();
+      return res.status(409).json({
+        error: { code: 'PAYMENT_REQUIRED', message: 'Only paid orders can advance to preparation or delivery.' },
+      });
+    }
+
+    const nowUtc = new Date().toISOString();
+    const actor = req.user!;
+    await transaction.batch([
+      {
+        sql: `UPDATE orders SET
+          fulfillment_status = ?,
+          updated_at = ?,
+          updated_by = ?
+        WHERE id = ?`,
+        args: [newStatus, nowUtc, `${actor.role}:${actor.username}`, orderId],
+      },
+      {
+        sql: `INSERT INTO audit_logs (id, actor_type, actor_id, action, target_type, target_id, details, ip, created_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        args: [
+          `AUD-${crypto.randomBytes(8).toString('hex')}`,
+          actor.role,
+          actor.username,
+          'ORDER_STATUS_UPDATED',
+          'ORDER',
+          orderId,
+          JSON.stringify({ from: oldStatus, to: newStatus }),
+          req.ip ? String(req.ip) : null,
+          nowUtc,
+        ],
+      },
+    ]);
+    await transaction.commit();
+
+    res.json({
+      success: true,
+      orderId,
+      oldStatus,
+      newStatus,
+      updatedAt: nowUtc,
+      updatedBy: actor.username,
+    });
+  } catch (error) {
+    await transaction.rollback().catch(() => {});
+    throw error;
+  } finally {
+    transaction.close();
   }
-
-  const oldStatus = String(existingRes.rows[0]?.fulfillment_status);
-  const nowUtc = new Date().toISOString();
-  // Authoritative actor derived from session only
-  const actor = req.user!;
-
-  await db.batch([
-    {
-      sql: `UPDATE orders SET
-        fulfillment_status = ?,
-        updated_at = ?,
-        updated_by = ?
-      WHERE id = ?`,
-      args: [newStatus, nowUtc, `${actor.role}:${actor.username}`, orderId],
-    },
-    {
-      sql: `INSERT INTO audit_logs (id, actor_type, actor_id, action, target_type, target_id, details, ip, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      args: [
-        `AUD-${crypto.randomBytes(8).toString('hex')}`,
-        actor.role,
-        actor.username,
-        'ORDER_STATUS_UPDATED',
-        'ORDER',
-        orderId,
-        JSON.stringify({ from: oldStatus, to: newStatus }),
-        req.ip ? String(req.ip) : null,
-        nowUtc,
-      ],
-    },
-  ]);
-
-  res.json({
-    success: true,
-    orderId,
-    oldStatus,
-    newStatus,
-    updatedAt: nowUtc,
-    updatedBy: actor.username,
-  });
 });
 
 // Analytics endpoint

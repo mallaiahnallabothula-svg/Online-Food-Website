@@ -157,6 +157,64 @@ describe('Administrator access and exact order amounts', () => {
     expect(result.body.orders[0]).toMatchObject({ jowarUnitPrice: 30.33, chapathiUnitPrice: 10.11, subtotal: 80.88, deliveryCharge: 15.07, totalAmount: 95.95 });
   });
 });
+
+describe('Owner order-status backend safety', () => {
+  async function statusRequest(orderId: string, status: string, sessionToken: string) {
+    return new Promise<{ status: number; body: any }>((resolve, reject) => {
+      const request: any = {
+        method: 'PATCH',
+        url: `/orders/${orderId}/status`,
+        params: { id: orderId }, body: { status }, headers: { 'x-requested-with': 'XMLHttpRequest' },
+        cookies: { admin_session: sessionToken }, ip: '127.0.0.1',
+      };
+      const response: any = {
+        statusCode: 200,
+        status(code: number) { this.statusCode = code; return this; },
+        json(body: any) { resolve({ status: this.statusCode, body }); return this; },
+      };
+      adminRouter(request, response, error => reject(error || new Error('Status request did not send a response.')));
+    });
+  }
+
+  it('rejects unpaid fulfillment, invalid jumps and terminal changes; preserves cancellation and audit integrity', async () => {
+    const password = 'Only-for-test-admin-password';
+    await getDb().execute({
+      sql: 'INSERT INTO admin_users (id, username, password_hash, role, name, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+      args: ['USR-status', 'admin', await bcrypt.hash(password, 4), 'ADMIN', 'Test admin', new Date().toISOString()],
+    });
+    const login = await loginAdmin('admin', password, '127.0.0.1');
+    expect(login.success).toBe(true);
+    const session = login.sessionCookie!;
+    const first = await createPaymentIntent(checkout);
+    const second = await createPaymentIntent(checkout);
+    const auditCount = async () => Number((await getDb().execute("SELECT COUNT(*) as total FROM audit_logs WHERE action = 'ORDER_STATUS_UPDATED'")).rows[0]?.total ?? 0);
+    const baseline = await auditCount();
+
+    expect((await statusRequest(first.orderId, 'PREPARING', session)).status).toBe(409);
+    expect((await statusRequest(first.orderId, 'DELIVERED', session)).status).toBe(409);
+    expect((await getDb().execute({ sql: 'SELECT fulfillment_status FROM orders WHERE id = ?', args: [first.orderId] })).rows[0]?.fulfillment_status).toBe('RECEIVED');
+    expect(await auditCount()).toBe(baseline);
+
+    const cancelled = await statusRequest(second.orderId, 'CANCELLED', session);
+    expect(cancelled.status).toBe(200);
+    expect((await statusRequest(second.orderId, 'PREPARING', session)).status).toBe(409);
+
+    await transitionOrderToTicketGenerated(first.orderId, {
+      provider: 'mock', providerPaymentId: 'pay_status_fixture', amountPaisa: first.amountPaisa, currency: 'INR',
+    });
+    expect((await statusRequest(first.orderId, 'DELIVERED', session)).status).toBe(409);
+    for (const next of ['PREPARING', 'OUT_FOR_DELIVERY', 'DELIVERED']) {
+      const result = await statusRequest(first.orderId, next, session);
+      expect(result.status).toBe(200);
+      expect(result.body.newStatus).toBe(next);
+    }
+    expect((await statusRequest(first.orderId, 'PREPARING', session)).status).toBe(409);
+    expect((await statusRequest(first.orderId, 'CANCELLED', session)).status).toBe(409);
+    expect((await statusRequest(first.orderId, 'DELIVERED', session)).status).toBe(409);
+    expect(await auditCount()).toBe(baseline + 4);
+  });
+});
+
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
 
 describe('Payment persistence and retry safety', () => {
