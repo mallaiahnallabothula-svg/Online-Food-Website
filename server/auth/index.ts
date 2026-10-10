@@ -16,13 +16,49 @@ export interface AuthenticatedRequest extends Request {
   requestId?: string;
 }
 
-// In-memory brute-force defense tracker (both IP and Account based)
-interface LoginAttemptRecord {
-  attempts: number;
-  lastAttempt: number;
-  lockoutUntil: number;
+// Shared, hashed-key failed-login counters: portable across Vercel instances.
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_MAX_FAILURES = 5;
+const loginHash = (value: string) => crypto.createHash('sha256').update(value).digest('hex');
+
+async function getLoginLock(keys: string[], now: number): Promise<number> {
+  const db = getDb();
+  let lockedUntil = 0;
+  for (const key of keys) {
+    const result = await db.execute({
+      sql: 'SELECT locked_until_ms FROM admin_login_attempts WHERE key_hash = ? LIMIT 1',
+      args: [key],
+    });
+    lockedUntil = Math.max(lockedUntil, Number(result.rows[0]?.locked_until_ms || 0));
+  }
+  return lockedUntil > now ? lockedUntil : 0;
 }
-const loginAttempts = new Map<string, LoginAttemptRecord>();
+
+async function recordLoginFailure(keys: string[], now: number): Promise<void> {
+  const db = getDb();
+  for (const key of keys) {
+    await db.execute({
+      sql: `INSERT INTO admin_login_attempts (key_hash, failed_count, window_expires_at_ms, locked_until_ms)
+            VALUES (?, 1, ?, 0)
+            ON CONFLICT(key_hash) DO UPDATE SET
+              failed_count = CASE WHEN window_expires_at_ms <= ? THEN 1 ELSE failed_count + 1 END,
+              window_expires_at_ms = CASE WHEN window_expires_at_ms <= ? THEN ? ELSE window_expires_at_ms END,
+              locked_until_ms = CASE
+                WHEN locked_until_ms > ? THEN locked_until_ms
+                WHEN window_expires_at_ms <= ? THEN 0
+                WHEN failed_count + 1 >= ? THEN ?
+                ELSE 0 END`,
+      args: [key, now + LOGIN_WINDOW_MS, now, now, now + LOGIN_WINDOW_MS, now, now, LOGIN_MAX_FAILURES, now + LOGIN_WINDOW_MS],
+    });
+  }
+}
+
+async function clearLoginFailures(keys: string[]): Promise<void> {
+  const db = getDb();
+  for (const key of keys) {
+    await db.execute({ sql: 'DELETE FROM admin_login_attempts WHERE key_hash = ?', args: [key] });
+  }
+}
 
 // Periodic automatic cleanup of stale sessions in database (every 15 minutes)
 if (typeof setInterval !== 'undefined') {
@@ -48,28 +84,14 @@ export async function loginAdmin(
 }> {
   const now = Date.now();
   const cleanUsername = (username || '').toLowerCase().trim();
-  const ipKey = `ip:${ip}`;
-  const userKey = `user:${cleanUsername}`;
-
-  // Check IP-based lockout
-  const ipRecord = loginAttempts.get(ipKey) || { attempts: 0, lastAttempt: now, lockoutUntil: 0 };
-  if (ipRecord.lockoutUntil > now) {
-    const waitSeconds = Math.ceil((ipRecord.lockoutUntil - now) / 1000);
+  const keys = [loginHash(`ip:${ip}`), loginHash(`user:${cleanUsername}`)];
+  const lockedUntil = await getLoginLock(keys, now);
+  if (lockedUntil) {
+    const waitSeconds = Math.ceil((lockedUntil - now) / 1000);
     return {
       success: false,
       error: `Too many failed attempts. Account temporarily locked. Please retry in ${waitSeconds} seconds.`,
-      lockedUntil: ipRecord.lockoutUntil,
-    };
-  }
-
-  // Check Account-based lockout
-  const userRecord = loginAttempts.get(userKey) || { attempts: 0, lastAttempt: now, lockoutUntil: 0 };
-  if (userRecord.lockoutUntil > now) {
-    const waitSeconds = Math.ceil((userRecord.lockoutUntil - now) / 1000);
-    return {
-      success: false,
-      error: `Too many failed attempts. Account temporarily locked. Please retry in ${waitSeconds} seconds.`,
-      lockedUntil: userRecord.lockoutUntil,
+      lockedUntil,
     };
   }
 
@@ -86,20 +108,7 @@ export async function loginAdmin(
     // Constant-time compare to prevent user enumeration
     await bcrypt.compare(passwordPlain || '', DUMMY_BCRYPT_HASH);
 
-    ipRecord.attempts += 1;
-    ipRecord.lastAttempt = now;
-    userRecord.attempts += 1;
-    userRecord.lastAttempt = now;
-
-    if (ipRecord.attempts >= 5) {
-      ipRecord.lockoutUntil = now + 15 * 60 * 1000;
-    }
-    if (userRecord.attempts >= 5) {
-      userRecord.lockoutUntil = now + 15 * 60 * 1000;
-    }
-
-    loginAttempts.set(ipKey, ipRecord);
-    loginAttempts.set(userKey, userRecord);
+    await recordLoginFailure(keys, Date.now());
     return { success: false, error: 'Invalid username or password credentials.' };
   }
 
@@ -107,26 +116,12 @@ export async function loginAdmin(
   const isValidPassword = await bcrypt.compare(passwordPlain, String(userRow.password_hash));
 
   if (!isValidPassword) {
-    ipRecord.attempts += 1;
-    ipRecord.lastAttempt = now;
-    userRecord.attempts += 1;
-    userRecord.lastAttempt = now;
-
-    if (ipRecord.attempts >= 5) {
-      ipRecord.lockoutUntil = now + 15 * 60 * 1000;
-    }
-    if (userRecord.attempts >= 5) {
-      userRecord.lockoutUntil = now + 15 * 60 * 1000;
-    }
-
-    loginAttempts.set(ipKey, ipRecord);
-    loginAttempts.set(userKey, userRecord);
+    await recordLoginFailure(keys, Date.now());
     return { success: false, error: 'Invalid username or password credentials.' };
   }
 
-  // Successful login -> Reset rate limiter for both this IP and this account
-  loginAttempts.delete(ipKey);
-  loginAttempts.delete(userKey);
+  // Reset the two persistent counters only on a verified successful login.
+  await clearLoginFailures(keys);
 
   // Generate 256-bit secure session ID (raw token returned only for HttpOnly cookie)
   const rawSessionToken = crypto.randomBytes(32).toString('hex');
