@@ -18,6 +18,15 @@ CREATE TABLE IF NOT EXISTS admin_sessions (
   ip TEXT
 );
 
+-- Additive persistent protection shared by every Vercel instance.
+-- key_hash is SHA-256 of an IP/username namespace; no raw login identifiers stored.
+CREATE TABLE IF NOT EXISTS admin_login_attempts (
+  key_hash TEXT PRIMARY KEY,
+  failed_count INTEGER NOT NULL DEFAULT 0,
+  window_expires_at_ms INTEGER NOT NULL,
+  locked_until_ms INTEGER NOT NULL DEFAULT 0
+);
+
 CREATE TABLE IF NOT EXISTS orders (
   id TEXT PRIMARY KEY,
   public_token_hash TEXT NOT NULL UNIQUE,
