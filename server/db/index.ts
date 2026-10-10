@@ -69,6 +69,14 @@ export async function initDb(): Promise<void> {
     await db.execute(statement);
   }
 
+  // Add the consent flag without rewriting existing reviews or orders.
+  // Existing reviews have consent=0, so the public query hides them safely
+  // even if their original is_public value was 1.
+  const feedbackColumns = await db.execute('PRAGMA table_info(feedback)');
+  if (!feedbackColumns.rows.some(row => String(row.name) === 'publication_consent')) {
+    await db.execute('ALTER TABLE feedback ADD COLUMN publication_consent INTEGER NOT NULL DEFAULT 0');
+  }
+
   // Ensure default administrator exists securely
   const existingAdmin = await db.execute({
     sql: 'SELECT id FROM admin_users WHERE username = ? LIMIT 1',

@@ -95,7 +95,8 @@ CREATE TABLE IF NOT EXISTS feedback (
   customer_name TEXT NOT NULL,
   rating INTEGER NOT NULL CHECK(rating >= 1 AND rating <= 5),
   comment TEXT,
-  is_public INTEGER NOT NULL DEFAULT 1,
+  is_public INTEGER NOT NULL DEFAULT 0,
+  publication_consent INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL
 );
 

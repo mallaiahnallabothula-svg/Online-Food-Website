@@ -88,7 +88,7 @@ customerRouter.post(['/:token/feedback', '/orders/:token/feedback'], customerAct
   }
 
   try {
-    const result = await submitOrderFeedback(token, parsed.data.rating, parsed.data.comment);
+    const result = await submitOrderFeedback(token, parsed.data.rating, parsed.data.comment, parsed.data.publicConsent);
     res.json(result);
   } catch (err: any) {
     res.status(400).json({

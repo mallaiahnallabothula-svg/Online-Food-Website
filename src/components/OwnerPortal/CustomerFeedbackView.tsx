@@ -5,6 +5,9 @@ import { OrderFeedback } from '../../types';
 
 interface CustomerFeedbackViewProps {
   feedbacks: OrderFeedback[];
+  isAdmin?: boolean;
+  updatingFeedbackId?: string | null;
+  onUpdatePublication?: (id: string, isPublic: boolean) => void;
   averageRating: number;
   totalFeedbacks: number;
   ratingDistribution?: Record<number, number>;
@@ -24,6 +27,9 @@ const TAG_TRANSLATIONS: Record<string, string> = {
 
 export const CustomerFeedbackView: React.FC<CustomerFeedbackViewProps> = ({
   feedbacks,
+  isAdmin = false,
+  updatingFeedbackId = null,
+  onUpdatePublication,
   averageRating,
   totalFeedbacks,
   ratingDistribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
@@ -215,6 +221,14 @@ export const CustomerFeedbackView: React.FC<CustomerFeedbackViewProps> = ({
                 </div>
               </div>
 
+              {isAdmin && onUpdatePublication && (
+                <div className="flex items-center gap-3 text-xs font-medium">
+                  <span>{fb.isPublic ? 'Public / పబ్లిక్' : fb.publicConsent ? 'Awaiting owner approval / యజమాని ఆమోదం కోసం' : 'Private — no customer consent / ప్రైవేట్'}</span>
+                  <button type="button" disabled={updatingFeedbackId === fb.id || (!fb.publicConsent && !fb.isPublic)} onClick={() => onUpdatePublication(fb.id, !fb.isPublic)} className="rounded-lg border border-stone-300 px-3 py-1.5 disabled:opacity-50">
+                    {fb.isPublic ? 'Unpublish / తీసివేయండి' : 'Approve / ఆమోదించండి'}
+                  </button>
+                </div>
+              )}
               {/* Aspects Tags */}
               {fb.aspects && fb.aspects.length > 0 && (
                 <div className="flex flex-wrap gap-1.5">

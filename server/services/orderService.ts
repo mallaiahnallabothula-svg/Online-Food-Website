@@ -74,6 +74,7 @@ export interface FormattedOrder {
     comment: string;
     createdAt: string;
     isPublic: boolean;
+    publicConsent: boolean;
   };
   updatedAt: string;
 }
@@ -113,7 +114,7 @@ export function formatCustomerSafeOrder(order: FormattedOrder) {
 async function formatOrderWithFeedback(row: any): Promise<FormattedOrder> {
   const order = formatOrderRow(row);
   const result = await withDbRetry(() => getDb().execute({
-    sql: 'SELECT id, order_id, customer_name, rating, comment, created_at, is_public FROM feedback WHERE order_id = ? LIMIT 1',
+    sql: 'SELECT id, order_id, customer_name, rating, comment, created_at, is_public, publication_consent FROM feedback WHERE order_id = ? LIMIT 1',
     args: [order.id],
   }));
   const feedback = result.rows[0];
@@ -125,7 +126,8 @@ async function formatOrderWithFeedback(row: any): Promise<FormattedOrder> {
       rating: Number(feedback.rating),
       comment: String(feedback.comment || ''),
       createdAt: String(feedback.created_at),
-      isPublic: Boolean(feedback.is_public),
+      isPublic: Boolean(feedback.is_public) && Boolean(feedback.publication_consent),
+      publicConsent: Boolean(feedback.publication_consent),
     };
   }
   return order;
@@ -840,7 +842,8 @@ export async function markOrderReceivedByCustomer(token: string) {
 export async function submitOrderFeedback(
   token: string,
   rating: number,
-  comment?: string
+  comment?: string,
+  publicConsent = false
 ) {
   if (!token || typeof token !== 'string' || token.trim().length === 0) {
     throw new Error('Invalid or missing customer access token');
@@ -879,8 +882,8 @@ export async function submitOrderFeedback(
     const feedbackId = String(existing.rows[0]?.id);
     await withDbRetry(async () =>
       db.execute({
-        sql: 'UPDATE feedback SET rating = ?, comment = ?, created_at = ? WHERE id = ?',
-        args: [rating, comment || null, nowUtc, feedbackId],
+        sql: 'UPDATE feedback SET rating = ?, comment = ?, publication_consent = ?, is_public = 0, created_at = ? WHERE id = ?',
+        args: [rating, comment || null, publicConsent ? 1 : 0, nowUtc, feedbackId],
       })
     );
     return { success: true, feedbackId, updated: true };
@@ -890,9 +893,9 @@ export async function submitOrderFeedback(
   await withDbRetry(async () =>
     db.batch([
       {
-        sql: `INSERT INTO feedback (id, order_id, customer_name, rating, comment, is_public, created_at)
-              VALUES (?, ?, ?, ?, ?, 1, ?)`,
-        args: [feedbackId, orderId, customerName, rating, comment || null, nowUtc],
+        sql: `INSERT INTO feedback (id, order_id, customer_name, rating, comment, is_public, publication_consent, created_at)
+              VALUES (?, ?, ?, ?, ?, 0, ?, ?)`,
+        args: [feedbackId, orderId, customerName, rating, comment || null, publicConsent ? 1 : 0, nowUtc],
       },
       {
         sql: `INSERT INTO audit_logs (id, actor_type, actor_id, action, target_type, target_id, details, created_at)

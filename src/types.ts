@@ -19,6 +19,7 @@ export interface OrderFeedback {
   createdAt: string;
   createdAtIST?: string;
   isPublic?: boolean;
+  publicConsent?: boolean;
 }
 
 export interface KaramSelection {

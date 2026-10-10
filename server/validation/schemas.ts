@@ -71,6 +71,7 @@ export const CustomerFeedbackSchema = z.object({
     .max(500, 'Comment must be under 500 characters')
     .optional()
     .transform((val) => (val ? val.replace(/<[^>]*>?/gm, '').trim() : undefined)),
+  publicConsent: z.boolean().optional().default(false),
 });
 
 export const UpdateOrderStatusSchema = z.object({
