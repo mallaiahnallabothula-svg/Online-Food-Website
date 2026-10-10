@@ -51,12 +51,14 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
   const [customerName, setCustomerName] = useState<string>(
     existingFeedback?.customerName || currentOrder.customer?.name || currentOrder.customerName || ''
   );
+  const [publicConsent, setPublicConsent] = useState<boolean>(existingFeedback?.publicConsent ?? false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [submitSuccess, setSubmitSuccess] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setCurrentOrder(order);
+    setPublicConsent(order.feedback?.publicConsent ?? false);
     setRating(order.feedback?.rating || 5);
     setComments(order.feedback?.comment || '');
     setSelectedTags(order.feedback?.aspects || []);
@@ -147,6 +149,7 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
         body: JSON.stringify({
           rating,
           comment: persistedComment,
+          publicConsent,
         }),
       });
 
@@ -162,7 +165,8 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
           customerName: customerName.trim() || currentOrder.customer?.name || currentOrder.customerName || 'Customer',
           createdAt: nowIso,
           createdAtIST: new Date().toLocaleDateString(language === 'te' ? 'te-IN' : 'en-IN', { timeZone: 'Asia/Kolkata' }),
-          isPublic: true,
+          isPublic: false,
+          publicConsent,
         };
         const updated: Order = {
           ...currentOrder,
@@ -437,6 +441,10 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
               </div>
             )}
 
+            <label className="flex items-start gap-2 text-xs text-stone-700 dark:text-stone-300">
+              <input type="checkbox" checked={publicConsent} onChange={e => setPublicConsent(e.target.checked)} className="mt-0.5" />
+              <span>{language === 'te' ? 'నా పేరు, రేటింగ్, వ్యాఖ్య వెబ్‌సైట్‌లో పబ్లిక్‌గా చూపించడానికి నేను అంగీకరిస్తున్నాను (యజమాని ఆమోదం తర్వాత మాత్రమే).' : 'I agree to publish my name, rating and review on the website, only after owner approval.'}</span>
+            </label>
             {/* Submit / Cancel Buttons */}
             <div className="flex items-center gap-3 pt-1">
               <button
