@@ -276,7 +276,7 @@ adminRouter.get('/analytics', requireAuth, async (req: AuthenticatedRequest, res
 adminRouter.get('/feedback', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const db = getDb();
   const resFb = await db.execute(`
-    SELECT f.id, f.order_id, f.customer_name, f.rating, f.comment, f.is_public, f.created_at, o.customer_mobile
+    SELECT f.id, f.order_id, f.customer_name, f.rating, f.comment, f.is_public, f.publication_consent, f.created_at, o.customer_mobile
     FROM feedback f
     JOIN orders o ON f.order_id = o.id
     ORDER BY f.created_at DESC
@@ -290,10 +290,32 @@ adminRouter.get('/feedback', requireAuth, async (req: AuthenticatedRequest, res:
       customerMobile: String(r.customer_mobile),
       rating: Number(r.rating),
       comment: r.comment ? String(r.comment) : '',
-      isPublic: Boolean(r.is_public),
+      isPublic: Boolean(r.is_public) && Boolean(r.publication_consent),
+      publicConsent: Boolean(r.publication_consent),
       createdAt: String(r.created_at),
     })),
   });
+});
+
+// Owner approval is separate from customer consent and cannot override it.
+adminRouter.patch('/feedback/:id/publication', requireAuth, requireRole(['ADMIN']), requireAdminCsrf, async (req: AuthenticatedRequest, res: Response) => {
+  const feedbackId = String(req.params.id || '');
+  if (!feedbackId || typeof req.body?.isPublic !== 'boolean') {
+    return res.status(400).json({ error: { code: 'VALIDATION_ERROR', message: 'Feedback ID and boolean isPublic are required.' } });
+  }
+  const db = getDb();
+  const existing = await db.execute({ sql: 'SELECT id, publication_consent, is_public FROM feedback WHERE id = ? LIMIT 1', args: [feedbackId] });
+  if (!existing.rows.length) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Review not found.' } });
+  if (req.body.isPublic && !Boolean(existing.rows[0]?.publication_consent)) {
+    return res.status(403).json({ error: { code: 'NO_CONSENT', message: 'Customer has not opted in to public display.' } });
+  }
+  const isPublic = req.body.isPublic ? 1 : 0;
+  await db.execute({ sql: 'UPDATE feedback SET is_public = ? WHERE id = ? AND publication_consent = 1 OR (id = ? AND ? = 0)', args: [isPublic, feedbackId, feedbackId, isPublic] });
+  await db.execute({
+    sql: 'INSERT INTO audit_logs (id, actor_type, actor_id, action, target_type, target_id, details, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    args: [`AUD-${crypto.randomBytes(8).toString('hex')}`, req.user!.role, req.user!.username, 'FEEDBACK_PUBLICATION_UPDATED', 'FEEDBACK', feedbackId, JSON.stringify({ isPublic: Boolean(isPublic) }), new Date().toISOString()],
+  });
+  res.json({ success: true, feedbackId, isPublic: Boolean(isPublic) });
 });
 
 // Audit logs
