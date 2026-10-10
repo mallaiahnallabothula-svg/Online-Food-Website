@@ -84,6 +84,17 @@ export async function getMenuStockRemaining(db: Client, itemId: string, delivery
 export async function reserveStockForPendingOrder(
   db: Client, request: HoldRequest, nowMs = Date.now(),
 ): Promise<{ idempotent: boolean }> {
+  return writeTx(db, tx => reserveStockForPendingOrderInTransaction(tx, request, nowMs));
+}
+
+/**
+ * Reuse the exact same capacity, pricing and hold rules when the future
+ * checkout inserts its order, snapshots and reservations in ONE write tx.
+ * Caller owns commit/rollback. Do not invoke on an untrusted public route.
+ */
+export async function reserveStockForPendingOrderInTransaction(
+  tx: Transaction, request: HoldRequest, nowMs = Date.now(),
+): Promise<{ idempotent: boolean }> {
   const { orderId, deliveryDateIst, lines, expiresAtMs } = request;
   if (!orderId || !validDate(deliveryDateIst) || !Number.isFinite(nowMs) ||
       !Number.isSafeInteger(expiresAtMs) || expiresAtMs <= nowMs ||
@@ -101,7 +112,6 @@ export async function reserveStockForPendingOrder(
     requested.set(line.itemId, line.plates);
   }
 
-  return writeTx(db, async tx => {
     const o = await tx.execute({
       sql: 'SELECT delivery_date, payment_status, order_status, subtotal_paisa, total_amount_paisa, delivery_charge_paisa, currency FROM orders WHERE id = ?',
       args: [orderId],
@@ -175,7 +185,6 @@ export async function reserveStockForPendingOrder(
       });
     }
     return { idempotent: false };
-  });
 }
 
 /** Release only unpaid FAILED/CANCELLED holds; never release confirmed stock. */
