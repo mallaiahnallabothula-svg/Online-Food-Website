@@ -149,7 +149,7 @@ export function buildOwnerOrderCompatibility(
     subtotalPaisa, deliveryChargePaisa, totalAmountPaisa,
     totalUnits: lines.reduce((acc, line) => acc + line.quantity, 0),
     summaryMatchesSavedSubtotal,
-  };
+  } as const;
 
   // Historical tickets remain stored bytes, regardless of later catalog edits.
   // Never synthesize a legacy ticket in this adapter or change old payment flow.
