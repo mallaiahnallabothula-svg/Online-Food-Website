@@ -72,6 +72,14 @@ function aistudioMediaPlugin(): Plugin {
 
 export default defineConfig(() => {
   return {
+    // Keep production customer build identical; preview-only standalone page.
+    build: {
+      rollupOptions: {
+        input: process.env.VERCEL_ENV === 'preview' || process.env.NODE_ENV === 'development'
+          ? { main: path.resolve(__dirname, 'index.html'), menuPreview: path.resolve(__dirname, 'menu-preview.html') }
+          : path.resolve(__dirname, 'index.html'),
+      },
+    },
     plugins: [
       react(),
       tailwindcss(),
