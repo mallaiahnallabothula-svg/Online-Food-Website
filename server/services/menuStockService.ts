@@ -245,7 +245,7 @@ export async function confirmMenuHoldsForVerifiedPayment(
         "SELECT 1 FROM payments WHERE order_id = ? AND status = 'SUCCESS'",
         'AND verified_at IS NOT NULL AND provider_payment_id = ? AND amount_paisa = ? LIMIT 1',
       ].join(' '),
-      args: [orderId, order.provider_payment_id, order.total_amount_paisa],
+      args: [orderId, String(order.provider_payment_id), Number(order.total_amount_paisa)],
     });
     if (!verified.rows.length) throw new Error('Matching verified payment record required');
 
