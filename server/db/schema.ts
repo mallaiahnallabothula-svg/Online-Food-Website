@@ -69,6 +69,39 @@ CREATE TABLE IF NOT EXISTS orders (
   updated_by TEXT NOT NULL
 );
 
+-- New-menu line items use price and name snapshots so later catalog edits
+-- never rewrite the customer receipt or historical payment.
+-- Legacy orders may have zero rows here and keep their old quantity columns.
+CREATE TABLE IF NOT EXISTS order_items (
+  order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE RESTRICT,
+  item_id TEXT NOT NULL,
+  item_name_en TEXT NOT NULL,
+  item_name_te TEXT NOT NULL,
+  meal_period TEXT NOT NULL CHECK(meal_period IN ('MORNING', 'EVENING')),
+  sale_unit TEXT NOT NULL CHECK(sale_unit IN ('PIECE', 'PLATE')),
+  pieces_per_unit INTEGER CHECK(pieces_per_unit IS NULL OR pieces_per_unit > 0),
+  quantity INTEGER NOT NULL CHECK(quantity > 0),
+  unit_price_paisa INTEGER NOT NULL CHECK(unit_price_paisa >= 0),
+  line_total_paisa INTEGER NOT NULL CHECK(line_total_paisa = unit_price_paisa * quantity),
+  created_at_utc TEXT NOT NULL,
+  PRIMARY KEY (order_id, item_id)
+);
+
+-- Prepared for future atomic plate reservation handling.
+-- This PR does not reserve, sell, release or count live inventory.
+-- Each order/item/date can have one status-bearing reservation record.
+CREATE TABLE IF NOT EXISTS menu_stock_reservations (
+  order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE RESTRICT,
+  item_id TEXT NOT NULL,
+  delivery_date TEXT NOT NULL,
+  quantity_plates INTEGER NOT NULL CHECK(quantity_plates > 0),
+  status TEXT NOT NULL CHECK(status IN ('HELD', 'CONFIRMED', 'RELEASED', 'EXPIRED')),
+  held_until_ms INTEGER CHECK(held_until_ms IS NULL OR held_until_ms > 0),
+  created_at_utc TEXT NOT NULL,
+  updated_at_utc TEXT NOT NULL,
+  PRIMARY KEY (order_id, item_id, delivery_date)
+);
+
 CREATE TABLE IF NOT EXISTS payments (
   id TEXT PRIMARY KEY,
   order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
@@ -121,6 +154,8 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   created_at TEXT NOT NULL
 );
 
+CREATE INDEX IF NOT EXISTS idx_order_items_item_id ON order_items(item_id);
+CREATE INDEX IF NOT EXISTS idx_menu_stock_reservations_availability ON menu_stock_reservations(item_id, delivery_date, status, held_until_ms);
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at_utc);
 CREATE INDEX IF NOT EXISTS idx_orders_delivery_date ON orders(delivery_date);
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(fulfillment_status);
