@@ -63,7 +63,7 @@ publicRouter.get(['/public-feedback', '/feedback/approved'], async (req: Request
   const resFb = await db.execute(`
     SELECT customer_name, rating, comment, created_at
     FROM feedback
-    WHERE is_public = 1
+    WHERE is_public = 1 AND publication_consent = 1
     ORDER BY created_at DESC
     LIMIT 6
   `);
