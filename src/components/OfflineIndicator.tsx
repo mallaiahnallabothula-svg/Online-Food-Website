@@ -1,7 +1,9 @@
+import { useUiText } from '../context/useUiText';
 import React, { useEffect, useState } from 'react';
 import { WifiOff, RefreshCw } from 'lucide-react';
 
 export const OfflineIndicator: React.FC = () => {
+  const ui = useUiText();
   const [isOnline, setIsOnline] = useState<boolean>(
     typeof navigator !== 'undefined' ? navigator.onLine : true
   );
@@ -27,7 +29,7 @@ export const OfflineIndicator: React.FC = () => {
       className="fixed bottom-4 left-4 z-50 flex items-center gap-2 rounded-xl bg-amber-900/95 text-amber-100 px-3.5 py-2 text-xs font-medium shadow-xl border border-amber-700 backdrop-blur-md font-telugu animate-in slide-in-from-bottom"
     >
       <WifiOff className="w-4 h-4 text-amber-300 animate-pulse" />
-      <span>ఆఫ్‌లైన్ మోడ్ — కాషింగ్ డేటా అందుబాటులో ఉంది</span>
+      <span>{ui("ఆఫ్‌లైన్ మోడ్ — కాషింగ్ డేటా అందుబాటులో ఉంది")}</span>
     </div>
   );
 };

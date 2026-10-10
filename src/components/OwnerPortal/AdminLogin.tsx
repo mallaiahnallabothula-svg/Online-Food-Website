@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { uiError } from '../../utils/uiCopy';
 import { Lock, RefreshCw, AlertCircle, ShieldCheck, User, Eye, EyeOff } from 'lucide-react';
 import { AdminRole } from '../../types';
 import { BrandEmblem } from '../BrandEmblem';
@@ -89,7 +90,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onCancel
         {error && (
           <div className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900 rounded-xl p-3 mb-4 flex items-start gap-2 text-xs text-red-700 dark:text-red-300">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
-            <span>{error}</span>
+            <span>{uiError(error, language)}</span>
           </div>
         )}
 

@@ -1,3 +1,4 @@
+import { useUiText } from '../context/useUiText';
 import React, { useState, useEffect } from 'react';
 import { CheckCircle2, MessageSquare, Copy, Check, ArrowRight, MapPin, Send, BellRing, ShieldCheck, Key } from 'lucide-react';
 import { Order } from '../types';
@@ -12,15 +13,14 @@ interface OrderConfirmationProps {
 }
 
 export const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ order, onNewOrder, onOrderUpdated }) => {
+  const ui = useUiText();
   const { t, language } = useLanguage();
   const [currentOrder, setCurrentOrder] = useState<Order>(order);
   const [copied, setCopied] = useState<boolean>(false);
   const [copiedToken, setCopiedToken] = useState<boolean>(false);
   const [autoOpened, setAutoOpened] = useState<boolean>(false);
-  const ticketText = currentOrder.ticketText || buildWhatsAppTicket(currentOrder, language);
-  const whatsappUrl = currentOrder.ticketText
-    ? `https://wa.me/${OWNER_PHONE}?text=${encodeURIComponent(currentOrder.ticketText)}`
-    : getWhatsAppUrl(currentOrder, language);
+  const ticketText = buildWhatsAppTicket(currentOrder, language);
+  const whatsappUrl = getWhatsAppUrl(currentOrder, language);
 
   const totalPaid = currentOrder.totalAmount || currentOrder.totalPaid || 0;
   const karivepakuGrams = currentOrder.karamQuantities?.karivepakuGrams ?? currentOrder.karivepakuGrams ?? 0;
@@ -102,7 +102,7 @@ export const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ order, onN
                 className="px-2.5 py-1 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 rounded-lg text-stone-700 dark:text-stone-300 font-bold hover:bg-stone-100 transition-colors flex items-center gap-1 cursor-pointer shrink-0"
               >
                 {copiedToken ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copiedToken ? 'కాపీ అయింది' : 'కీ కాపీ చేయి'}</span>
+                <span>{copiedToken ? ui("కాపీ అయింది") : ui("కీ కాపీ చేయి")}</span>
               </button>
             </div>
           )}
@@ -191,7 +191,7 @@ export const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ order, onN
                 className="text-xs text-amber-800 dark:text-amber-400 hover:underline flex items-center gap-1 font-bold"
               >
                 {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copied ? 'కాపీ అయింది' : 'రసీదు కాపీ చేయి'}</span>
+                <span>{copied ? ui("కాపీ అయింది") : ui("రసీదు కాపీ చేయి")}</span>
               </button>
             </div>
 

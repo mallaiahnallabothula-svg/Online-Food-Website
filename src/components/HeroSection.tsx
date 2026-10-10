@@ -1,3 +1,4 @@
+import { useUiText } from '../context/useUiText';
 import React from 'react';
 import { ArrowDown, CheckCircle2, Sparkles, MapPin, Clock, ShieldCheck, Smartphone, Heart, Flame } from 'lucide-react';
 import { BrandEmblem } from './BrandEmblem';
@@ -16,6 +17,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
   onOpenInstallModal,
   isInstalled = false,
 }) => {
+  const ui = useUiText();
   const { t, language } = useLanguage();
 
   return (
@@ -199,9 +201,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   <span>{language === 'te' ? '100% పల్లెటూరి సంప్రదాయం' : '100% Traditional Village Craft'}</span>
                 </span>
-                <span className="font-mono text-[11px] text-stone-500">
-                  కొల్లూరు • Kolluru
-                </span>
+                <span className="font-mono text-[11px] text-stone-500">{" "}{ui("కొల్లూరు • Kolluru")}{" "}</span>
               </div>
 
             </div>

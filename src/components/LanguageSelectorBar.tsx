@@ -1,8 +1,10 @@
+import { useUiText } from '../context/useUiText';
 import React from 'react';
 import { Languages, Check } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 export const LanguageSelectorBar: React.FC = () => {
+  const ui = useUiText();
   const { language, setLanguage } = useLanguage();
 
   return (
@@ -10,9 +12,7 @@ export const LanguageSelectorBar: React.FC = () => {
       <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-2 sm:gap-4">
         <div className="flex items-center gap-2">
           <Languages className="w-4 h-4 text-amber-300 flex-shrink-0" />
-          <span className="font-semibold tracking-wide">
-            భాషను ఎంచుకోండి / Choose Language:
-          </span>
+          <span className="font-semibold tracking-wide">{" "}{ui("భాషను ఎంచుకోండి / Choose Language:")}{" "}</span>
         </div>
 
         <div className="flex items-center gap-1.5 bg-amber-950/70 p-1 rounded-lg border border-amber-700/50 shadow-inner">

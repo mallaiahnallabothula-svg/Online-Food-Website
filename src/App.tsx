@@ -1,3 +1,4 @@
+import { useUiText } from './context/useUiText';
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
@@ -20,6 +21,7 @@ import { useLanguage } from './context/LanguageContext';
 import { Phone, Clock, Lock, Smartphone } from 'lucide-react';
 
 export default function App() {
+  const ui = useUiText();
   const { t, language } = useLanguage();
 
   // Dark mode state
@@ -315,7 +317,7 @@ export default function App() {
                 }
               }}
               id="footer-owner-access-btn"
-              title="అధీకృత యజమాని యాక్సెస్ మాత్రమే"
+              title={ui("అధీకృత యజమాని యాక్సెస్ మాత్రమే")}
               className="inline-flex items-center gap-1 text-[11px] text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors cursor-pointer"
             >
               <Lock className="w-3 h-3 text-stone-400" />

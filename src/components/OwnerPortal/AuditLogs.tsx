@@ -1,3 +1,4 @@
+import { useUiText } from '../../context/useUiText';
 import React from 'react';
 import { History, CheckCircle2 } from 'lucide-react';
 import { AuditLog } from '../../types';
@@ -7,20 +8,18 @@ interface AuditLogsProps {
 }
 
 export const AuditLogs: React.FC<AuditLogsProps> = ({ logs }) => {
+  const ui = useUiText();
   return (
     <div className="bg-white dark:bg-[#211E1A] rounded-2xl border border-stone-200 dark:border-stone-800 shadow-xs overflow-hidden font-telugu">
       <div className="p-6 border-b border-stone-100 dark:border-stone-800 flex items-center justify-between">
         <div>
           <h3 className="text-lg font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
             <History className="w-5 h-5 text-[#78350F] dark:text-amber-400" />
-            <span>లావాదేవీల ఆడిట్ రికార్డులు (Transaction & Security Audit Logs)</span>
+            <span>{ui("లావాదేవీల ఆడిట్ రికార్డులు (Transaction & Security Audit Logs)")}</span>
           </h3>
-          <p className="text-xs text-stone-500 mt-0.5">
-            సర్వర్ ద్వారా నమోదైన అన్ని చెల్లింపులు మరియు ఆర్డర్ స్థితి మార్పుల వివరాలు
-          </p>
+          <p className="text-xs text-stone-500 mt-0.5">{" "}{ui("సర్వర్ ద్వారా నమోదైన అన్ని చెల్లింపులు మరియు ఆర్డర్ స్థితి మార్పుల వివరాలు")}{" "}</p>
         </div>
-        <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300">
-          మొత్తం రికార్డులు: {logs.length}
+        <span className="text-xs font-mono font-semibold px-2.5 py-1 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300">{" "}{ui("మొత్తం రికార్డులు:")}{" "}{logs.length}
         </span>
       </div>
 
@@ -28,19 +27,17 @@ export const AuditLogs: React.FC<AuditLogsProps> = ({ logs }) => {
         <table className="w-full text-left text-xs">
           <thead className="bg-stone-50 dark:bg-stone-900/60 text-stone-600 dark:text-stone-400 border-b border-stone-200 dark:border-stone-800 uppercase tracking-wider font-mono">
             <tr>
-              <th className="px-5 py-3.5">సమయం (IST / UTC)</th>
-              <th className="px-5 py-3.5">రకం / చర్య</th>
-              <th className="px-5 py-3.5">లక్ష్యం / ఆర్డర్</th>
-              <th className="px-5 py-3.5">వివరాలు</th>
-              <th className="px-5 py-3.5">కర్త (Actor)</th>
+              <th className="px-5 py-3.5">{ui("సమయం (IST / UTC)")}</th>
+              <th className="px-5 py-3.5">{ui("రకం / చర్య")}</th>
+              <th className="px-5 py-3.5">{ui("లక్ష్యం / ఆర్డర్")}</th>
+              <th className="px-5 py-3.5">{ui("వివరాలు")}</th>
+              <th className="px-5 py-3.5">{ui("కర్త (Actor)")}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-100 dark:divide-stone-800">
             {logs.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-5 py-8 text-center text-stone-500">
-                  ఇంకా ఎలాంటి ఆడిట్ రికార్డులు నమోదు కాలేదు.
-                </td>
+                <td colSpan={5} className="px-5 py-8 text-center text-stone-500">{" "}{ui("ఇంకా ఎలాంటి ఆడిట్ రికార్డులు నమోదు కాలేదు.")}{" "}</td>
               </tr>
             ) : (
               logs.map((log) => {

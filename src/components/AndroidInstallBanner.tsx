@@ -1,3 +1,4 @@
+import { useUiText } from '../context/useUiText';
 import React, { useState } from 'react';
 import { Smartphone, Download, X, Sparkles } from 'lucide-react';
 import { BrandEmblem } from './BrandEmblem';
@@ -12,6 +13,7 @@ export const AndroidInstallBanner: React.FC<AndroidInstallBannerProps> = ({
   isInstalled,
   onOpenModal,
 }) => {
+  const ui = useUiText();
   const [dismissed, setDismissed] = useState<boolean>(false);
   const { language } = useLanguage();
 
@@ -62,7 +64,7 @@ export const AndroidInstallBanner: React.FC<AndroidInstallBannerProps> = ({
             onClick={() => setDismissed(true)}
             id="dismiss-install-banner-btn"
             className="p-1 rounded-md text-amber-300/80 hover:text-white hover:bg-black/20 transition-colors cursor-pointer"
-            title="మూసివేయండి"
+            title={ui("మూసివేయండి")}
           >
             <X className="w-4 h-4" />
           </button>

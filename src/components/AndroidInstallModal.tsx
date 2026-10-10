@@ -1,3 +1,4 @@
+import { useUiText } from '../context/useUiText';
 import React from 'react';
 import { X, Download, Smartphone, CheckCircle2, Share2, Sparkles, ExternalLink, ShieldCheck } from 'lucide-react';
 import { BrandEmblem } from './BrandEmblem';
@@ -18,6 +19,7 @@ export const AndroidInstallModal: React.FC<AndroidInstallModalProps> = ({
   onInstall,
   isIOS = false,
 }) => {
+  const ui = useUiText();
   const { language, t } = useLanguage();
 
   if (!isOpen) return null;
@@ -65,8 +67,7 @@ export const AndroidInstallModal: React.FC<AndroidInstallModalProps> = ({
                 {t.brandName}
               </h3>
               <p className="text-xs text-amber-200/90 font-sans">
-                {t.brandTagline} • కొల్లూరు
-              </p>
+                {t.brandTagline}{" "}{ui("• కొల్లూరు")}{" "}</p>
             </div>
           </div>
         </div>
@@ -138,8 +139,7 @@ export const AndroidInstallModal: React.FC<AndroidInstallModalProps> = ({
                   3
                 </span>
                 <span>
-                  <strong>"Install App"</strong> లేదా <strong>"Add to Home screen"</strong> ఎంచుకోండి.
-                </span>
+                  <strong>"Install App"</strong>{" "}{ui("లేదా")}{" "}<strong>"Add to Home screen"</strong>{" "}{ui("ఎంచుకోండి.")}{" "}</span>
               </li>
             </ol>
           </div>

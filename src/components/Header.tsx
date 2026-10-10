@@ -1,3 +1,4 @@
+import { useUiText } from '../context/useUiText';
 import React from 'react';
 import { Phone, Moon, Sun, ShoppingBag, Smartphone, MessageSquareHeart, Languages } from 'lucide-react';
 import { OrderingHoursStatus } from '../types';
@@ -27,6 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenOrderTracker,
   isInstalled = false,
 }) => {
+  const ui = useUiText();
   const { language, setLanguage, t } = useLanguage();
 
   return (
@@ -80,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={() => setLanguage(language === 'te' ? 'en' : 'te')}
               id="header-lang-toggle-btn"
               className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-md text-amber-950 dark:text-amber-100 hover:bg-white/60 dark:hover:bg-stone-700 transition-colors cursor-pointer"
-              title="భాష మార్చండి / Change Language"
+              title={ui("భాష మార్చండి / Change Language")}
             >
               <Languages className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
               <span>{language === 'te' ? 'English' : 'తెలుగు'}</span>
@@ -93,7 +95,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onOpenInstallModal}
               id="header-install-app-btn"
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs transition-all font-telugu cursor-pointer"
-              title="Android యాప్ డౌన్‌లోడ్ / Install App"
+              title={ui("Android యాప్ డౌన్‌లోడ్ / Install App")}
             >
               <Smartphone className="w-3.5 h-3.5 text-emerald-200" />
               <span className="hidden sm:inline">{t.androidAppBtn}</span>
@@ -107,7 +109,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onOpenOrderTracker}
               id="header-track-order-btn"
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg text-[#78350F] dark:text-amber-300 bg-amber-50 hover:bg-amber-100 dark:bg-stone-800 dark:hover:bg-stone-700 border border-amber-300/80 dark:border-stone-700 transition-colors font-telugu cursor-pointer"
-              title="నా ఆర్డర్లు — ఆర్డర్ స్థితి చూడండి / My Orders — Track your order"
+              title={ui("నా ఆర్డర్లు — ఆర్డర్ స్థితి చూడండి / My Orders — Track your order")}
             >
               <ShoppingBag className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
               <span className="hidden sm:inline">{t.trackFeedbackBtn}</span>
@@ -120,7 +122,7 @@ export const Header: React.FC<HeaderProps> = ({
             href="tel:+918499865803"
             id="owner-phone-call-btn"
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg text-amber-950 bg-amber-100/80 hover:bg-amber-200/80 dark:bg-stone-800 dark:text-stone-200 border border-amber-900/15 dark:border-stone-700 transition-colors"
-            title="యజమాని సంప్రదించండి"
+            title={ui("యజమాని సంప్రదించండి")}
           >
             <Phone className="w-3.5 h-3.5 text-[#78350F] dark:text-amber-400" />
             <span className="hidden sm:inline font-mono font-medium">+91 8499865803</span>
@@ -133,7 +135,7 @@ export const Header: React.FC<HeaderProps> = ({
             id="toggle-theme-btn"
             aria-label="Toggle Dark Mode"
             className="p-2 rounded-lg text-stone-700 dark:text-stone-300 hover:bg-amber-100/60 dark:hover:bg-stone-800 transition-colors cursor-pointer"
-            title={darkMode ? 'లైట్ మోడ్' : 'డార్క్ మోడ్'}
+            title={darkMode ? ui("లైట్ మోడ్") : ui("డార్క్ మోడ్")}
           >
             {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-stone-700" />}
           </button>

@@ -1,3 +1,6 @@
+import { uiError } from '../utils/uiCopy';
+import { useLanguage } from '../context/LanguageContext';
+import { useUiText } from '../context/useUiText';
 import React, { useState, useEffect } from 'react';
 import {
   Star,
@@ -32,6 +35,8 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
   onOrderUpdated,
   className = '',
 }) => {
+  const ui = useUiText();
+  const { language } = useLanguage();
   const [currentOrder, setCurrentOrder] = useState<Order>(order);
   const [isMarkingReceived, setIsMarkingReceived] = useState<boolean>(false);
   const [markSuccessMsg, setMarkSuccessMsg] = useState<string | null>(null);
@@ -69,7 +74,7 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
   // Handler: Customer marks order as received
   const handleMarkAsReceived = async () => {
     if (!currentOrder.customerAccessToken) {
-      setErrorMessage('ట్రాకింగ్ కీతో ఆర్డర్ తెరిచి మళ్లీ ప్రయత్నించండి (A tracking key is required).');
+      setErrorMessage(ui("ట్రాకింగ్ కీతో ఆర్డర్ తెరిచి మళ్లీ ప్రయత్నించండి (A tracking key is required)."));
       return;
     }
     setIsMarkingReceived(true);
@@ -92,14 +97,14 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
         };
         setCurrentOrder(updated);
         onOrderUpdated?.(updated);
-        setMarkSuccessMsg('ఆర్డర్ అందినట్లుగా ధృవీకరించబడింది! దయచేసి క్రింద మీ రేటింగ్ మరియు అభిప్రాయాన్ని తెలపండి.');
+        setMarkSuccessMsg(ui("ఆర్డర్ అందినట్లుగా ధృవీకరించబడింది! దయచేసి క్రింద మీ రేటింగ్ మరియు అభిప్రాయాన్ని తెలపండి."));
         setIsEditing(true);
       } else {
         const err = await res.json().catch(() => ({}));
-        setErrorMessage(err.error?.message || err.message || 'ఆర్డర్ స్థితి అప్‌డేట్ చేయడంలో లోపం ఏర్పడింది.');
+        setErrorMessage(err.error?.message || err.message || ui("ఆర్డర్ స్థితి అప్‌డేట్ చేయడంలో లోపం ఏర్పడింది."));
       }
     } catch {
-      setErrorMessage('సర్వర్ కనెక్షన్ లోపం. దయచేసి మళ్లీ ప్రయత్నించండి.');
+      setErrorMessage(ui("సర్వర్ కనెక్షన్ లోపం. దయచేసి మళ్లీ ప్రయత్నించండి."));
     } finally {
       setIsMarkingReceived(false);
     }
@@ -116,18 +121,18 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
   const handleSubmitFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentOrder.customerAccessToken) {
-      setErrorMessage('ట్రాకింగ్ కీతో ఆర్డర్ తెరిచి మళ్లీ ప్రయత్నించండి (A tracking key is required).');
+      setErrorMessage(ui("ట్రాకింగ్ కీతో ఆర్డర్ తెరిచి మళ్లీ ప్రయత్నించండి (A tracking key is required)."));
       return;
     }
     if (!rating) {
-      setErrorMessage('దయచేసి నక్షత్రాల రేటింగ్ ఎంచుకోండి.');
+      setErrorMessage(ui("దయచేసి నక్షత్రాల రేటింగ్ ఎంచుకోండి."));
       return;
     }
 
-    const highlights = FEEDBACK_TAGS.filter(tag => selectedTags.includes(tag.id)).map(tag => tag.label);
+    const highlights = FEEDBACK_TAGS.filter(tag => selectedTags.includes(tag.id)).map(tag => ui(tag.label));
     const persistedComment = [comments.trim(), highlights.length ? `Highlights: ${highlights.join('; ')}` : ''].filter(Boolean).join('\n');
     if (persistedComment.length > 500) {
-      setErrorMessage('అభిప్రాయం మరియు హైలైట్లు కలిపి 500 అక్షరాలలోపు ఉండాలి (Maximum 500 characters including highlights).');
+      setErrorMessage(ui("అభిప్రాయం మరియు హైలైట్లు కలిపి 500 అక్షరాలలోపు ఉండాలి (Maximum 500 characters including highlights)."));
       return;
     }
 
@@ -156,7 +161,7 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
           aspects: selectedTags,
           customerName: customerName.trim() || currentOrder.customer?.name || currentOrder.customerName || 'Customer',
           createdAt: nowIso,
-          createdAtIST: new Date().toLocaleDateString('te-IN', { timeZone: 'Asia/Kolkata' }),
+          createdAtIST: new Date().toLocaleDateString(language === 'te' ? 'te-IN' : 'en-IN', { timeZone: 'Asia/Kolkata' }),
           isPublic: true,
         };
         const updated: Order = {
@@ -170,10 +175,10 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
         setTimeout(() => setSubmitSuccess(false), 5000);
       } else {
         const err = await res.json().catch(() => ({}));
-        setErrorMessage(err.error?.message || err.message || 'ఫీడ్‌బ్యాక్ సమర్పించడంలో లోపం ఏర్పడింది.');
+        setErrorMessage(err.error?.message || err.message || ui("ఫీడ్‌బ్యాక్ సమర్పించడంలో లోపం ఏర్పడింది."));
       }
     } catch {
-      setErrorMessage('సర్వర్ కనెక్షన్ లోపం. దయచేసి మళ్లీ ప్రయత్నించండి.');
+      setErrorMessage(ui("సర్వర్ కనెక్షన్ లోపం. దయచేసి మళ్లీ ప్రయత్నించండి."));
     } finally {
       setIsSubmitting(false);
     }
@@ -191,11 +196,8 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
             <PackageCheck className="w-4 h-4" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-stone-900 dark:text-stone-100">
-              డెలివరీ ధృవీకరణ & కస్టమర్ అభిప్రాయం (Delivery & Feedback)
-            </h4>
-            <p className="text-[11px] text-stone-500 dark:text-stone-400">
-              ఆర్డర్ నంబర్: <span className="font-mono font-semibold">{currentOrder.id}</span>
+            <h4 className="text-sm font-bold text-stone-900 dark:text-stone-100">{" "}{ui("డెలివరీ ధృవీకరణ & కస్టమర్ అభిప్రాయం (Delivery & Feedback)")}{" "}</h4>
+            <p className="text-[11px] text-stone-500 dark:text-stone-400">{" "}{ui("ఆర్డర్ నంబర్:")}{" "}<span className="font-mono font-semibold">{currentOrder.id}</span>
             </p>
           </div>
         </div>
@@ -203,7 +205,7 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
         {isReceived && (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>చేరింది (Delivered)</span>
+            <span>{ui("చేరింది (Delivered)")}</span>
           </span>
         )}
       </div>
@@ -213,32 +215,22 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
         <div className="bg-[#FAF4EA] dark:bg-stone-900/70 rounded-xl p-4 border border-amber-900/10 dark:border-stone-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-300">
-                ప్రస్తుత డెలివరీ స్థితి:
-              </span>
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-900 dark:text-amber-300">{" "}{ui("ప్రస్తుత డెలివరీ స్థితి:")}{" "}</span>
               {currentOrder.fulfillmentStatus === 'DELIVERED' || isReceived ? (
-                <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">
-                  డెలివరీ పూర్తయింది
-                </span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300">{" "}{ui("డెలివరీ పూర్తయింది")}{" "}</span>
               ) : currentOrder.fulfillmentStatus === 'OUT_FOR_DELIVERY' ? (
-                <span className="text-xs font-bold px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
-                  డెలివరీ కోసం బయలుదేరింది (6-8 PM)
-                </span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">{" "}{ui("డెలివరీ కోసం బయలుదేరింది (6-8 PM)")}{" "}</span>
               ) : currentOrder.fulfillmentStatus === 'PREPARING' ? (
-                <span className="text-xs font-bold px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">
-                  తయారవుతోంది
-                </span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300">{" "}{ui("తయారవుతోంది")}{" "}</span>
               ) : (
-                <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">
-                  నమోదైంది (కొత్తది)
-                </span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300">{" "}{ui("నమోదైంది (కొత్తది)")}{" "}</span>
               )}
             </div>
 
             <p className="text-xs sm:text-sm text-stone-700 dark:text-stone-300 mt-1">
               {isReceived
-                ? `మీరు ఈ ఆర్డర్ అందుకున్నట్లు విజయవంతంగా రికార్డైంది (${currentOrder.receivedAtIST || currentOrder.receivedAt || currentOrder.createdAtIST || ''}).`
-                : 'మీ చేతికి వేడివేడి జొన్న రొట్టెల ఆర్డర్ అందిన తర్వాత క్రింది బటన్ నొక్కండి.'}
+                ? (language === 'te' ? 'మీరు ఈ ఆర్డర్ అందుకున్నట్లు రికార్డైంది.' : 'You have confirmed receipt of this order.')
+                : ui("మీ చేతికి వేడివేడి జొన్న రొట్టెల ఆర్డర్ అందిన తర్వాత క్రింది బటన్ నొక్కండి.")}
             </p>
           </div>
 
@@ -254,19 +246,19 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
               {isMarkingReceived ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>నమోదవుతోంది...</span>
+                  <span>{ui("నమోదవుతోంది...")}</span>
                 </>
               ) : (
                 <>
                   <ThumbsUp className="w-4 h-4" />
-                  <span>రొట్టెలు అందాయి (Confirm Received)</span>
+                  <span>{ui("రొట్టెలు అందాయి (Confirm Received)")}</span>
                 </>
               )}
             </button>
           ) : (
             <div className="flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/50 px-3 py-1.5 rounded-lg border border-emerald-200 dark:border-emerald-800/80">
               <CheckCircle2 className="w-4 h-4" />
-              <span>అందుకున్నారు</span>
+              <span>{ui("అందుకున్నారు")}</span>
             </div>
           )}
         </div>
@@ -274,7 +266,7 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
         {markSuccessMsg && (
           <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>{markSuccessMsg}</span>
+            <span>{ui(markSuccessMsg)}</span>
           </div>
         )}
 
@@ -284,9 +276,7 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
           <div className="bg-amber-50/50 dark:bg-stone-900 rounded-xl p-5 border border-amber-200/60 dark:border-stone-800 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-stone-700 dark:text-stone-300">
-                  మీరు సమర్పించిన రేటింగ్:
-                </span>
+                <span className="text-xs font-bold text-stone-700 dark:text-stone-300">{" "}{ui("మీరు సమర్పించిన రేటింగ్:")}{" "}</span>
                 <div className="flex text-amber-500">
                   {[1, 2, 3, 4, 5].map((s) => (
                     <Star
@@ -311,7 +301,7 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
                 className="inline-flex items-center gap-1 text-xs text-[#78350F] dark:text-amber-400 hover:underline font-semibold cursor-pointer"
               >
                 <Edit3 className="w-3 h-3" />
-                <span>సవరించండి</span>
+                <span>{ui("సవరించండి")}</span>
               </button>
             </div>
 
@@ -325,7 +315,7 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
                       key={tagId}
                       className="px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 dark:bg-stone-800 text-[#78350F] dark:text-amber-300 border border-amber-200 dark:border-stone-700"
                     >
-                      {tag.label}
+                      {ui(tag.label)}
                     </span>
                   ) : null;
                 })}
@@ -340,7 +330,7 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
             )}
 
             <div className="flex items-center justify-between text-[11px] text-stone-500 dark:text-stone-400 pt-1 border-t border-amber-200/50 dark:border-stone-800 font-mono">
-              <span>సమర్పించినవారు: {currentOrder.feedback.customerName || 'కస్టమర్'}</span>
+              <span>{ui("సమర్పించినవారు:")}{" "}{currentOrder.feedback.customerName || ui("కస్టమర్")}</span>
               <span>{currentOrder.feedback.createdAtIST || currentOrder.feedback.createdAt?.slice(0, 10)}</span>
             </div>
           </div>
@@ -349,11 +339,9 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
           <form onSubmit={handleSubmitFeedback} className="space-y-5" id="customer-feedback-form">
             <div>
               <div className="flex items-center justify-between">
-                <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
-                  జొన్న రొట్టెల అనుభవం ఎలా ఉంది? (Rate your experience)
-                </label>
+                <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">{" "}{ui("జొన్న రొట్టెల అనుభవం ఎలా ఉంది? (Rate your experience)")}{" "}</label>
                 <span className="text-xs font-mono font-bold text-amber-700 dark:text-amber-400">
-                  {rating === 5 ? 'అద్భుతం! (5/5)' : rating === 4 ? 'చాలా బాగుంది (4/5)' : rating === 3 ? 'బాగుంది (3/5)' : `${rating}/5`}
+                  {rating === 5 ? ui("అద్భుతం! (5/5)") : rating === 4 ? ui("చాలా బాగుంది (4/5)") : rating === 3 ? ui("బాగుంది (3/5)") : `${rating}/5`}
                 </span>
               </div>
 
@@ -368,7 +356,7 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
                     onMouseLeave={() => setHoverRating(0)}
                     id={`feedback-star-${star}`}
                     className="p-1 rounded-lg hover:scale-110 active:scale-95 transition-transform focus:outline-hidden focus:ring-2 focus:ring-amber-500 cursor-pointer"
-                    aria-label={`${star} నక్షత్రాలు`}
+                    aria-label={language === 'te' ? `${star} నక్షత్రాలు` : `${star} stars`}
                   >
                     <Star
                       className={`w-7 h-7 sm:w-8 sm:h-8 transition-colors ${
@@ -384,9 +372,7 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
 
             {/* Quick Experience Tags */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-2">
-                మీకు బాగా నచ్చిన విషయాలు (Select Highlights):
-              </label>
+              <label className="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-2">{" "}{ui("మీకు బాగా నచ్చిన విషయాలు (Select Highlights):")}{" "}</label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {FEEDBACK_TAGS.map((tag) => {
                   const isSelected = selectedTags.includes(tag.id);
@@ -401,7 +387,7 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
                           : 'bg-stone-50 dark:bg-stone-900 border-stone-200 dark:border-stone-800 text-stone-700 dark:text-stone-300 hover:border-amber-400'
                       }`}
                     >
-                      <span>{tag.label}</span>
+                      <span>{ui(tag.label)}</span>
                       {isSelected ? <CheckCircle2 className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400 shrink-0 ml-1" /> : null}
                     </button>
                   );
@@ -414,16 +400,14 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
               <label
                 htmlFor="feedback-comments-input"
                 className="block text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300 mb-1"
-              >
-                మరిన్ని అభిప్రాయాలు లేదా సూచనలు (Comments / Suggestions):
-              </label>
+              >{" "}{ui("మరిన్ని అభిప్రాయాలు లేదా సూచనలు (Comments / Suggestions):")}{" "}</label>
               <textarea
                 id="feedback-comments-input"
                 rows={3}
                 maxLength={500}
                 value={comments}
                 onChange={(e) => setComments(e.target.value)}
-                placeholder="ఉదా: రొట్టెలు చాలా మెత్తగా ఉన్నాయి, కరివేపాకు కారం అదిరిపోయింది..."
+                placeholder={ui("ఉదా: రొట్టెలు చాలా మెత్తగా ఉన్నాయి, కరివేపాకు కారం అదిరిపోయింది...")}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 text-xs focus:ring-2 focus:ring-amber-600 focus:border-amber-600 font-telugu"
               />
             </div>
@@ -434,15 +418,13 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
                 <label
                   htmlFor="feedback-name-input"
                   className="block text-xs font-semibold text-stone-600 dark:text-stone-400 mb-1"
-                >
-                  మీ పేరు (Name for review):
-                </label>
+                >{" "}{ui("మీ పేరు (Name for review):")}{" "}</label>
                 <input
                   type="text"
                   id="feedback-name-input"
                   value={customerName}
                   readOnly
-                  placeholder="మీ పేరు"
+                  placeholder={ui("మీ పేరు")}
                   className="w-full px-3.5 py-2 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 text-xs font-telugu"
                 />
               </div>
@@ -451,7 +433,7 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
             {/* Error Message */}
             {errorMessage && (
               <div className="p-3 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 rounded-xl text-xs text-red-800 dark:text-red-200 font-semibold">
-                {errorMessage}
+                {uiError(errorMessage, language)}
               </div>
             )}
 
@@ -466,12 +448,12 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>సమర్పిస్తోంది...</span>
+                    <span>{ui("సమర్పిస్తోంది...")}</span>
                   </>
                 ) : (
                   <>
                     <Send className="w-4 h-4" />
-                    <span>అభిప్రాయం సమర్పించండి (Submit Review)</span>
+                    <span>{ui("అభిప్రాయం సమర్పించండి (Submit Review)")}</span>
                   </>
                 )}
               </button>
@@ -481,9 +463,7 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
                   type="button"
                   onClick={() => setIsEditing(false)}
                   className="px-4 py-2.5 rounded-xl font-semibold text-xs text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors cursor-pointer"
-                >
-                  రద్దు చేయండి (Cancel)
-                </button>
+                >{" "}{ui("రద్దు చేయండి (Cancel)")}{" "}</button>
               )}
             </div>
           </form>
@@ -492,7 +472,7 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
         {submitSuccess && (
           <div className="p-3 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 rounded-xl text-xs text-emerald-800 dark:text-emerald-300 font-bold flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>మీ విలువైన అభిప్రాయానికి చాలా ధన్యవాదాలు! ఇది ఇతర కస్టమర్లకు సహాయపడుతుంది.</span>
+            <span>{ui("మీ విలువైన అభిప్రాయానికి చాలా ధన్యవాదాలు! ఇది ఇతర కస్టమర్లకు సహాయపడుతుంది.")}</span>
           </div>
         )}
       </div>

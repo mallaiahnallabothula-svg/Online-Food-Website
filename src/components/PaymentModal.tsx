@@ -1,3 +1,4 @@
+import { uiError } from '../utils/uiCopy';
 import React, { useEffect, useRef, useState } from 'react';
 import { X, Lock, RefreshCw, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import type { Order } from '../types';
@@ -111,16 +112,16 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, ord
     <div className="bg-white dark:bg-[#211E1A] w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden font-telugu my-8">
       <div className="bg-[#78350F] p-5 text-white flex items-center justify-between">
         <div className="flex items-center gap-3"><BrandEmblem size="sm" /><h3 id="payment-title" className="font-bold text-lg">{te ? 'సురక్షిత ఆన్‌లైన్ చెల్లింపు' : 'Secure Online Payment'}</h3></div>
-        <button onClick={onClose} aria-label="Close payment" className="p-2 rounded-full hover:bg-white/20"><X className="w-5 h-5" /></button>
+        <button onClick={onClose} aria-label={te ? 'చెల్లింపు మూసివేయి' : 'Close payment'} className="p-2 rounded-full hover:bg-white/20"><X className="w-5 h-5" /></button>
       </div>
       <div className="p-6 space-y-5">
         {loading ? <div className="text-center py-10"><RefreshCw className="animate-spin mx-auto mb-3" /><p>{te ? 'చెల్లింపు వివరాలు పొందుతోంది...' : 'Preparing checkout...'}</p></div> : <>
-          {error && <div role="alert" className="rounded-xl bg-red-50 text-red-800 p-3 text-sm flex gap-2"><AlertTriangle className="w-5 h-5 shrink-0" />{error}</div>}
+          {error && <div role="alert" className="rounded-xl bg-red-50 text-red-800 p-3 text-sm flex gap-2"><AlertTriangle className="w-5 h-5 shrink-0" />{uiError(error, language)}</div>}
           {!intent && error && <button onClick={() => setRetryCount(value => value + 1)} className="w-full rounded-xl bg-[#78350F] text-white p-3 font-bold">{te ? 'మళ్ళీ ప్రయత్నించండి' : 'Retry checkout'}</button>}
           {intent && <>
             <div className="rounded-2xl bg-stone-50 dark:bg-stone-900 p-4 space-y-2 text-sm dark:text-stone-200">
               <p className="flex justify-between"><span>{te ? 'రొట్టెలు & చపాతీలు' : 'Items subtotal'}</span><strong>₹{intent.subtotalRupees.toFixed(2)}</strong></p>
-              <p className="flex justify-between"><span>{te ? 'డెలివరీ రుసుము' : 'Delivery fee'} ({intent.distanceKm} km)</span><strong>₹{intent.deliveryChargeRupees.toFixed(2)}</strong></p>
+              <p className="flex justify-between"><span>{te ? 'డెలివరీ రుసుము' : 'Delivery fee'} ({intent.distanceKm} {te ? 'కి.మీ.' : 'km'})</span><strong>₹{intent.deliveryChargeRupees.toFixed(2)}</strong></p>
               <p className="flex justify-between border-t pt-3 text-lg"><span>{te ? 'మొత్తం' : 'Total'}</span><strong>₹{intent.amountRupees.toFixed(2)}</strong></p>
               <p className="text-xs text-stone-500">{te ? 'ఆర్డర్ నంబర్' : 'Order number'}: {intent.orderId}</p>
             </div>

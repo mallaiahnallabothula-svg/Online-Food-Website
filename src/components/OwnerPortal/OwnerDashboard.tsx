@@ -1,3 +1,5 @@
+import { uiError, paymentStatusLabel } from '../../utils/uiCopy';
+import { useUiText } from '../../context/useUiText';
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, 
@@ -34,6 +36,7 @@ interface OwnerDashboardProps {
 }
 
 export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }) => {
+  const ui = useUiText();
   const { language } = useLanguage();
   const isTe = language !== 'en';
 
@@ -217,15 +220,15 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
   const getStatusBadge = (status: FulfillmentStatus) => {
     switch (status) {
       case 'RECEIVED':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 font-telugu">ఆర్డర్ అందింది (Received)</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 font-telugu">{ui("ఆర్డర్ అందింది (Received)")}</span>;
       case 'PREPARING':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-telugu">తయారవుతోంది (Preparing)</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-telugu">{ui("తయారవుతోంది (Preparing)")}</span>;
       case 'OUT_FOR_DELIVERY':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 font-telugu">డెలివరీలో ఉంది (Out for delivery)</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-300 font-telugu">{ui("డెలివరీలో ఉంది (Out for delivery)")}</span>;
       case 'DELIVERED':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-telugu">డెలివరీ పూర్తయింది (Delivered)</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 font-telugu">{ui("డెలివరీ పూర్తయింది (Delivered)")}</span>;
       case 'CANCELLED':
-        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300 font-telugu">రద్దు చేయబడింది (Cancelled)</span>;
+        return <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 dark:bg-red-950 text-red-800 dark:text-red-300 font-telugu">{ui("రద్దు చేయబడింది (Cancelled)")}</span>;
       default:
         return null;
     }
@@ -233,7 +236,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6 font-telugu">
-      {errorMessage && <div role="alert" className="p-4 rounded-xl bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300 text-sm">{errorMessage}</div>}
+      {errorMessage && <div role="alert" className="p-4 rounded-xl bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300 text-sm">{uiError(errorMessage, language)}</div>}
       
       {/* Top Header Bar */}
       <div className="bg-white dark:bg-[#211E1A] p-4 sm:p-6 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -246,9 +249,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
               {role}
             </span>
           </div>
-          <p className="text-xs text-stone-500 mt-1">
-            కొల్లూరు కిచెన్ & డెలివరీ నిర్వహణ | Asia/Kolkata Business Time
-          </p>
+          <p className="text-xs text-stone-500 mt-1">{" "}{ui("కొల్లూరు కిచెన్ & డెలివరీ నిర్వహణ | Asia/Kolkata Business Time")}{" "}</p>
         </div>
 
         {/* Action Buttons */}
@@ -264,7 +265,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
             title={soundEnabled ? 'Audio alerts active' : 'Audio alerts muted'}
           >
             {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-            <span className="hidden sm:inline">{soundEnabled ? 'సౌండ్ ఆన్' : 'సౌండ్ ఆఫ్'}</span>
+            <span className="hidden sm:inline">{soundEnabled ? ui("సౌండ్ ఆన్") : ui("సౌండ్ ఆఫ్")}</span>
           </button>
 
           {/* Refresh Button */}
@@ -274,7 +275,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
             className="p-2 px-3 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 rounded-xl text-xs font-semibold text-stone-700 dark:text-stone-300 flex items-center gap-1.5 border border-stone-300 dark:border-stone-700 cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
-            <span>రిఫ్రెష్</span>
+            <span>{ui("రిఫ్రెష్")}</span>
           </button>
 
           {/* CSV Export Button */}
@@ -284,7 +285,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
             className="p-2 px-3 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 border border-emerald-300 dark:border-emerald-800 rounded-xl text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>CSV రిపోర్ట్</span>
+            <span>{ui("CSV రిపోర్ట్")}</span>
           </button>
 
           {/* Logout Button */}
@@ -293,7 +294,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
             className="p-2 px-3 bg-red-50 dark:bg-red-950/60 hover:bg-red-100 border border-red-200 dark:border-red-900 rounded-xl text-xs font-bold text-red-700 dark:text-red-300 flex items-center gap-1.5 cursor-pointer"
           >
             <LogOut className="w-3.5 h-3.5" />
-            <span>లాగౌట్</span>
+            <span>{ui("లాగౌట్")}</span>
           </button>
         </div>
       </div>
@@ -370,18 +371,18 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
 
             {/* Status Filter */}
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold text-stone-500">స్టేటస్:</span>
+              <span className="text-xs font-semibold text-stone-500">{ui("స్టేటస్:")}</span>
               <select
                 value={statusFilter}
                 onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
                 className="py-1.5 px-3 bg-stone-50 dark:bg-[#1A1816] border border-stone-300 dark:border-stone-700 rounded-xl text-xs font-semibold text-stone-800 dark:text-stone-200"
               >
-                <option value="ALL">అన్నీ (All)</option>
-                <option value="RECEIVED">ఆర్డర్ అందింది (Received)</option>
-                <option value="PREPARING">తయారవుతోంది (Preparing)</option>
-                <option value="OUT_FOR_DELIVERY">డెలివరీలో ఉంది (Out for delivery)</option>
-                <option value="DELIVERED">డెలివరీ పూర్తయింది (Delivered)</option>
-                <option value="CANCELLED">రద్దు చేయబడింది (Cancelled)</option>
+                <option value="ALL">{ui("అన్నీ (All)")}</option>
+                <option value="RECEIVED">{ui("ఆర్డర్ అందింది (Received)")}</option>
+                <option value="PREPARING">{ui("తయారవుతోంది (Preparing)")}</option>
+                <option value="OUT_FOR_DELIVERY">{ui("డెలివరీలో ఉంది (Out for delivery)")}</option>
+                <option value="DELIVERED">{ui("డెలివరీ పూర్తయింది (Delivered)")}</option>
+                <option value="CANCELLED">{ui("రద్దు చేయబడింది (Cancelled)")}</option>
               </select>
             </div>
 
@@ -398,9 +399,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                 <button
                   onClick={() => { setDateFilter(''); setPage(1); }}
                   className="text-xs text-stone-400 hover:text-stone-600"
-                >
-                  క్లియర్
-                </button>
+                >{" "}{ui("క్లియర్")}{" "}</button>
               )}
             </div>
           </div>
@@ -417,9 +416,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
               <p className="font-bold text-stone-700 dark:text-stone-300">
                 {isTe ? 'ఎటువంటి ఆర్డర్లు కనుగొనబడలేదు.' : 'No orders found matching criteria.'}
               </p>
-              <p className="text-xs text-stone-400">
-                ఫిల్టర్లు క్లియర్ చేసి మళ్ళీ ప్రయత్నించండి.
-              </p>
+              <p className="text-xs text-stone-400">{" "}{ui("ఫిల్టర్లు క్లియర్ చేసి మళ్ళీ ప్రయత్నించండి.")}{" "}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -447,14 +444,14 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                           </span>
                           {getStatusBadge(order.fulfillmentStatus)}
                           <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold font-mono ${order.paymentStatus === 'PAID' ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300' : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'}`}>
-                            {order.paymentStatus}
+                            {paymentStatusLabel(order.paymentStatus, language)}
                           </span>
                         </div>
                         <div className="text-xs text-stone-400 mt-1 flex items-center gap-2">
                           <Clock className="w-3.5 h-3.5" />
                           <span>{order.createdAtIst || order.createdAtIST || order.createdAtUtc}</span>
                           <span>•</span>
-                          <span>డెలివరీ తేదీ: {order.deliveryDate}</span>
+                          <span>{ui("డెలివరీ తేదీ:")}{" "}{order.deliveryDate}</span>
                         </div>
                       </div>
 
@@ -462,8 +459,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                         <div className="text-lg font-mono font-extrabold text-[#78350F] dark:text-amber-400">
                           ₹{totalPaid}
                         </div>
-                        <div className="text-[11px] text-stone-400">
-                          రొట్టెలు: ₹{order.subtotal} + డెలివరీ: ₹{order.deliveryCharge}
+                        <div className="text-[11px] text-stone-400">{" "}{ui("రొట్టెలు: ₹")}{order.subtotal}{" "}{ui("+ డెలివరీ: ₹")}{order.deliveryCharge}
                         </div>
                       </div>
                     </div>
@@ -473,28 +469,23 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                       
                       {/* Products & Karams */}
                       <div className="bg-stone-50 dark:bg-[#1A1816] p-3 rounded-xl border border-stone-200 dark:border-stone-800/60 space-y-1.5">
-                        <div className="font-bold text-stone-800 dark:text-stone-200">
-                          ఆర్డర్ చేసిన పదార్థాలు:
-                        </div>
+                        <div className="font-bold text-stone-800 dark:text-stone-200">{" "}{ui("ఆర్డర్ చేసిన పదార్థాలు:")}{" "}</div>
                         <div className="flex flex-wrap gap-2 text-stone-700 dark:text-stone-300">
                           {order.jowarQuantity > 0 && (
-                            <span className="bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 px-2 py-1 rounded-md font-bold">
-                              జొన్న రొట్టెలు: {order.jowarQuantity}
+                            <span className="bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 px-2 py-1 rounded-md font-bold">{" "}{ui("జొన్న రొట్టెలు:")}{" "}{order.jowarQuantity}
                             </span>
                           )}
                           {order.chapathiQuantity > 0 && (
-                            <span className="bg-orange-100 dark:bg-orange-950 text-orange-900 dark:text-orange-200 px-2 py-1 rounded-md font-bold">
-                              చపాతీలు: {order.chapathiQuantity}
+                            <span className="bg-orange-100 dark:bg-orange-950 text-orange-900 dark:text-orange-200 px-2 py-1 rounded-md font-bold">{" "}{ui("చపాతీలు:")}{" "}{order.chapathiQuantity}
                             </span>
                           )}
                         </div>
 
                         {/* Complimentary Karams */}
-                        <div className="pt-1 text-stone-500 dark:text-stone-400">
-                          కారం (ఉచితం):{' '}
-                          {order.karivepakuGrams ? `కరివేపాకు (${order.karivepakuGrams} గ్రా.)` : ''}
+                        <div className="pt-1 text-stone-500 dark:text-stone-400">{" "}{ui("కారం (ఉచితం):")}{' '}
+                          {order.karivepakuGrams ? `${ui('కరివేపాకు కారం')} (${order.karivepakuGrams} ${ui('గ్రా.')})` : ''}
                           {order.karivepakuGrams && order.aviseGrams ? ' + ' : ''}
-                          {order.aviseGrams ? `అవిసె గింజల (${order.aviseGrams} గ్రా.)` : ''}
+                          {order.aviseGrams ? `${ui('అవిసె గింజల కారం')} (${order.aviseGrams} ${ui('గ్రా.')})` : ''}
                         </div>
                       </div>
 
@@ -504,15 +495,13 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                           <span className="font-bold text-stone-800 dark:text-stone-200">
                             {customerName}
                           </span>
-                          <span className="text-[11px] font-semibold text-stone-500">
-                            దూరం: {distanceKm} కి.మీ.
-                          </span>
+                          <span className="text-[11px] font-semibold text-stone-500">{" "}{ui("దూరం:")}{" "}{distanceKm}{" "}{ui("కి.మీ.")}{" "}</span>
                         </div>
 
                         <div className="text-stone-600 dark:text-stone-400 leading-relaxed">
                           {customerAddress}
                           {customerLandmark && (
-                            <span className="block text-stone-500">గుర్తు: {customerLandmark}</span>
+                            <span className="block text-stone-500">{ui("గుర్తు:")}{" "}{customerLandmark}</span>
                           )}
                         </div>
 
@@ -528,7 +517,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
 
                           <a
                             href={`https://wa.me/91${customerMobile}?text=${encodeURIComponent(
-                              `నమస్కారం ${customerName} గారు, మీ మన ఇంటి వంట ఆర్డర్ (${order.id}) సిద్ధమవుతోంది. సాయంత్రం 6-8 గంటల మధ్య డెలివరీ చేయబడుతుంది.`
+                              isTe ? `నమస్కారం ${customerName} గారు, మీ మన ఇంటి వంట ఆర్డర్ (${order.id}) సిద్ధమవుతోంది. సాయంత్రం 6-8 గంటల మధ్య డెలివరీ చేయబడుతుంది.` : `Hello ${customerName}, your Mana Enti Vanta order (${order.id}) is being prepared. Delivery is between 6 and 8 PM.`
                             )}`}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -545,7 +534,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                               className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 dark:bg-blue-950 border border-blue-300 text-blue-700 dark:text-blue-300 rounded-lg font-bold hover:bg-blue-100"
                             >
                               <MapPin className="w-3 h-3" />
-                              <span>మ్యాప్స్ డైరెక్షన్స్</span>
+                              <span>{ui("మ్యాప్స్ డైరెక్షన్స్")}</span>
                             </a>
                           )}
                         </div>
@@ -554,9 +543,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
 
                     {/* Bottom Status Changer Buttons */}
                     <div className="flex flex-wrap items-center justify-between gap-2 border-t border-stone-100 dark:border-stone-800 pt-3">
-                      <div className="text-xs font-bold text-stone-600 dark:text-stone-400">
-                        స్టేటస్ మార్చు:
-                      </div>
+                      <div className="text-xs font-bold text-stone-600 dark:text-stone-400">{" "}{ui("స్టేటస్ మార్చు:")}{" "}</div>
 
                       <div className="flex flex-wrap items-center gap-1.5">
                         <button
@@ -567,9 +554,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                               ? 'bg-amber-600 text-white'
                               : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-amber-100'
                           }`}
-                        >
-                          తయారవుతోంది
-                        </button>
+                        >{" "}{ui("తయారవుతోంది")}{" "}</button>
 
                         <button
                           disabled={isUpdating || !canFulfill || order.fulfillmentStatus !== 'PREPARING'}
@@ -579,9 +564,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                               ? 'bg-purple-600 text-white'
                               : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-purple-100'
                           }`}
-                        >
-                          డెలివరీలో ఉంది
-                        </button>
+                        >{" "}{ui("డెలివరీలో ఉంది")}{" "}</button>
 
                         <button
                           disabled={isUpdating || !canFulfill || order.fulfillmentStatus !== 'OUT_FOR_DELIVERY'}
@@ -591,9 +574,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                               ? 'bg-emerald-600 text-white'
                               : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-emerald-100'
                           }`}
-                        >
-                          డెలివరీ పూర్తయింది
-                        </button>
+                        >{" "}{ui("డెలివరీ పూర్తయింది")}{" "}</button>
 
                         <button
                           disabled={isUpdating || ['DELIVERED', 'CANCELLED'].includes(order.fulfillmentStatus)}
@@ -603,9 +584,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                               ? 'bg-red-600 text-white'
                               : 'bg-stone-100 dark:bg-stone-800 text-stone-400 hover:bg-red-100 hover:text-red-700'
                           }`}
-                        >
-                          రద్దు
-                        </button>
+                        >{" "}{ui("రద్దు")}{" "}</button>
                       </div>
                     </div>
                   </div>

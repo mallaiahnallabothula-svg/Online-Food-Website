@@ -1,3 +1,4 @@
+import { uiError } from '../utils/uiCopy';
 import React, { useState, useEffect } from 'react';
 import { Plus, Minus, Check, MapPin, AlertCircle, Sparkles, ShieldCheck, ArrowRight, Navigation, Gift, CheckCircle2, ExternalLink, Leaf } from 'lucide-react';
 import { KaramSelection, CustomerDetails, OrderingHoursStatus } from '../types';
@@ -917,7 +918,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               {errors.customerName && (
                 <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
                   <AlertCircle className="w-3.5 h-3.5" />
-                  <span>{errors.customerName}</span>
+                  <span>{uiError(errors.customerName, language)}</span>
                 </p>
               )}
             </div>
@@ -944,7 +945,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               {errors.mobileNumber && (
                 <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
                   <AlertCircle className="w-3.5 h-3.5" />
-                  <span>{errors.mobileNumber}</span>
+                  <span>{uiError(errors.mobileNumber, language)}</span>
                 </p>
               )}
             </div>
@@ -1019,7 +1020,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               {errors.address && (
                 <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
                   <AlertCircle className="w-3.5 h-3.5" />
-                  <span>{errors.address}</span>
+                  <span>{uiError(errors.address, language)}</span>
                 </p>
               )}
             </div>
@@ -1169,7 +1170,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               <p className="font-bold">{t.errorCheckPrompt}</p>
               <ul className="list-disc list-inside mt-1 text-xs space-y-0.5">
                 {Object.values(errors).map((err, i) => (
-                  <li key={i}>{err}</li>
+                  <li key={i}>{uiError(err, language)}</li>
                 ))}
               </ul>
             </div>

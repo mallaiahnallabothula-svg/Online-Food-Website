@@ -1,3 +1,4 @@
+import { useUiText } from '../../context/useUiText';
 import React, { useState } from 'react';
 import { Star, MessageSquareHeart, ThumbsUp, Sparkles, Filter, CheckCircle2, User, Phone, Calendar, RefreshCw } from 'lucide-react';
 import { OrderFeedback } from '../../types';
@@ -29,6 +30,7 @@ export const CustomerFeedbackView: React.FC<CustomerFeedbackViewProps> = ({
   onRefresh,
   isRefreshing = false,
 }) => {
+  const ui = useUiText();
   const [filterStar, setFilterStar] = useState<number | 'ALL'>('ALL');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
@@ -51,9 +53,7 @@ export const CustomerFeedbackView: React.FC<CustomerFeedbackViewProps> = ({
         {/* Average Rating Card */}
         <div className="bg-white dark:bg-[#211E1A] p-5 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">
-              సగటు కస్టమర్ రేటింగ్ (Average Rating)
-            </span>
+            <span className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400">{" "}{ui("సగటు కస్టమర్ రేటింగ్ (Average Rating)")}{" "}</span>
             <div className="p-2 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-[#78350F] dark:text-amber-400">
               <Star className="w-5 h-5 fill-amber-400 text-amber-500" />
             </div>
@@ -77,15 +77,13 @@ export const CustomerFeedbackView: React.FC<CustomerFeedbackViewProps> = ({
                 }`}
               />
             ))}
-            <span className="text-xs text-stone-500 ml-2">({totalFeedbacks} సమీక్షలు)</span>
+            <span className="text-xs text-stone-500 ml-2">({totalFeedbacks}{" "}{ui("సమీక్షలు)")}</span>
           </div>
         </div>
 
         {/* Rating Breakdown Bar */}
         <div className="sm:col-span-2 bg-white dark:bg-[#211E1A] p-5 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-xs space-y-2">
-          <span className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 block mb-1">
-            రేటింగ్ల విభజన (Rating Breakdown)
-          </span>
+          <span className="text-xs font-bold uppercase tracking-wider text-stone-500 dark:text-stone-400 block mb-1">{" "}{ui("రేటింగ్ల విభజన (Rating Breakdown)")}{" "}</span>
 
           {[5, 4, 3, 2, 1].map((stars) => {
             const count = ratingDistribution[stars] || 0;
@@ -115,8 +113,7 @@ export const CustomerFeedbackView: React.FC<CustomerFeedbackViewProps> = ({
         {/* Star Filter Pills */}
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-xs font-bold text-stone-500 dark:text-stone-400 mr-1 flex items-center gap-1">
-            <Filter className="w-3.5 h-3.5" /> ఫిల్టర్:
-          </span>
+            <Filter className="w-3.5 h-3.5" />{" "}{ui("ఫిల్టర్:")}{" "}</span>
           <button
             type="button"
             onClick={() => setFilterStar('ALL')}
@@ -125,8 +122,7 @@ export const CustomerFeedbackView: React.FC<CustomerFeedbackViewProps> = ({
                 ? 'bg-[#78350F] text-white shadow-xs'
                 : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-200'
             }`}
-          >
-            అన్నీ ({feedbacks.length})
+          >{" "}{ui("అన్నీ (")}{feedbacks.length})
           </button>
           {[5, 4, 3, 2, 1].map((s) => (
             <button
@@ -152,7 +148,7 @@ export const CustomerFeedbackView: React.FC<CustomerFeedbackViewProps> = ({
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="కస్టమర్ లేదా కామెంట్ శోధించండి..."
+            placeholder={ui("కస్టమర్ లేదా కామెంట్ శోధించండి...")}
             className="w-full sm:w-60 px-3 py-1.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-stone-50 dark:bg-stone-900 text-xs text-stone-900 dark:text-stone-100 outline-hidden focus:ring-1 focus:ring-amber-500"
           />
           {onRefresh && (
@@ -161,7 +157,7 @@ export const CustomerFeedbackView: React.FC<CustomerFeedbackViewProps> = ({
               onClick={onRefresh}
               disabled={isRefreshing}
               className="p-2 rounded-xl border border-stone-300 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-700 dark:text-stone-300"
-              title="రీఫ్రెష్ చేయండి"
+              title={ui("రీఫ్రెష్ చేయండి")}
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
             </button>
@@ -174,7 +170,7 @@ export const CustomerFeedbackView: React.FC<CustomerFeedbackViewProps> = ({
         {filteredFeedbacks.length === 0 ? (
           <div className="p-12 text-center bg-white dark:bg-[#211E1A] rounded-2xl border border-stone-200 dark:border-stone-800 text-stone-400 space-y-2">
             <MessageSquareHeart className="w-10 h-10 mx-auto text-stone-300 dark:text-stone-600" />
-            <p className="text-sm font-semibold">ఈ కేటగిరీలో ఎలాంటి సమీక్షలు లేవు.</p>
+            <p className="text-sm font-semibold">{ui("ఈ కేటగిరీలో ఎలాంటి సమీక్షలు లేవు.")}</p>
           </div>
         ) : (
           filteredFeedbacks.map((fb) => (
@@ -189,10 +185,9 @@ export const CustomerFeedbackView: React.FC<CustomerFeedbackViewProps> = ({
                   </div>
                   <div>
                     <h4 className="font-bold text-sm text-stone-900 dark:text-stone-100 leading-tight">
-                      {fb.customerName || 'గౌరవనీయ కస్టమర్'}
+                      {fb.customerName || ui("గౌరవనీయ కస్టమర్")}
                     </h4>
-                    <span className="text-xs text-stone-400 font-mono">
-                      ఆర్డర్: <span className="font-bold text-stone-700 dark:text-stone-300">{fb.orderId}</span>
+                    <span className="text-xs text-stone-400 font-mono">{" "}{ui("ఆర్డర్:")}{" "}<span className="font-bold text-stone-700 dark:text-stone-300">{fb.orderId}</span>
                       {fb.customerMobile && ` • +91 ${fb.customerMobile}`}
                     </span>
                   </div>
@@ -228,7 +223,7 @@ export const CustomerFeedbackView: React.FC<CustomerFeedbackViewProps> = ({
                       key={tagId}
                       className="px-2 py-0.5 rounded-full text-xs font-medium bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border border-stone-200 dark:border-stone-700"
                     >
-                      {TAG_TRANSLATIONS[tagId] || tagId}
+                      {ui(TAG_TRANSLATIONS[tagId] || tagId)}
                     </span>
                   ))}
                 </div>
@@ -240,7 +235,7 @@ export const CustomerFeedbackView: React.FC<CustomerFeedbackViewProps> = ({
                   "{fb.comment || fb.comments}"
                 </p>
               ) : (
-                <span className="text-xs text-stone-400 italic">వ్యాఖ్యలు లేవు (నక్షత్రాల రేటింగ్ మాత్రమే ఇవ్వబడింది).</span>
+                <span className="text-xs text-stone-400 italic">{ui("వ్యాఖ్యలు లేవు (నక్షత్రాల రేటింగ్ మాత్రమే ఇవ్వబడింది).")}</span>
               )}
             </div>
           ))

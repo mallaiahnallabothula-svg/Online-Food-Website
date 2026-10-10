@@ -1,3 +1,5 @@
+import { uiError } from '../utils/uiCopy';
+import { useUiText } from '../context/useUiText';
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Search, Package, Clock, CheckCircle2, AlertCircle, ArrowRight, MessageSquareHeart, Star } from 'lucide-react';
 import { Order } from '../types';
@@ -16,6 +18,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
   onClose,
   initialOrderId,
 }) => {
+  const ui = useUiText();
   const { language, t } = useLanguage();
   const [searchId, setSearchId] = useState<string>(initialOrderId || '');
   const [loading, setLoading] = useState<boolean>(false);
@@ -60,7 +63,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
     if (cleanId.length < 16 || cleanId.startsWith('SMJR-')) {
       setSelectedOrder(null);
       setLoading(false);
-      setErrorMessage('ఆర్డర్ నంబర్ బదులు కన్ఫర్మేషన్‌లో ఇచ్చిన ట్రాకింగ్ కీ నమోదు చేయండి (Enter your tracking key).');
+      setErrorMessage(ui("ఆర్డర్ నంబర్ బదులు కన్ఫర్మేషన్‌లో ఇచ్చిన ట్రాకింగ్ కీ నమోదు చేయండి (Enter your tracking key)."));
       return;
     }
 
@@ -78,14 +81,14 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
           setSelectedOrder(previous => ({ ...order, feedback: order.feedback || (previous?.id === order.id ? previous?.feedback : undefined) }));
           persistCustomerOrder(order.id, cleanId);
         } else {
-          setErrorMessage('ఆర్డర్ కనుగొనబడలేదు.');
+          setErrorMessage(ui("ఆర్డర్ కనుగొనబడలేదు."));
         }
       } else {
         const err = await res.json();
-        if (currentRequest === requestId.current) setErrorMessage(err.error?.message || err.message || 'ఈ కీతో ఆర్డర్ వివరాలు లభించలేదు.');
+        if (currentRequest === requestId.current) setErrorMessage(err.error?.message || err.message || ui("ఈ కీతో ఆర్డర్ వివరాలు లభించలేదు."));
       }
     } catch (e) {
-      if (currentRequest === requestId.current) setErrorMessage('సర్వర్ కనెక్షన్ లోపం ఏర్పడింది. దయచేసి మళ్లీ ప్రయత్నించండి.');
+      if (currentRequest === requestId.current) setErrorMessage(ui("సర్వర్ కనెక్షన్ లోపం ఏర్పడింది. దయచేసి మళ్లీ ప్రయత్నించండి."));
     } finally {
       if (!quiet && currentRequest === requestId.current) setLoading(false);
     }
@@ -163,16 +166,14 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
           
           {/* Search Bar */}
           <form onSubmit={handleSearch} className="space-y-2">
-            <label className="block text-xs font-bold text-stone-700 dark:text-stone-300">
-              ట్రాకింగ్ కీ ద్వారా వెతకండి (Enter tracking key):
-            </label>
+            <label className="block text-xs font-bold text-stone-700 dark:text-stone-300">{" "}{ui("ట్రాకింగ్ కీ ద్వారా వెతకండి (Enter tracking key):")}{" "}</label>
             <div className="flex gap-2">
               <div className="relative flex-1">
                 <input
                   type="text"
                   value={searchId}
                   onChange={(e) => setSearchId(e.target.value)}
-                  placeholder="ఆర్డర్ కన్ఫర్మేషన్‌లో ఇచ్చిన కీ / Tracking key"
+                  placeholder={ui("ఆర్డర్ కన్ఫర్మేషన్‌లో ఇచ్చిన కీ / Tracking key")}
                   className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 text-xs sm:text-sm font-mono focus:ring-2 focus:ring-amber-500 outline-hidden"
                 />
                 <Search className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
@@ -183,7 +184,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                 id="search-order-btn"
                 className="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-[#78350F] hover:bg-[#92400E] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
               >
-                <span>{loading ? 'వెతుకుతోంది...' : 'వెతకండి'}</span>
+                <span>{loading ? ui("వెతుకుతోంది...") : ui("వెతకండి")}</span>
               </button>
             </div>
           </form>
@@ -210,7 +211,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                     }`}
                   >
                     <span>{rec.id}</span>
-                    {rec.qty != null && <span className="text-[10px] text-stone-500 font-telugu font-normal">({rec.qty} రొట్టెలు)</span>}
+                    {rec.qty != null && <span className="text-[10px] text-stone-500 font-telugu font-normal">({rec.qty}{" "}{ui("రొట్టెలు)")}</span>}
                   </button>
                 ))}
               </div>
@@ -220,7 +221,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
           {errorMessage && (
             <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span>{errorMessage}</span>
+              <span>{uiError(errorMessage, language)}</span>
             </div>
           )}
 
@@ -231,15 +232,15 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
               {/* Order Info Card */}
               <div className="p-4 rounded-xl bg-[#FAF4EA] dark:bg-stone-900 border border-amber-900/10 dark:border-stone-800 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
                 <div>
-                  <span className="text-stone-500 block">కస్టమర్ పేరు:</span>
-                  <strong className="text-stone-900 dark:text-stone-100">{selectedOrder.customer?.name || selectedOrder.customerName || 'కస్టమర్'}</strong>
+                  <span className="text-stone-500 block">{ui("కస్టమర్ పేరు:")}</span>
+                  <strong className="text-stone-900 dark:text-stone-100">{selectedOrder.customer?.name || selectedOrder.customerName || ui("కస్టమర్")}</strong>
                 </div>
                 <div>
-                  <span className="text-stone-500 block">రొట్టెల పరిమాణం:</span>
-                  <strong className="text-[#78350F] dark:text-amber-400 font-mono text-sm">{selectedOrder.totalItems || selectedOrder.quantity || 0} వస్తువులు (₹{selectedOrder.totalAmount || selectedOrder.totalPaid || 0})</strong>
+                  <span className="text-stone-500 block">{ui("రొట్టెల పరిమాణం:")}</span>
+                  <strong className="text-[#78350F] dark:text-amber-400 font-mono text-sm">{selectedOrder.totalItems || selectedOrder.quantity || 0}{" "}{ui("వస్తువులు (₹")}{selectedOrder.totalAmount || selectedOrder.totalPaid || 0})</strong>
                 </div>
                 <div>
-                  <span className="text-stone-500 block">డెలివరీ తేదీ:</span>
+                  <span className="text-stone-500 block">{ui("డెలివరీ తేదీ:")}</span>
                   <strong className="text-stone-800 dark:text-stone-200">{selectedOrder.deliveryDate}</strong>
                 </div>
               </div>

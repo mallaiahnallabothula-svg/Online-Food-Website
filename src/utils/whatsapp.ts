@@ -16,14 +16,14 @@ export function buildWhatsAppTicket(order: Order, lang: 'te' | 'en' = 'te'): str
   if (order.karamSelection?.karivepaku && karivepakuGrams > 0) {
     karamLines.push(
       lang === 'en'
-        ? `• Curry Leaf Podi (కరివేపాకు కారం): ${karivepakuGrams}g`
+        ? `• Curry Leaf Podi: ${karivepakuGrams}g`
         : `• కరివేపాకు కారం: ${karivepakuGrams} గ్రా.`
     );
   }
   if (order.karamSelection?.aviseGinjalu && aviseGrams > 0) {
     karamLines.push(
       lang === 'en'
-        ? `• Flax Seeds Podi (అవిసె గింజల కారం): ${aviseGrams}g`
+        ? `• Flax Seeds Podi: ${aviseGrams}g`
         : `• అవిసె గింజల కారం: ${aviseGrams} గ్రా.`
     );
   }
@@ -89,7 +89,7 @@ export function buildWhatsAppTicket(order: Order, lang: 'te' | 'en' = 'te'): str
 
   if (lang === 'en') {
     const parts: string[] = [
-      '🧾 *MANA ENTI VANTA (మన ఇంటి వంట)*',
+      '🧾 *MANA ENTI VANTA*',
       'Authentic Village Jowar Rotis & Chapathis • Kolluru Village',
       'WhatsApp Order Ticket to: +91 8499865803',
       '================================',
