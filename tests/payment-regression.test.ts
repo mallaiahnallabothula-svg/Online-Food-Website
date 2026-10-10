@@ -100,6 +100,32 @@ describe('Customer receipt and saved reviews', () => {
     await expect(submitOrderFeedback(intent.orderId, 1, 'Unauthorized')).rejects.toThrow(/unauthorized/);
     expect((await getDb().execute('SELECT id FROM feedback')).rows).toHaveLength(1);
   });
+
+  it('keeps reviews private without opt-in and resets approval when edited', async () => {
+    const intent = await createPaymentIntent(checkout);
+    await transitionOrderToTicketGenerated(intent.orderId, {
+      provider: 'mock', providerPaymentId: 'pay_privacy_fixture', amountPaisa: intent.amountPaisa, currency: 'INR',
+    });
+    const first = await submitOrderFeedback(intent.customerAccessToken, 4, 'Private review');
+    let review = (await getDb().execute({ sql: 'SELECT is_public, publication_consent FROM feedback WHERE id = ?', args: [first.feedbackId] })).rows[0]!;
+    expect(Number(review.is_public)).toBe(0);
+    expect(Number(review.publication_consent)).toBe(0);
+
+    await submitOrderFeedback(intent.customerAccessToken, 5, 'Consented review', true);
+    review = (await getDb().execute({ sql: 'SELECT is_public, publication_consent FROM feedback WHERE id = ?', args: [first.feedbackId] })).rows[0]!;
+    expect(Number(review.is_public)).toBe(0);
+    expect(Number(review.publication_consent)).toBe(1);
+    await getDb().execute({ sql: 'UPDATE feedback SET is_public = 1 WHERE id = ?', args: [first.feedbackId] });
+    await submitOrderFeedback(intent.customerAccessToken, 3, 'Changed review', true);
+    review = (await getDb().execute({ sql: 'SELECT is_public, publication_consent FROM feedback WHERE id = ?', args: [first.feedbackId] })).rows[0]!;
+    expect(Number(review.is_public)).toBe(0);
+    expect(Number(review.publication_consent)).toBe(1);
+    await submitOrderFeedback(intent.customerAccessToken, 2, 'Revoked consent', false);
+    review = (await getDb().execute({ sql: 'SELECT is_public, publication_consent FROM feedback WHERE id = ?', args: [first.feedbackId] })).rows[0]!;
+    expect(Number(review.is_public)).toBe(0);
+    expect(Number(review.publication_consent)).toBe(0);
+  });
+
 });
 
 describe('Administrator access and exact order amounts', () => {
