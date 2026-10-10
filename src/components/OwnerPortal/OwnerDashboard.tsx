@@ -62,6 +62,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
   const [isExportingCsv, setIsExportingCsv] = useState<boolean>(false);
+  const [updatingFeedbackId, setUpdatingFeedbackId] = useState<string | null>(null);
 
   // Fetch orders, analytics, audit logs, and feedback with credentials: 'include'
   const fetchDashboardData = async (isManualRefresh: boolean = false) => {
@@ -139,6 +140,22 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
     }, 12000); // 12-second live refresh
     return () => clearInterval(interval);
   }, [statusFilter, dateFilter, searchQuery, page]);
+
+  const updateFeedbackPublication = async (feedbackId: string, isPublic: boolean) => {
+    setUpdatingFeedbackId(feedbackId);
+    setErrorMessage('');
+    try {
+      const response = await fetch(`/api/admin/feedback/${encodeURIComponent(feedbackId)}/publication`, {
+        method: 'PATCH', credentials: 'include',
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: JSON.stringify({ isPublic }),
+      });
+      if (!response.ok) throw new Error((await response.json()).error?.message || 'Could not update review publication');
+      setFeedbacks(current => current.map(review => review.id === feedbackId ? { ...review, isPublic } : review));
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : 'Could not update review publication');
+    } finally { setUpdatingFeedbackId(null); }
+  };
 
   // Update order fulfillment status (authoritative actor derived from session on server)
   const handleStatusChange = async (orderId: string, newStatus: FulfillmentStatus) => {
@@ -604,6 +621,9 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
       {activeTab === 'FEEDBACK' && (
         <CustomerFeedbackView
           feedbacks={feedbacks}
+          isAdmin={role === 'ADMIN'}
+          updatingFeedbackId={updatingFeedbackId}
+          onUpdatePublication={updateFeedbackPublication}
           averageRating={analytics?.feedbackSummary?.averageRating || 5.0}
           totalFeedbacks={analytics?.feedbackSummary?.totalReviews || 0}
           ratingDistribution={analytics?.feedbackSummary?.ratingCounts || { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }}
