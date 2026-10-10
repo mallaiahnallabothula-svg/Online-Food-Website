@@ -10,7 +10,7 @@ const customer = {
   name:'Test Customer',mobile:'9000000001',address:'Flat 1, Kollur test address',
   latitude:17.4850, longitude:78.2350,
 };
-const request = (lines: {itemId:string;quantity:number}[], extra:Partial<NewMenuCheckoutRequest>={}) => ({
+const request = (lines: readonly {itemId:string;quantity:number}[], extra:Partial<NewMenuCheckoutRequest>={}) => ({
   lines,customer,...extra,
 });
 const basket = request([{itemId:'idly',quantity:2},{itemId:'ragi-idly',quantity:2}]);
