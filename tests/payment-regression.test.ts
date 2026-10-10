@@ -70,7 +70,7 @@ beforeEach(async () => {
   vi.stubEnv('RAZORPAY_WEBHOOK_SECRET', webhookSecret);
   vi.spyOn(console, 'error').mockImplementation(() => {});
   await initDb();
-  await getDb().batch(['DELETE FROM admin_sessions', 'DELETE FROM admin_users', 'DELETE FROM payments', 'DELETE FROM feedback', 'DELETE FROM payment_intents', 'DELETE FROM audit_logs', 'DELETE FROM orders'], 'write');
+  await getDb().batch(['DELETE FROM admin_login_attempts', 'DELETE FROM admin_sessions', 'DELETE FROM admin_users', 'DELETE FROM payments', 'DELETE FROM feedback', 'DELETE FROM payment_intents', 'DELETE FROM audit_logs', 'DELETE FROM orders'], 'write');
 });
 
 describe('Customer receipt and saved reviews', () => {
@@ -126,6 +126,41 @@ describe('Customer receipt and saved reviews', () => {
     expect(Number(review.publication_consent)).toBe(0);
   });
 
+});
+
+describe('Persistent serverless owner login limits', () => {
+  it('locks the account after five bad passwords, rejects valid password while locked and resets expired counters', async () => {
+    const username = 'owner-limit';
+    const goodPassword = 'test-correct-password';
+    await getDb().execute({
+      sql: 'INSERT INTO admin_users (id, username, password_hash, role, name, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+      args: ['USR-limit', username, await bcrypt.hash(goodPassword, 4), 'ADMIN', 'Owner', new Date().toISOString()],
+    });
+    for (let attempt = 0; attempt < 5; attempt++) {
+      expect((await loginAdmin(username, 'wrong-password', '127.0.0.50')).success).toBe(false);
+    }
+    const locked = await loginAdmin(username, goodPassword, '127.0.0.51');
+    expect(locked.success).toBe(false);
+    expect(locked.lockedUntil).toBeGreaterThan(Date.now());
+    const saved = await getDb().execute('SELECT failed_count FROM admin_login_attempts');
+    expect(saved.rows.length).toBeGreaterThan(0);
+    await getDb().execute({ sql: 'UPDATE admin_login_attempts SET window_expires_at_ms = 0, locked_until_ms = 0', args: [] });
+    const allowed = await loginAdmin(username, goodPassword, '127.0.0.51');
+    expect(allowed.success).toBe(true);
+    const accountKey = crypto.createHash('sha256').update('user:' + username).digest('hex');
+    const account = await getDb().execute({ sql: 'SELECT * FROM admin_login_attempts WHERE key_hash = ?', args: [accountKey] });
+    expect(account.rows).toHaveLength(0);
+  });
+
+  it('locks an IP across unknown usernames and records only hashed keys', async () => {
+    for (let attempt = 0; attempt < 5; attempt++) {
+      expect((await loginAdmin('not-a-user-' + attempt, 'bad-password', '127.0.0.60')).success).toBe(false);
+    }
+    const locked = await loginAdmin('another-account', 'bad-password', '127.0.0.60');
+    expect(locked.lockedUntil).toBeGreaterThan(Date.now());
+    const rows = (await getDb().execute('SELECT key_hash FROM admin_login_attempts')).rows;
+    expect(rows.every(row => /^[a-f0-9]{64}$/.test(String(row.key_hash)))).toBe(true);
+  });
 });
 
 describe('Administrator access and exact order amounts', () => {
