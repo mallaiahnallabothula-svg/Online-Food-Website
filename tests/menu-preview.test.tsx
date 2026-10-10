@@ -15,7 +15,7 @@ describe('inactive menu design preview', () => {
     for (const item of MENU_CATALOG.filter(x => x.mealPeriod === 'MORNING')) {
       expect(container.querySelector('[data-item-id="' + item.id + '"]')).toBeTruthy();
     }
-    expect(screen.getByText('4 pieces / plate')).toBeTruthy();
+    expect(screen.getAllByText('4 pieces / plate')).toHaveLength(2);
     expect(screen.getAllByText('Daily limit: 30 plates', { exact: false })).toHaveLength(6);
     expect(screen.getByRole('button',{name:'Checkout unavailable in design preview'}).hasAttribute('disabled')).toBe(true);
     expect(screen.getByText(/Complimentary Karam Podi/)).toBeTruthy();
