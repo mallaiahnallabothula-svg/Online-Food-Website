@@ -310,7 +310,7 @@ adminRouter.patch('/feedback/:id/publication', requireAuth, requireRole(['ADMIN'
     return res.status(403).json({ error: { code: 'NO_CONSENT', message: 'Customer has not opted in to public display.' } });
   }
   const isPublic = req.body.isPublic ? 1 : 0;
-  await db.execute({ sql: 'UPDATE feedback SET is_public = ? WHERE id = ? AND publication_consent = 1 OR (id = ? AND ? = 0)', args: [isPublic, feedbackId, feedbackId, isPublic] });
+  await db.execute({ sql: 'UPDATE feedback SET is_public = ? WHERE id = ? AND (? = 0 OR publication_consent = 1)', args: [isPublic, feedbackId, isPublic] });
   await db.execute({
     sql: 'INSERT INTO audit_logs (id, actor_type, actor_id, action, target_type, target_id, details, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
     args: [`AUD-${crypto.randomBytes(8).toString('hex')}`, req.user!.role, req.user!.username, 'FEEDBACK_PUBLICATION_UPDATED', 'FEEDBACK', feedbackId, JSON.stringify({ isPublic: Boolean(isPublic) }), new Date().toISOString()],
