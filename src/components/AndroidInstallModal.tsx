@@ -51,7 +51,7 @@ export const AndroidInstallModal: React.FC<AndroidInstallModalProps> = ({
             onClick={onClose}
             id="close-install-modal-btn"
             className="absolute top-3.5 right-3.5 p-1.5 rounded-lg bg-black/25 hover:bg-black/40 text-amber-200 transition-colors cursor-pointer"
-            aria-label="Close"
+            aria-label={language === 'te' ? 'మూసివేయండి' : 'Close'}
           >
             <X className="w-5 h-5" />
           </button>

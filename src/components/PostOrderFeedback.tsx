@@ -346,7 +346,7 @@ export const PostOrderFeedback: React.FC<PostOrderFeedbackProps> = ({
               </div>
 
               {/* Star Selector */}
-              <div className="flex items-center gap-2 mt-2" role="radiogroup" aria-label="Rating out of 5">
+              <div className="flex items-center gap-2 mt-2" role="radiogroup" aria-label={language === 'te' ? '5 నక్షత్రాలలో రేటింగ్' : 'Rating out of 5'}>
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}

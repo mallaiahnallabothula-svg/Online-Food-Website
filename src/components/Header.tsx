@@ -133,7 +133,7 @@ export const Header: React.FC<HeaderProps> = ({
           <button
             onClick={onToggleDarkMode}
             id="toggle-theme-btn"
-            aria-label="Toggle Dark Mode"
+            aria-label={language === 'te' ? 'డార్క్ మోడ్ మార్చండి' : 'Toggle Dark Mode'}
             className="p-2 rounded-lg text-stone-700 dark:text-stone-300 hover:bg-amber-100/60 dark:hover:bg-stone-800 transition-colors cursor-pointer"
             title={darkMode ? ui("లైట్ మోడ్") : ui("డార్క్ మోడ్")}
           >

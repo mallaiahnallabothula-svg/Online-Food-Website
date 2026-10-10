@@ -484,7 +484,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                       onClick={decrementJowar}
                       id="jowar-decrement-btn"
                       className="w-9 h-9 rounded-lg bg-stone-100 dark:bg-stone-700 text-stone-800 dark:text-stone-100 flex items-center justify-center hover:bg-amber-100 dark:hover:bg-stone-600 active:scale-95 transition-all cursor-pointer"
-                      aria-label="Decrease jowar quantity"
+                      aria-label={language === 'te' ? 'జొన్న రొట్టెల సంఖ్య తగ్గించండి' : 'Decrease jowar quantity'}
                     >
                       <Minus className="w-4 h-4" />
                     </button>
@@ -501,7 +501,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                       onClick={incrementJowar}
                       id="jowar-increment-btn"
                       className="w-9 h-9 rounded-lg bg-stone-100 dark:bg-stone-700 text-stone-800 dark:text-stone-100 flex items-center justify-center hover:bg-amber-100 dark:hover:bg-stone-600 active:scale-95 transition-all cursor-pointer"
-                      aria-label="Increase jowar quantity"
+                      aria-label={language === 'te' ? 'జొన్న రొట్టెల సంఖ్య పెంచండి' : 'Increase jowar quantity'}
                     >
                       <Plus className="w-4 h-4" />
                     </button>
@@ -575,7 +575,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                       onClick={decrementChapathi}
                       id="chapathi-decrement-btn"
                       className="w-9 h-9 rounded-lg bg-stone-100 dark:bg-stone-700 text-stone-800 dark:text-stone-100 flex items-center justify-center hover:bg-amber-100 dark:hover:bg-stone-600 active:scale-95 transition-all cursor-pointer"
-                      aria-label="Decrease chapathi quantity"
+                      aria-label={language === 'te' ? 'చపాతీల సంఖ్య తగ్గించండి' : 'Decrease chapathi quantity'}
                     >
                       <Minus className="w-4 h-4" />
                     </button>
@@ -592,7 +592,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                       onClick={incrementChapathi}
                       id="chapathi-increment-btn"
                       className="w-9 h-9 rounded-lg bg-stone-100 dark:bg-stone-700 text-stone-800 dark:text-stone-100 flex items-center justify-center hover:bg-amber-100 dark:hover:bg-stone-600 active:scale-95 transition-all cursor-pointer"
-                      aria-label="Increase chapathi quantity"
+                      aria-label={language === 'te' ? 'చపాతీల సంఖ్య పెంచండి' : 'Increase chapathi quantity'}
                     >
                       <Plus className="w-4 h-4" />
                     </button>
