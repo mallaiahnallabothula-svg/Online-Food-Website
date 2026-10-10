@@ -69,6 +69,14 @@ export async function initDb(): Promise<void> {
     await db.execute(statement);
   }
 
+  // Previous reviews never recorded public-publication consent. Hide them while
+  // retaining every review, and migrate the existing production schema safely.
+  const feedbackColumns = await db.execute('PRAGMA table_info(feedback)');
+  if (!feedbackColumns.rows.some(row => String(row.name) === 'publication_consent')) {
+    await db.execute('ALTER TABLE feedback ADD COLUMN publication_consent INTEGER NOT NULL DEFAULT 0');
+  }
+  await db.execute('UPDATE feedback SET is_public = 0 WHERE publication_consent = 0 AND is_public != 0');
+
   // Ensure default administrator exists securely
   const existingAdmin = await db.execute({
     sql: 'SELECT id FROM admin_users WHERE username = ? LIMIT 1',
