@@ -18,7 +18,7 @@ import { getMenuStockRemaining } from '../server/services/menuStockService.ts';
 
 const placedAt = new Date('2026-10-10T00:30:00.000Z'); // 06:00 IST
 const duringHold = placedAt.getTime() + 60_000;
-const keyId = 'rzp_test_pr21_fixture';
+const keyId = 'rzp_test_pr21fixture';
 const keySecret = 'pr21-fixture-not-a-real-secret';
 const credentials = { keyId, keySecret };
 const orderGatewayId = 'order_PR21TEST1234567';
