@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
 import { OrderingHoursBanner } from './components/OrderingHoursBanner';
+import { UpcomingMenuSection } from './components/UpcomingMenuSection';
 import { OrderForm } from './components/OrderForm';
 import { PaymentModal } from './components/PaymentModal';
 import { OrderConfirmation } from './components/OrderConfirmation';
@@ -249,6 +250,9 @@ export default function App() {
                 <OrderingHoursBanner
                   status={hoursStatus}
                 />
+
+                {/* Read-only upcoming menu; existing checkout remains unchanged below. */}
+                <UpcomingMenuSection />
 
                 <OrderForm
                   hoursStatus={hoursStatus}
