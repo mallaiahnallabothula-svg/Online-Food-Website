@@ -145,7 +145,7 @@ describe('PR20 inactive durable checkout idempotency (isolated test database onl
     const db=await fixture();
     try{
       const key=makeKey();
-      const hash=crypto.createHmac('sha256',secret).update('new-menu-checkout:'+key).digest('hex');
+      const hash=crypto.createHash('sha256').update('new-menu-checkout:'+key).digest('hex');
       await db.execute({
         sql:"INSERT INTO inactive_menu_checkout_idempotency (key_hash,request_fingerprint,status,claim_nonce,created_at_utc,updated_at_utc) VALUES (?,?,'CLAIMED',?,?,?)",
         args:[hash,'fingerprint-placeholder',crypto.randomUUID(),at.toISOString(),at.toISOString()],
@@ -188,14 +188,13 @@ describe('PR20 inactive durable checkout idempotency (isolated test database onl
         .rejects.toThrow('Invalid checkout idempotency');
       const original=await prepareInactiveNewMenuCheckoutIdempotent(db,request,key,secret,at);
       await expect(prepareInactiveNewMenuCheckoutIdempotent(db,request,key,secretOther,soon))
-        .rejects.toThrow('Invalid checkout idempotency').catch(()=>{});
-      // Different secret points to a different namespace; do not accept it as a valid
-      // recovery key, and never assume a secret may be silently rotated.
-      const wrongSecretClaims=await count(db,'inactive_menu_checkout_idempotency');
-      expect(wrongSecretClaims).toBeGreaterThanOrEqual(1);
+        .rejects.toThrow('manual reconciliation');
+      // Encryption key rotation must not silently create another order.
+      expect(await count(db,'inactive_menu_checkout_idempotency')).toBe(1);
+      expect(await count(db,'orders')).toBe(1);
       await expect(prepareInactiveNewMenuCheckoutIdempotent(db,request,key,secret,
         new Date(original.expiresAtMs))).rejects.toThrow('manual reconciliation');
-      const hash=crypto.createHmac('sha256',secret).update('new-menu-checkout:'+key).digest('hex');
+      const hash=crypto.createHash('sha256').update('new-menu-checkout:'+key).digest('hex');
       await db.execute({sql:'UPDATE inactive_menu_checkout_idempotency SET encrypted_result=? WHERE key_hash=?',args:['garbled',hash]});
       await expect(prepareInactiveNewMenuCheckoutIdempotent(db,request,key,secret,soon))
         .rejects.toThrow('manual reconciliation');
