@@ -159,6 +159,23 @@ describe('PR20 inactive durable checkout idempotency (isolated test database onl
     }finally{db.close();}
   });
 
+  it('fails closed on an orphaned in-progress claim for the IDENTICAL payload',async()=>{
+    const db=await fixture();
+    try{
+      const key=makeKey();
+      await prepareInactiveNewMenuCheckoutIdempotent(db,request,key,secret,at);
+      const hash=crypto.createHash('sha256').update('new-menu-checkout:'+key).digest('hex');
+      await db.execute({
+        sql:"UPDATE inactive_menu_checkout_idempotency SET status='CLAIMED',order_id=NULL,encrypted_result=NULL WHERE key_hash=?",
+        args:[hash],
+      });
+      await expect(prepareInactiveNewMenuCheckoutIdempotent(db,request,key,secret,soon))
+        .rejects.toThrow('manual reconciliation');
+      expect(await count(db,'orders')).toBe(1);
+      expect(await count(db,'menu_stock_reservations')).toBe(2);
+    }finally{db.close();}
+  });
+
   it('prevents new orders after a failed stock transaction, preserving the review claim',async()=>{
     const db=await fixture();
     try{
