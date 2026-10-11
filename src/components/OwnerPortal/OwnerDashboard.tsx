@@ -1,3 +1,4 @@
+import { OrderItemLines } from '../OrderItemLines';
 import { uiError, paymentStatusLabel } from '../../utils/uiCopy';
 import { useUiText } from '../../context/useUiText';
 import React, { useState, useEffect, useRef } from 'react';
@@ -488,11 +489,12 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                       <div className="bg-stone-50 dark:bg-[#1A1816] p-3 rounded-xl border border-stone-200 dark:border-stone-800/60 space-y-1.5">
                         <div className="font-bold text-stone-800 dark:text-stone-200">{" "}{ui("ఆర్డర్ చేసిన పదార్థాలు:")}{" "}</div>
                         <div className="flex flex-wrap gap-2 text-stone-700 dark:text-stone-300">
-                          {order.jowarQuantity > 0 && (
+                          {order.items?.length ? <OrderItemLines items={order.items} /> : null}
+                          {!order.items?.length && order.jowarQuantity > 0 && (
                             <span className="bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 px-2 py-1 rounded-md font-bold">{" "}{ui("జొన్న రొట్టెలు:")}{" "}{order.jowarQuantity}
                             </span>
                           )}
-                          {order.chapathiQuantity > 0 && (
+                          {!order.items?.length && order.chapathiQuantity > 0 && (
                             <span className="bg-orange-100 dark:bg-orange-950 text-orange-900 dark:text-orange-200 px-2 py-1 rounded-md font-bold">{" "}{ui("చపాతీలు:")}{" "}{order.chapathiQuantity}
                             </span>
                           )}

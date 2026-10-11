@@ -38,7 +38,14 @@ export interface CustomerDetails {
   distanceKm?: number;
 }
 
+export interface OrderLine {
+  itemId: string; nameEn: string; nameTe: string;
+  quantity: number; saleUnit: 'PLATE' | 'PIECE'; piecesPerUnit: number | null;
+  unitPricePaisa: number; lineTotalPaisa: number;
+}
+
 export interface Order {
+  items?: readonly OrderLine[];
   id: string; // e.g. SMJR-20260914-1001
   customerAccessToken?: string;
   createdAtUtc?: string;

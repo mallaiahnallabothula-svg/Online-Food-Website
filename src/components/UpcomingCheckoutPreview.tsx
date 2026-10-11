@@ -1,3 +1,5 @@
+import { InactiveMenuCheckout } from './InactiveMenuCheckout';
+import type { TestPayment } from '../utils/inactiveMenuCheckout';
 import { useState, type FormEvent } from 'react';
 import { Clock3, ShieldCheck, ShoppingBag } from 'lucide-react';
 import { NEW_MENU_ORDER_POLICY, type MealPeriod, type MenuItem } from '../../shared/menuCatalog.ts';
@@ -46,10 +48,11 @@ export function validateUpcomingPreview(
 const money = (paisa: number) =>
   '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
 
-/** Inactive UI only: no fetch, no storage, no payment, no order submission. */
+/** Public UI stays local-only. Explicit test injection exercises inactive checkout. */
 export function UpcomingCheckoutPreview({
-  period, lines, subtotalPaisa, te,
+  period, lines, subtotalPaisa, te, isolatedCheckout,
 }: {
+  isolatedCheckout?: { latitude: number; longitude: number; pay: TestPayment };
   period: MealPeriod;
   lines: readonly PreviewCartLine[];
   subtotalPaisa: number;
@@ -207,6 +210,10 @@ export function UpcomingCheckoutPreview({
                 : 'Basic field formats pass. No order was created; delivery eligibility, stock and payment were not verified.'}
             </p>
           )}
+          {import.meta.env.MODE === 'test' && isolatedCheckout && checked && validateUpcomingPreview(subtotalPaisa, details).length === 0 ? (
+            <InactiveMenuCheckout request={{ lines: lines.map(({ item, quantity }) => ({ itemId: item.id, quantity })),
+              customer: { ...details, latitude: isolatedCheckout.latitude, longitude: isolatedCheckout.longitude } }} pay={isolatedCheckout.pay} />
+          ) : null}
           <button
             type="button"
             disabled
