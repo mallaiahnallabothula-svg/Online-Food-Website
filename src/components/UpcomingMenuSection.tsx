@@ -100,7 +100,7 @@ export function UpcomingMenuSection() {
                   setPeriod(key);
                   setQuantities({}); // never mix morning and evening checkout slots
                 }
-              }
+              }}
               className={
                 'inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:flex-none ' +
                 (period === key
