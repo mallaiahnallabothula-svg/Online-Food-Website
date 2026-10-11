@@ -84,8 +84,10 @@ function fingerprintOf(request: NewMenuCheckoutRequest): string {
   return crypto.createHash('sha256').update(canonical).digest('hex');
 }
 
-function keyHash(secret: Buffer, key: string): string {
-  return crypto.createHmac('sha256', secret).update('new-menu-checkout:' + key).digest('hex');
+function keyHash(key: string): string {
+  // Stable across secret rotation: changing encryption secrets must NEVER
+  // create a fresh claim for the same request key.
+  return crypto.createHash('sha256').update('new-menu-checkout:' + key).digest('hex');
 }
 
 function encryptResult(prepared: Prepared, secret: Buffer, aad: string): string {
@@ -170,7 +172,7 @@ export async function prepareInactiveNewMenuCheckoutIdempotent(
 ): Promise<IdempotentPrepared> {
   requireInactiveTestMode(secret, requestKey, now);
   const fingerprint = fingerprintOf(request);
-  const hash = keyHash(secret, requestKey);
+  const hash = keyHash(requestKey);
   const existing = await getClaim(db, hash);
   if (existing) return retrieveReady(db, existing, hash, fingerprint, secret, now.getTime());
 
