@@ -17,7 +17,7 @@ import type { Client } from '@libsql/client';
 import { NEW_MENU_LAUNCH_ENABLED } from '../../shared/menuCatalog.ts';
 import {
   createPendingNewMenuCheckout, priceNewMenuCheckout,
-  type NewMenuCheckoutRequest, type NewMenuPricing,
+  type NewMenuCheckoutRequest,
 } from './newMenuCheckoutService.ts';
 
 export const INACTIVE_CHECKOUT_IDEMPOTENCY_TEST_SCHEMA = [
