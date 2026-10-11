@@ -50,13 +50,18 @@ export async function createInactiveNewMenuGatewayOrder(
   credentials: InactiveGatewayCredentials,
   transport: GatewayTransport,
   nowMs = Date.now(),
+  mode: 'test' | 'production' = 'test',
 ): Promise<InactiveGatewayOrderResult> {
-  if (NEW_MENU_LAUNCH_ENABLED) {
-    throw new Error('This inactive test-only adapter must not run after launch');
+  const keyIdPattern = mode === 'production'
+    ? /^rzp_live_[A-Za-z0-9]+$/
+    : /^rzp_test_[A-Za-z0-9]+$/;
+  if ((mode === 'test' && NEW_MENU_LAUNCH_ENABLED) ||
+      (mode === 'production' && !NEW_MENU_LAUNCH_ENABLED)) {
+    throw new Error('New-menu gateway is not enabled for this environment');
   }
   if (!ORDER_ID.test(orderId) ||
       !Number.isSafeInteger(nowMs) || nowMs <= 0 ||
-      !credentials || !/^rzp_test_[A-Za-z0-9]+$/.test(credentials.keyId) ||
+      !credentials || !keyIdPattern.test(credentials.keyId) ||
       !credentials.keySecret || typeof transport !== 'function') {
     throw new Error('Invalid inactive gateway request or test credentials');
   }
@@ -127,6 +132,29 @@ export async function createInactiveNewMenuGatewayOrder(
   const providerOrderId = order.provider_order_id ? String(order.provider_order_id) : '';
   if (providerOrderId) {
     if (!PROVIDER_ORDER.test(providerOrderId)) throw reviewRequired();
+    // A retried browser session must not reopen a Razorpay order after a
+    // captured payment. Confirm the provider still reports the exact unpaid
+    // amount before returning this order to Checkout.js.
+    let existingResponse: Response;
+    try {
+      existingResponse = await transport('https://api.razorpay.com/v1/orders/' + encodeURIComponent(providerOrderId), {
+        headers: {
+          Authorization: 'Basic ' + Buffer.from(credentials.keyId + ':' + credentials.keySecret).toString('base64'),
+        },
+        signal: AbortSignal.timeout(10_000),
+      });
+    } catch {
+      throw reviewRequired();
+    }
+    if (!existingResponse.ok) throw reviewRequired();
+    let existingBody: unknown;
+    try { existingBody = await existingResponse.json(); } catch { throw reviewRequired(); }
+    if (!existingBody || typeof existingBody !== 'object') throw reviewRequired();
+    const existing = existingBody as Record<string, unknown>;
+    if (existing.id !== providerOrderId || existing.amount !== amountPaisa || existing.currency !== 'INR' ||
+        existing.status !== 'created' || existing.amount_paid !== 0 || existing.amount_due !== amountPaisa) {
+      throw reviewRequired();
+    }
     // Binding validates the existing saved payment intent, not merely the ID.
     await bindNewMenuRazorpayOrder(db, orderId, providerOrderId, nowMs);
     return {
@@ -214,4 +242,18 @@ export async function createInactiveNewMenuGatewayOrder(
     orderId, providerOrderId: gateway.id, publicKeyId: credentials.keyId,
     amountPaisa, currency: 'INR', expiresAtMs, idempotent: false,
   };
+}
+
+export function createProductionNewMenuGatewayOrder(
+  db: Client,
+  orderId: string,
+  credentials: InactiveGatewayCredentials,
+  transport: GatewayTransport,
+  nowMs = Date.now(),
+): Promise<InactiveGatewayOrderResult> {
+  if (process.env.NODE_ENV !== 'production' || process.env.VERCEL_ENV !== 'production' ||
+      !process.env.RAZORPAY_KEY_ID?.startsWith('rzp_live_')) {
+    throw new Error('Live Razorpay is restricted to the production deployment');
+  }
+  return createInactiveNewMenuGatewayOrder(db, orderId, credentials, transport, nowMs, 'production');
 }

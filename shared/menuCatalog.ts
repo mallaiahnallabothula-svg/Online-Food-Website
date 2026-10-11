@@ -43,7 +43,10 @@ export const NEW_MENU_ORDER_POLICY = {
  * Safety switch for subsequent work: do not publish this new menu until
  * itemized pricing, payment verification, inventory and owner tickets are ready.
  */
-export const NEW_MENU_LAUNCH_ENABLED = false;
+// Vite replaces this expression with the production build flag for the
+// customer UI. Server code reads the same Vercel environment variable at
+// runtime. The default remains fail-closed.
+export const NEW_MENU_LAUNCH_ENABLED = process.env.NEW_MENU_LAUNCH_ENABLED === 'true';
 
 export const MENU_CATALOG: readonly MenuItem[] = [
   {

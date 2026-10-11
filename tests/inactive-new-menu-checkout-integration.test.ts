@@ -31,6 +31,13 @@ async function fixture(): Promise<Client> {
 
 function gateway(status = 200, overrides: Record<string, unknown> = {}) {
   const send = vi.fn(async (_url: string, options?: RequestInit) => {
+    if (options?.method !== 'POST') {
+      return {
+        status, ok: status >= 200 && status < 300,
+        json: async () => ({ id: providerId, amount: 14000, amount_due: 14000,
+          amount_paid: 0, currency: 'INR', status: 'created', ...overrides }),
+      };
+    }
     const request = JSON.parse(String(options?.body ?? '{}'));
     return {
       status, ok: status >= 200 && status < 300,
@@ -155,7 +162,8 @@ describe('PR19 inactive backend checkout orchestration (in-memory DB, mocked gat
       expect(JSON.stringify(body)).not.toContain(original.customer.mobile);
       const again = await startInactiveNewMenuCheckoutGateway(db,input,creds,gate.transport,now+1000);
       expect(again).toMatchObject({providerOrderId:providerId,amountPaisa:14000,idempotent:true});
-      expect(gate.send).toHaveBeenCalledTimes(1);
+      expect(gate.send).toHaveBeenCalledTimes(2);
+      expect(gate.send.mock.calls[1]?.[0]).toBe('https://api.razorpay.com/v1/orders/' + providerId);
       expect(await count(db,'payment_intents')).toBe(1);
       expect(await count(db,'payments')).toBe(0);
       expect((await db.execute({sql:'SELECT payment_status FROM orders WHERE id=?',
@@ -173,7 +181,7 @@ describe('PR19 inactive backend checkout orchestration (in-memory DB, mocked gat
         startInactiveNewMenuCheckoutGateway(db,input,creds,gate.transport,now),
         startInactiveNewMenuCheckoutGateway(db,input,creds,gate.transport,now),
       ]);
-      expect(gate.send).toHaveBeenCalledTimes(1);
+      expect(gate.send.mock.calls.filter((call) => call[1]?.method === 'POST')).toHaveLength(1);
       expect(outcomes.some(x=>x.status==='fulfilled')).toBe(true);
       expect(await count(db,'payment_intents')).toBe(1);
     } finally {db.close();}

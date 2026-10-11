@@ -126,9 +126,11 @@ export async function createPendingNewMenuCheckout(
   db: Client,
   request: NewMenuCheckoutRequest,
   placedAt: Date = new Date(),
+  mode: 'inactive-test' | 'production' = 'inactive-test',
 ): Promise<{ orderId: string; customerAccessToken: string; expiresAtMs: number; pricing: NewMenuPricing }> {
-  if (NEW_MENU_LAUNCH_ENABLED) {
-    throw new Error('This inactive foundation must be reviewed before activation');
+  if ((mode === 'inactive-test' && NEW_MENU_LAUNCH_ENABLED) ||
+      (mode === 'production' && (!NEW_MENU_LAUNCH_ENABLED || process.env.NODE_ENV !== 'production'))) {
+    throw new Error('New-menu checkout is not enabled for this environment');
   }
   const nowMs = placedAt.getTime();
   if (!Number.isSafeInteger(nowMs) || nowMs <= 0) throw new Error('Invalid placement date');

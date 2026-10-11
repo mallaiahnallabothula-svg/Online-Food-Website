@@ -8,6 +8,7 @@ import { paymentRouter } from './routes/paymentRoutes.ts';
 import { customerRouter } from './routes/customerRoutes.ts';
 import { adminRouter } from './routes/adminRoutes.ts';
 import { newMenuQuoteRouter } from './routes/newMenuQuoteRoutes.ts';
+import { newMenuCheckoutRouter } from './routes/newMenuCheckoutRoutes.ts';
 
 export function createExpressApp() {
   const app = express();
@@ -50,6 +51,7 @@ export function createExpressApp() {
   app.use('/api', publicRouter);
   app.use('/api/payment', paymentRouter);
   app.use('/api/menu', newMenuQuoteRouter);
+  app.use('/api/new-menu', newMenuCheckoutRouter);
   app.use('/api/customer', customerRouter);
   app.use('/api/orders', customerRouter);
   app.use('/api/admin', adminRouter);
