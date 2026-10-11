@@ -4,6 +4,8 @@ import { useState, type FormEvent } from 'react';
 import { Clock3, ShieldCheck, ShoppingBag } from 'lucide-react';
 import { NEW_MENU_ORDER_POLICY, type MealPeriod, type MenuItem } from '../../shared/menuCatalog.ts';
 import { getNextPreorderDeliverySlot } from '../../shared/preorderScheduling.ts';
+import { NEW_MENU_LAUNCH_ENABLED } from '../../shared/menuCatalog.ts';
+import { LiveNewMenuCheckout } from './LiveNewMenuCheckout';
 
 export interface PreviewCartLine {
   readonly item: MenuItem;
@@ -49,7 +51,7 @@ const money = (paisa: number) =>
   '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
 
 /** Public UI stays local-only. Explicit test injection exercises inactive checkout. */
-export function UpcomingCheckoutPreview({
+function PreviewCheckoutOnly({
   period, lines, subtotalPaisa, te, isolatedCheckout,
 }: {
   isolatedCheckout?: { latitude: number; longitude: number; pay: TestPayment };
@@ -230,4 +232,17 @@ export function UpcomingCheckoutPreview({
       </div>
     </div>
   );
+}
+
+export function UpcomingCheckoutPreview(props: {
+  isolatedCheckout?: { latitude: number; longitude: number; pay: TestPayment };
+  period: MealPeriod;
+  lines: readonly PreviewCartLine[];
+  subtotalPaisa: number;
+  te: boolean;
+}) {
+  if (NEW_MENU_LAUNCH_ENABLED) {
+    return <LiveNewMenuCheckout period={props.period} lines={props.lines} te={props.te} />;
+  }
+  return <PreviewCheckoutOnly {...props} />;
 }

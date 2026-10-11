@@ -33,6 +33,8 @@ export const INACTIVE_CHECKOUT_IDEMPOTENCY_TEST_SCHEMA = [
   ')',
 ].join(' ');
 
+const LIVE_CHECKOUT_IDEMPOTENCY_TABLE = 'new_menu_checkout_idempotency';
+
 type Prepared = Awaited<ReturnType<typeof createPendingNewMenuCheckout>>;
 export type IdempotentPrepared = Prepared & { readonly idempotent: boolean };
 type ClaimRow = {
@@ -119,9 +121,9 @@ function decryptResult(encoded: string, secret: Buffer, aad: string): Prepared {
   }
 }
 
-async function getClaim(db: Client, hash: string): Promise<ClaimRow | undefined> {
+async function getClaim(db: Client, hash: string, tableName: string): Promise<ClaimRow | undefined> {
   const rows = await db.execute({
-    sql: 'SELECT key_hash, request_fingerprint, status, claim_nonce, order_id, encrypted_result FROM inactive_menu_checkout_idempotency WHERE key_hash=? LIMIT 1',
+    sql: `SELECT key_hash, request_fingerprint, status, claim_nonce, order_id, encrypted_result FROM ${tableName} WHERE key_hash=? LIMIT 1`,
     args: [hash],
   });
   return rows.rows[0] as ClaimRow | undefined;
@@ -163,19 +165,25 @@ async function retrieveReady(
  *
  * A missing dedicated test table fails immediately; NEVER create it here.
  */
-export async function prepareInactiveNewMenuCheckoutIdempotent(
+async function prepareNewMenuCheckoutIdempotent(
   db: Client,
   request: NewMenuCheckoutRequest,
   requestKey: string,
   secret: Buffer,
   now: Date = new Date(),
+  tableName: string,
+  mode: 'inactive-test' | 'production',
 ): Promise<IdempotentPrepared> {
-  requireInactiveTestMode(secret, requestKey, now);
+  if (mode === 'inactive-test') requireInactiveTestMode(secret, requestKey, now);
+  else if (secret.length !== 32 || !NEW_MENU_LAUNCH_ENABLED ||
+      process.env.NODE_ENV !== 'production' || process.env.VERCEL_ENV !== 'production') {
+    throw new Error('Production checkout idempotency is not enabled for this environment');
+  }
   const fingerprint = fingerprintOf(request);
   const hash = keyHash(requestKey);
   let existing: ClaimRow | undefined;
   try {
-    existing = await getClaim(db, hash);
+    existing = await getClaim(db, hash, tableName);
   } catch {
     // Missing staging table or concurrent DB failure must never turn into a
     // fresh order. Do not silently fall back to a non-idempotent checkout.
@@ -193,7 +201,7 @@ export async function prepareInactiveNewMenuCheckoutIdempotent(
   try {
     claimed = await db.execute({
       sql: [
-        'INSERT INTO inactive_menu_checkout_idempotency',
+        `INSERT INTO ${tableName}`,
         '(key_hash,request_fingerprint,status,claim_nonce,created_at_utc,updated_at_utc)',
         "VALUES (?,?,'CLAIMED',?,?,?) ON CONFLICT(key_hash) DO NOTHING",
       ].join(' '),
@@ -207,7 +215,7 @@ export async function prepareInactiveNewMenuCheckoutIdempotent(
   if (claimed.rowsAffected !== 1) {
     let competing: ClaimRow | undefined;
     try {
-      competing = await getClaim(db, hash);
+      competing = await getClaim(db, hash, tableName);
     } catch {
       throw reviewError();
     }
@@ -217,12 +225,14 @@ export async function prepareInactiveNewMenuCheckoutIdempotent(
 
   let prepared: Prepared;
   try {
-    prepared = await createPendingNewMenuCheckout(db, request, now);
+    prepared = await createPendingNewMenuCheckout(
+      db, request, now, mode === 'production' ? 'production' : 'inactive-test',
+    );
   } catch (error) {
     // No second attempt is made. An ambiguous commit may have left an order;
     // retain the claim until a separately approved reconciliation process.
     await db.execute({
-      sql: "UPDATE inactive_menu_checkout_idempotency SET status='REVIEW_REQUIRED',updated_at_utc=? WHERE key_hash=? AND claim_nonce=? AND status='CLAIMED'",
+      sql: `UPDATE ${tableName} SET status='REVIEW_REQUIRED',updated_at_utc=? WHERE key_hash=? AND claim_nonce=? AND status='CLAIMED'`,
       args: [new Date().toISOString(), hash, nonce],
     }).catch(() => {});
     throw error;
@@ -231,7 +241,7 @@ export async function prepareInactiveNewMenuCheckoutIdempotent(
   const encrypted = encryptResult(prepared, secret, hash + ':' + fingerprint);
   const saved = await db.execute({
     sql: [
-      'UPDATE inactive_menu_checkout_idempotency',
+      `UPDATE ${tableName}`,
       "SET status='READY', order_id=?, encrypted_result=?, updated_at_utc=?",
       "WHERE key_hash=? AND claim_nonce=? AND request_fingerprint=? AND status='CLAIMED'",
     ].join(' '),
@@ -239,4 +249,22 @@ export async function prepareInactiveNewMenuCheckoutIdempotent(
   });
   if (saved.rowsAffected !== 1) throw reviewError();
   return { ...prepared, idempotent: false };
+}
+
+export function prepareInactiveNewMenuCheckoutIdempotent(
+  db: Client, request: NewMenuCheckoutRequest, requestKey: string,
+  secret: Buffer, now: Date = new Date(),
+): Promise<IdempotentPrepared> {
+  return prepareNewMenuCheckoutIdempotent(
+    db, request, requestKey, secret, now, 'inactive_menu_checkout_idempotency', 'inactive-test',
+  );
+}
+
+export function prepareProductionNewMenuCheckoutIdempotent(
+  db: Client, request: NewMenuCheckoutRequest, requestKey: string,
+  secret: Buffer, now: Date = new Date(),
+): Promise<IdempotentPrepared> {
+  return prepareNewMenuCheckoutIdempotent(
+    db, request, requestKey, secret, now, LIVE_CHECKOUT_IDEMPOTENCY_TABLE, 'production',
+  );
 }

@@ -58,6 +58,10 @@ function paymentSignature() {
 }
 function gateway() {
   const create=vi.fn(async(_url:string,init?:RequestInit)=>{
+    if(init?.method!=='POST')return {ok:true,status:200,json:async()=>({
+      id:gatewayId,amount:14000,amount_due:14000,amount_paid:0,
+      currency:'INR',status:'created',
+    })};
     const body=JSON.parse(String(init?.body));
     return {ok:true,status:200,json:async()=>({
       id:gatewayId,receipt:body.receipt,amount:body.amount,
@@ -158,7 +162,8 @@ describe('PR22 consolidated inactive stage 2 (no live routes or production DB)',
           orderId:checkout.orderId,customerAccessToken:checkout.customerAccessToken,
         });
         expect(again.body.gateway.idempotent).toBe(true);
-        expect(mocks.create).toHaveBeenCalledTimes(1);
+        expect(mocks.create).toHaveBeenCalledTimes(2);
+        expect(mocks.create.mock.calls[1]?.[0]).toBe('https://api.razorpay.com/v1/orders/'+gatewayId);
         const unauthorized=await invoke(base,'/confirm',{
           orderId:checkout.orderId,customerAccessToken:'f'.repeat(64),
           providerPaymentId:paymentId,providerSignature:paymentSignature(),

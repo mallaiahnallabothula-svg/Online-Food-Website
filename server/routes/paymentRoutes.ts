@@ -12,6 +12,8 @@ import {
   formatCustomerSafeOrder,
 } from '../services/orderService.ts';
 import { paymentRateLimiter, statusPollingRateLimiter } from '../middleware/rateLimit.ts';
+import { verifyAndSettleNewMenuPayment } from '../services/newMenuPaymentSafetyService.ts';
+import { getDb } from '../db/index.ts';
 
 export const paymentRouter = Router();
 
@@ -102,6 +104,26 @@ paymentRouter.post('/webhook', async (req: any, res: Response) => {
     const orderId = intent.orderId;
     const providerPaymentId = paymentEntity.id;
     const amountPaisa = paymentEntity.amount;
+
+    // Itemized menu payments use their own atomic stock/ticket settlement.
+    // The webhook HMAC authenticates this payload; payment signature plus
+    // Razorpay's captured-payment API response independently verify the charge.
+    if (orderId.startsWith('MENU-')) {
+      const paymentSignature = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || '')
+        .update(paymentEntity.order_id + '|' + providerPaymentId)
+        .digest('hex');
+      const settlement = await verifyAndSettleNewMenuPayment(getDb(), {
+        orderId,
+        providerPaymentId,
+        providerSignature: paymentSignature,
+      });
+      return res.json({
+        received: true,
+        orderId: settlement.orderId,
+        status: settlement.status,
+        idempotent: settlement.idempotent,
+      });
+    }
 
     // Atomically transition order: PENDING → PAID → CONFIRMED → TICKET_GENERATED
     const transitionResult = await transitionOrderToTicketGenerated(

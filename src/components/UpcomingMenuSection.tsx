@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Clock3, Coffee, Sun, Moon, UtensilsCrossed, Wheat } from 'lucide-react';
-import { MENU_CATALOG, type MealPeriod, type MenuItem } from '../../shared/menuCatalog.ts';
+import { MENU_CATALOG, NEW_MENU_LAUNCH_ENABLED, type MealPeriod, type MenuItem } from '../../shared/menuCatalog.ts';
 import { useLanguage } from '../context/LanguageContext';
 import { UpcomingCheckoutPreview } from './UpcomingCheckoutPreview';
 
@@ -35,9 +35,8 @@ function serving(item: MenuItem, telugu: boolean): string {
 }
 
 /**
- * Inactive public catalog with a purely local sample cart and preview form.
- * No order, Razorpay, stock, persistence or API calls are permitted here.
- * The existing two-item OrderForm remains the only live customer checkout.
+ * Public catalog and cart for the additive 10-item menu. The production flag
+ * selects the verified checkout; the fail-closed default remains preview-only.
  */
 export function UpcomingMenuSection() {
   const { language } = useLanguage();
@@ -72,15 +71,15 @@ export function UpcomingMenuSection() {
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <span className="inline-flex rounded-full border border-amber-300 bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-amber-950 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
-              {te ? 'త్వరలో అందుబాటులోకి' : 'Coming Soon'}
+              {NEW_MENU_LAUNCH_ENABLED ? (te ? 'ఆర్డర్లు స్వీకరిస్తున్నాం' : 'Ordering open') : (te ? 'త్వరలో అందుబాటులోకి' : 'Coming Soon')}
             </span>
             <h2 id="upcoming-menu-heading" className="mt-3 text-2xl font-extrabold text-[#4B2F1D] sm:text-3xl dark:text-amber-100">
-              {te ? 'మన ఇంటి వంట — కొత్త 10 రకాల మెనూ' : 'Our upcoming 10-item menu'}
+              {te ? 'మన ఇంటి వంట — 10 రకాల మెనూ' : 'Mana Enti Vanta — 10-item menu'}
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-stone-600 dark:text-stone-300">
               {te
-                ? 'కొత్త మెనూ చూడవచ్చు. ఈ కార్డుల నుంచి ఆర్డర్ లేదా పేమెంట్ చేయడం ఇంకా ప్రారంభం కాలేదు.'
-                : 'Explore our planned menu. Ordering and payment from these cards are not available yet.'}
+                ? (NEW_MENU_LAUNCH_ENABLED ? 'ఉదయం, సాయంత్రం మెనూ నుంచి ఎంచుకుని డెలివరీ వివరాలు ధృవీకరించండి.' : 'కొత్త మెనూను చూడండి. ఆర్డర్లు ఇంకా ప్రారంభం కాలేదు.')
+                : (NEW_MENU_LAUNCH_ENABLED ? 'Choose from the morning or evening menu and confirm your delivery details.' : 'Explore the planned menu. Ordering is not open yet.')}
             </p>
           </div>
           <div className="inline-flex items-center gap-2 rounded-xl bg-white/80 px-3 py-2 text-xs font-semibold text-[#5F4B33] dark:bg-stone-800 dark:text-stone-200">
@@ -150,11 +149,11 @@ export function UpcomingMenuSection() {
                 <div className="mt-4 border-t border-stone-100 pt-3 dark:border-stone-700">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-[11px] font-semibold text-stone-500 dark:text-stone-300">
-                      {te ? 'డెమో కార్ట్ మాత్రమే' : 'Sample cart only'}
+                      {NEW_MENU_LAUNCH_ENABLED ? (te ? 'మీ కార్ట్' : 'Your cart') : (te ? 'డెమో కార్ట్ మాత్రమే' : 'Sample cart only')}
                     </span>
                     {(quantities[item.id] ?? 0) === 0 ? (
                       <button type="button"
-                        aria-label={'Add ' + item.nameEn + ' to sample cart'}
+                      aria-label={'Add ' + item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' to cart' : ' to sample cart')}
                         onClick={() => adjustQuantity(item, 1)}
                         className="min-h-10 rounded-lg bg-[#26543A] px-3 py-2 text-xs font-bold text-white hover:bg-[#1E4330]">
                         {te ? 'జోడించండి +' : 'Add +'}
@@ -162,15 +161,15 @@ export function UpcomingMenuSection() {
                     ) : (
                       <div className="inline-flex items-center gap-2">
                         <button type="button"
-                          aria-label={'Decrease ' + item.nameEn + ' sample quantity'}
+                          aria-label={'Decrease ' + item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' quantity' : ' sample quantity')}
                           onClick={() => adjustQuantity(item, -1)}
                           className="flex h-10 w-10 items-center justify-center rounded-lg border border-stone-300 bg-white text-lg font-bold text-emerald-900 dark:border-stone-600 dark:bg-stone-900 dark:text-white">−</button>
-                        <span aria-label={item.nameEn + ' sample quantity'}
+                        <span aria-label={item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' quantity' : ' sample quantity')}
                           className="min-w-5 text-center text-sm font-bold text-stone-900 dark:text-white">
                           {quantities[item.id]}
                         </span>
                         <button type="button"
-                          aria-label={'Increase ' + item.nameEn + ' sample quantity'}
+                          aria-label={'Increase ' + item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' quantity' : ' sample quantity')}
                           disabled={(quantities[item.id] ?? 0) >= (item.dailyPlateLimit ?? 500)}
                           onClick={() => adjustQuantity(item, 1)}
                           className="flex h-10 w-10 items-center justify-center rounded-lg border border-stone-300 bg-white text-lg font-bold text-emerald-900 disabled:cursor-not-allowed disabled:opacity-40 dark:border-stone-600 dark:bg-stone-900 dark:text-white">+</button>
@@ -180,7 +179,7 @@ export function UpcomingMenuSection() {
                   <p className="mt-2 text-xs font-semibold text-amber-800 dark:text-amber-300">
                     {item.legacyItem
                       ? (te ? 'ప్రస్తుతం దిగువ ఆర్డర్ ఫారంలో అందుబాటులో ఉంది' : 'Already available in the order form below')
-                      : (te ? 'కొత్త మెనూ ఆర్డర్లు త్వరలో' : 'New-menu ordering coming soon')}
+                      : (NEW_MENU_LAUNCH_ENABLED ? (te ? 'ఆన్‌లైన్‌లో ఆర్డర్ చేయండి' : 'Order from this menu') : (te ? 'కొత్త మెనూ ఆర్డర్లు త్వరలో' : 'New-menu ordering coming soon'))}
                   </p>
                 </div>
               </div>
@@ -190,8 +189,8 @@ export function UpcomingMenuSection() {
         <UpcomingCheckoutPreview key={period} period={period} lines={selected} subtotalPaisa={subtotalPaisa} te={te} />
         <p className="mt-6 text-center text-xs leading-relaxed text-stone-500 dark:text-stone-400">
           {te
-            ? 'ఇక్కడ చూపిన ధరలు కొత్త మెనూ ప్రివ్యూ కోసం మాత్రమే. లైవ్ ఆర్డరింగ్ కేవలం దిగువ ఉన్న ప్రస్తుత ఫారంలోనే అందుబాటులో ఉంది.'
-            : 'Prices shown are for the upcoming menu preview only. Live ordering remains available exclusively through the existing form below.'}
+            ? (NEW_MENU_LAUNCH_ENABLED ? 'ఆర్డర్‌కు ముందు సర్వర్ ధర, డెలివరీ ప్రాంతం, స్టాక్ మళ్లీ ధృవీకరిస్తుంది.' : 'ఇక్కడి ధరలు ప్రివ్యూ మాత్రమే. ప్రస్తుతం ఆర్డరింగ్ దిగువ ఫారంలో కొనసాగుతుంది.')
+            : (NEW_MENU_LAUNCH_ENABLED ? 'The server rechecks price, delivery area and stock before payment.' : 'These are preview prices. Existing ordering remains in the form below.')}
         </p>
       </div>
     </section>

@@ -131,6 +131,20 @@ CREATE TABLE IF NOT EXISTS payment_intents (
   is_verified INTEGER NOT NULL DEFAULT 0
 );
 
+-- Durable request idempotency for the 10-item production checkout.
+-- The encrypted response preserves the original private tracking token when
+-- a customer retries after a network timeout. Keys themselves are only hashed.
+CREATE TABLE IF NOT EXISTS new_menu_checkout_idempotency (
+  key_hash TEXT PRIMARY KEY NOT NULL,
+  request_fingerprint TEXT NOT NULL,
+  status TEXT NOT NULL CHECK(status IN ('CLAIMED', 'READY', 'REVIEW_REQUIRED')),
+  claim_nonce TEXT NOT NULL,
+  order_id TEXT,
+  encrypted_result TEXT,
+  created_at_utc TEXT NOT NULL,
+  updated_at_utc TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS feedback (
   id TEXT PRIMARY KEY,
   order_id TEXT UNIQUE NOT NULL REFERENCES orders(id) ON DELETE CASCADE,

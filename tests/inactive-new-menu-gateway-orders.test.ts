@@ -26,7 +26,15 @@ async function setup() {
 }
 
 function gatewayMock(status = 200, overrides: Record<string, unknown> = {}) {
-  const spy = vi.fn(async (_url: string, init?: RequestInit) => {
+  const spy = vi.fn(async (url: string, init?: RequestInit) => {
+    if (init?.method !== 'POST') {
+      return {
+        ok: status >= 200 && status < 300,
+        status,
+        json: async () => ({ id: providerOrderId, amount: 12000, currency: 'INR',
+          status: 'created', amount_paid: 0, amount_due: 12000, ...overrides }),
+      };
+    }
     const payload = JSON.parse(String(init?.body || '{}'));
     return {
       ok: status >= 200 && status < 300,
@@ -88,7 +96,8 @@ describe('inactive new menu Razorpay gateway order integration — mocked test m
       const repeat = await createInactiveNewMenuGatewayOrder(db, pending.orderId,
         credentials, gateway.transport, now+1000);
       expect(repeat).toMatchObject({ providerOrderId, idempotent: true, amountPaisa: 12000 });
-      expect(gateway.spy).toHaveBeenCalledTimes(1);
+      expect(gateway.spy).toHaveBeenCalledTimes(2);
+      expect(gateway.spy.mock.calls[1]?.[0]).toBe('https://api.razorpay.com/v1/orders/' + providerOrderId);
     } finally { db.close(); }
   });
 
@@ -100,7 +109,7 @@ describe('inactive new menu Razorpay gateway order integration — mocked test m
         createInactiveNewMenuGatewayOrder(db, pending.orderId, credentials, gate.transport, now),
         createInactiveNewMenuGatewayOrder(db, pending.orderId, credentials, gate.transport, now),
       ]);
-      expect(gate.spy).toHaveBeenCalledTimes(1);
+      expect(gate.spy.mock.calls.filter((call) => call[1]?.method === 'POST')).toHaveLength(1);
       expect([a, b].filter(x => x.status === 'fulfilled').length).toBeGreaterThanOrEqual(1);
       expect((await db.execute('SELECT COUNT(*) AS total FROM payment_intents')).rows[0]?.total).toBe(1);
       expect((await db.execute('SELECT COUNT(*) AS total FROM payments')).rows[0]?.total).toBe(0);
