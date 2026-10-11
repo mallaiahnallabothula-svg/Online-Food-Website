@@ -173,7 +173,14 @@ export async function prepareInactiveNewMenuCheckoutIdempotent(
   requireInactiveTestMode(secret, requestKey, now);
   const fingerprint = fingerprintOf(request);
   const hash = keyHash(requestKey);
-  const existing = await getClaim(db, hash);
+  let existing: ClaimRow | undefined;
+  try {
+    existing = await getClaim(db, hash);
+  } catch {
+    // Missing staging table or concurrent DB failure must never turn into a
+    // fresh order. Do not silently fall back to a non-idempotent checkout.
+    throw reviewError();
+  }
   if (existing) return retrieveReady(db, existing, hash, fingerprint, secret, now.getTime());
 
   // Validate using EXISTING authoritative pricing before trying to reserve a key.
@@ -182,16 +189,28 @@ export async function prepareInactiveNewMenuCheckoutIdempotent(
 
   const nonce = crypto.randomUUID();
   const timestamp = now.toISOString();
-  const claimed = await db.execute({
-    sql: [
-      'INSERT INTO inactive_menu_checkout_idempotency',
-      '(key_hash,request_fingerprint,status,claim_nonce,created_at_utc,updated_at_utc)',
-      "VALUES (?,?,'CLAIMED',?,?,?) ON CONFLICT(key_hash) DO NOTHING",
-    ].join(' '),
-    args: [hash, fingerprint, nonce, timestamp, timestamp],
-  });
+  let claimed: Awaited<ReturnType<Client['execute']>>;
+  try {
+    claimed = await db.execute({
+      sql: [
+        'INSERT INTO inactive_menu_checkout_idempotency',
+        '(key_hash,request_fingerprint,status,claim_nonce,created_at_utc,updated_at_utc)',
+        "VALUES (?,?,'CLAIMED',?,?,?) ON CONFLICT(key_hash) DO NOTHING",
+      ].join(' '),
+      args: [hash, fingerprint, nonce, timestamp, timestamp],
+    });
+  } catch {
+    // A simultaneous claim may have won while the DB returned SQLITE_BUSY,
+    // a network error, or an ambiguous commit result. Never create an order.
+    throw reviewError();
+  }
   if (claimed.rowsAffected !== 1) {
-    const competing = await getClaim(db, hash);
+    let competing: ClaimRow | undefined;
+    try {
+      competing = await getClaim(db, hash);
+    } catch {
+      throw reviewError();
+    }
     if (!competing) throw reviewError();
     return retrieveReady(db, competing, hash, fingerprint, secret, now.getTime());
   }
