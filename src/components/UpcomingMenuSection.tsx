@@ -171,7 +171,7 @@ export function UpcomingMenuSection() {
                         </span>
                         <button type="button"
                           aria-label={'Increase ' + item.nameEn + ' sample quantity'}
-                          disabled={quantities[item.id] >= (item.dailyPlateLimit ?? 500)}
+                          disabled={(quantities[item.id] ?? 0) >= (item.dailyPlateLimit ?? 500)}
                           onClick={() => adjustQuantity(item, 1)}
                           className="flex h-10 w-10 items-center justify-center rounded-lg border border-stone-300 bg-white text-lg font-bold text-emerald-900 disabled:cursor-not-allowed disabled:opacity-40 dark:border-stone-600 dark:bg-stone-900 dark:text-white">+</button>
                       </div>
