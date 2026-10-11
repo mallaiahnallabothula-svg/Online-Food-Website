@@ -85,7 +85,7 @@ async function harness(db:Client, state:{now:Date}, mocks:ReturnType<typeof gate
 }
 async function invoke(base:string, path:string, data:unknown, headers:Record<string,string>={}) {
   const res=await fetch(base+'/staging'+path,{
-    method:'POST',headers:{'content-type':'application/json',...headers},
+    method:'POST',headers:{'content-type':'application/json','x-menu-checkout':'1',...headers},
     body:JSON.stringify(data),
   });
   return {status:res.status,body:await res.json()};

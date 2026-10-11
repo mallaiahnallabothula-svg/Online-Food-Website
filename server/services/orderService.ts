@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { loadOwnerOrderCompatibility, type OwnerOrderLine } from './ownerMenuCompatibilityService.ts';
 import type { Transaction } from '@libsql/client';
 import { getDb, withDbRetry } from '../db/index.ts';
 import type { PaymentIntent } from '../payments/provider.ts';
@@ -13,6 +14,7 @@ export interface FinalOrderResult {
 }
 
 export interface FormattedOrder {
+  items?: readonly OwnerOrderLine[];
   id: string;
   customerAccessToken?: string;
   createdAtUtc: string;
@@ -82,6 +84,7 @@ export interface FormattedOrder {
 export function formatCustomerSafeOrder(order: FormattedOrder) {
   return {
     id: order.id,
+    ...(order.items ? { items: order.items } : {}),
     orderStatus: order.orderStatus,
     fulfillmentStatus: order.fulfillmentStatus,
     paymentStatus: order.paymentStatus,
@@ -113,6 +116,10 @@ export function formatCustomerSafeOrder(order: FormattedOrder) {
 
 async function formatOrderWithFeedback(row: any): Promise<FormattedOrder> {
   const order = formatOrderRow(row);
+  if (order.id.startsWith('MENU-')) {
+    const detail = await loadOwnerOrderCompatibility(getDb(), order.id);
+    order.items = detail?.lines;
+  }
   const result = await withDbRetry(() => getDb().execute({
     sql: 'SELECT id, order_id, customer_name, rating, comment, created_at, is_public, publication_consent FROM feedback WHERE order_id = ? LIMIT 1',
     args: [order.id],

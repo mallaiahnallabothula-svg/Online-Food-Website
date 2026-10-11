@@ -7,6 +7,7 @@
 import crypto from 'node:crypto';
 import { Router, type Request } from 'express';
 import { z } from 'zod';
+import { createRateLimiter } from '../middleware/rateLimit.ts';
 import type { Client } from '@libsql/client';
 import { MENU_CATALOG, NEW_MENU_LAUNCH_ENABLED } from '../../shared/menuCatalog.ts';
 import { priceNewMenuCheckout } from '../services/newMenuCheckoutService.ts';
@@ -91,6 +92,15 @@ export function createInactiveNewMenuStage2Router(deps: InactiveMenuStage2Deps) 
   const now = () => deps.now?.() ?? new Date();
   router.use((_req, res, next) => {
     res.setHeader('Cache-Control', 'no-store');
+    if (process.env.NODE_ENV !== 'test' || NEW_MENU_LAUNCH_ENABLED) return res.status(404).json({ error: { code: 'NOT_FOUND' } });
+    next();
+  });
+
+  router.use(createRateLimiter({ windowMs: 60_000, maxRequests: 40, message: 'Please retry shortly.' }));
+  router.use((req, res, next) => {
+    if (!req.is('application/json') || req.get('x-menu-checkout') !== '1') {
+      return res.status(403).json({ error: { code: 'INVALID_REQUEST' } });
+    }
     next();
   });
 
