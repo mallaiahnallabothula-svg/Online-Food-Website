@@ -203,6 +203,7 @@ export function createInactiveNewMenuStage2Router(deps: InactiveMenuStage2Deps) 
     return res.json({
       order: {
         ...formatCustomerSafeOrder(formatOrderRow(order)),
+        ticketText: order.ticket_text ? String(order.ticket_text) : null,
         items: items.rows.map(item => ({
           itemId: String(item.item_id),
           nameEn: String(item.item_name_en),
