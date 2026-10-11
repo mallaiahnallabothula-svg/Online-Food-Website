@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Clock3, Coffee, Sun, Moon, UtensilsCrossed, Wheat } from 'lucide-react';
 import { MENU_CATALOG, type MealPeriod, type MenuItem } from '../../shared/menuCatalog.ts';
 import { useLanguage } from '../context/LanguageContext';
+import { UpcomingCheckoutPreview } from './UpcomingCheckoutPreview';
 
 const money = (paisa: number) => '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
 
@@ -34,15 +35,31 @@ function serving(item: MenuItem, telugu: boolean): string {
 }
 
 /**
- * Read-only public preview of the proposed ten-item catalog.
- * It deliberately has NO cart, checkout, payment, stock reservations or API calls.
+ * Inactive public catalog with a purely local sample cart and preview form.
+ * No order, Razorpay, stock, persistence or API calls are permitted here.
  * The existing two-item OrderForm remains the only live customer checkout.
  */
 export function UpcomingMenuSection() {
   const { language } = useLanguage();
   const te = language === 'te';
   const [period, setPeriod] = useState<MealPeriod>('MORNING');
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
   const visible = MENU_CATALOG.filter(item => item.mealPeriod === period);
+  const selected = visible.filter(item => (quantities[item.id] ?? 0) > 0)
+    .map(item => ({ item, quantity: quantities[item.id]! }));
+  const subtotalPaisa = selected.reduce((total, line) =>
+    total + line.item.pricePaisa * line.quantity, 0);
+
+  function adjustQuantity(item: MenuItem, adjustment: number) {
+    setQuantities(current => {
+      const old = current[item.id] ?? 0;
+      const max = item.dailyPlateLimit ?? 500;
+      const next = adjustment > 0
+        ? Math.min(max, old === 0 ? item.minimumQuantity : old + 1)
+        : old <= item.minimumQuantity ? 0 : old - 1;
+      return { ...current, [item.id]: next };
+    });
+  }
 
   return (
     <section
@@ -78,7 +95,12 @@ export function UpcomingMenuSection() {
               key={key}
               type="button"
               aria-pressed={period === key}
-              onClick={() => setPeriod(key)}
+              onClick={() => {
+                if (period !== key) {
+                  setPeriod(key);
+                  setQuantities({}); // never mix morning and evening checkout slots
+                }
+              }}
               className={
                 'inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:flex-none ' +
                 (period === key
@@ -125,15 +147,47 @@ export function UpcomingMenuSection() {
                   {serving(item, te)}
                   {item.includesChutney && <span> · {te ? 'చట్నీతో' : 'Chutney included'}</span>}
                 </p>
-                <div className="mt-4 border-t border-stone-100 pt-3 text-xs font-semibold text-amber-800 dark:border-stone-700 dark:text-amber-300">
-                  {item.legacyItem
-                    ? (te ? 'ప్రస్తుతం దిగువ ఆర్డర్ ఫారంలో అందుబాటులో ఉంది' : 'Already available in the order form below')
-                    : (te ? 'కొత్త మెనూ ఆర్డర్లు త్వరలో' : 'New-menu ordering coming soon')}
+                <div className="mt-4 border-t border-stone-100 pt-3 dark:border-stone-700">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-[11px] font-semibold text-stone-500 dark:text-stone-300">
+                      {te ? 'డెమో కార్ట్ మాత్రమే' : 'Sample cart only'}
+                    </span>
+                    {(quantities[item.id] ?? 0) === 0 ? (
+                      <button type="button"
+                        aria-label={'Add ' + item.nameEn + ' to sample cart'}
+                        onClick={() => adjustQuantity(item, 1)}
+                        className="min-h-10 rounded-lg bg-[#26543A] px-3 py-2 text-xs font-bold text-white hover:bg-[#1E4330]">
+                        {te ? 'జోడించండి +' : 'Add +'}
+                      </button>
+                    ) : (
+                      <div className="inline-flex items-center gap-2">
+                        <button type="button"
+                          aria-label={'Decrease ' + item.nameEn + ' sample quantity'}
+                          onClick={() => adjustQuantity(item, -1)}
+                          className="flex h-10 w-10 items-center justify-center rounded-lg border border-stone-300 bg-white text-lg font-bold text-emerald-900 dark:border-stone-600 dark:bg-stone-900 dark:text-white">−</button>
+                        <span aria-label={item.nameEn + ' sample quantity'}
+                          className="min-w-5 text-center text-sm font-bold text-stone-900 dark:text-white">
+                          {quantities[item.id]}
+                        </span>
+                        <button type="button"
+                          aria-label={'Increase ' + item.nameEn + ' sample quantity'}
+                          disabled={(quantities[item.id] ?? 0) >= (item.dailyPlateLimit ?? 500)}
+                          onClick={() => adjustQuantity(item, 1)}
+                          className="flex h-10 w-10 items-center justify-center rounded-lg border border-stone-300 bg-white text-lg font-bold text-emerald-900 disabled:cursor-not-allowed disabled:opacity-40 dark:border-stone-600 dark:bg-stone-900 dark:text-white">+</button>
+                      </div>
+                    )}
+                  </div>
+                  <p className="mt-2 text-xs font-semibold text-amber-800 dark:text-amber-300">
+                    {item.legacyItem
+                      ? (te ? 'ప్రస్తుతం దిగువ ఆర్డర్ ఫారంలో అందుబాటులో ఉంది' : 'Already available in the order form below')
+                      : (te ? 'కొత్త మెనూ ఆర్డర్లు త్వరలో' : 'New-menu ordering coming soon')}
+                  </p>
                 </div>
               </div>
             </article>
           ))}
         </div>
+        <UpcomingCheckoutPreview key={period} period={period} lines={selected} subtotalPaisa={subtotalPaisa} te={te} />
         <p className="mt-6 text-center text-xs leading-relaxed text-stone-500 dark:text-stone-400">
           {te
             ? 'ఇక్కడ చూపిన ధరలు కొత్త మెనూ ప్రివ్యూ కోసం మాత్రమే. లైవ్ ఆర్డరింగ్ కేవలం దిగువ ఉన్న ప్రస్తుత ఫారంలోనే అందుబాటులో ఉంది.'
