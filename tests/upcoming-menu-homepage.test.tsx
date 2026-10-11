@@ -39,9 +39,9 @@ describe('PR17 public coming-soon menu (display only)', () => {
     expect(menu.textContent).toContain('7:00 AM – 11:00 AM');
     expect(menu.textContent).toContain('₹30');
     expect(menu.textContent).toContain('₹40');
-    // Preview offers no add-to-cart, order, payment or checkout controls.
+    // Sample cart is interactive, but real payment/order checkout stays disabled.
     expect(within(menu).queryByText('Pay Now')).toBeNull();
-    expect(within(menu).queryByRole('button', { name: /checkout|order now|add to cart/i })).toBeNull();
+    expect(within(menu).getByRole('button', { name: 'New menu checkout unavailable' }).hasAttribute('disabled')).toBe(true);
   });
 
   it('shows four evening items with correct prices and points legacy orders to existing form', () => {
@@ -59,7 +59,7 @@ describe('PR17 public coming-soon menu (display only)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Use English' }));
     expect(chapathi.textContent).toContain('Already available in the order form below');
     expect(menu.textContent).toContain('New-menu ordering coming soon');
-    expect(within(menu).queryByRole('button', { name: /pay|checkout|buy|add/i })).toBeNull();
+    expect(within(menu).getByRole('button', { name: 'New menu checkout unavailable' }).hasAttribute('disabled')).toBe(true);
   });
 
   it('keeps legacy home checkout and owner flow unchanged when section is inserted', () => {
