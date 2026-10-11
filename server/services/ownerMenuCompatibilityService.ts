@@ -1,6 +1,6 @@
 /**
- * INACTIVE foundation for the future owner dashboard + itemized WhatsApp tickets.
- * No existing owner API, dashboard, checkout or legacy ticket code imports this.
+ * Read-only compatibility for owner lists and private customer tracking.
+ * Itemized tickets still require verified payment and settled stock.
  *
  * Read-only by design: no updates to historical orders, tickets, payments,
  * inventory or customer data. Future callers must enforce owner authentication.
@@ -239,8 +239,8 @@ export function renderItemizedOwnerTicket(
 }
 
 /**
- * Read-only owner adapter for a future authenticated API.
- * No DB write and no change to current /api/admin/orders response.
+ * Read-only adapter. API callers must authorize access before calling.
+ * No DB writes; legacy callers can skip this adapter entirely.
  */
 export async function loadOwnerOrderCompatibility(
   db: Client, orderId: string,

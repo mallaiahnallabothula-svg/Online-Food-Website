@@ -26,7 +26,7 @@ const customerSchema = z.strictObject({
   locationLink: z.string().max(2000).optional(),
 });
 
-const quoteSchema = z.strictObject({
+export const quoteSchema = z.strictObject({
   lines: z.array(cartLineSchema).min(1).max(MENU_CATALOG.length),
   customer: customerSchema,
   requestedDeliveryDateIst: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),

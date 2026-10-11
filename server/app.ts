@@ -7,6 +7,7 @@ import { publicRouter } from './routes/publicRoutes.ts';
 import { paymentRouter } from './routes/paymentRoutes.ts';
 import { customerRouter } from './routes/customerRoutes.ts';
 import { adminRouter } from './routes/adminRoutes.ts';
+import { createInactiveNewMenuCheckoutRouter } from './routes/inactiveNewMenuCheckoutRoutes.ts';
 import { newMenuQuoteRouter } from './routes/newMenuQuoteRoutes.ts';
 
 export function createExpressApp() {
@@ -50,6 +51,7 @@ export function createExpressApp() {
   app.use('/api', publicRouter);
   app.use('/api/payment', paymentRouter);
   app.use('/api/menu', newMenuQuoteRouter);
+  app.use('/api/menu/checkout', createInactiveNewMenuCheckoutRouter());
   app.use('/api/customer', customerRouter);
   app.use('/api/orders', customerRouter);
   app.use('/api/admin', adminRouter);

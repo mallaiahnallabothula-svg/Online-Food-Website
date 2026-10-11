@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import crypto from 'crypto';
+import { loadOwnerOrderCompatibility } from '../services/ownerMenuCompatibilityService.ts';
 import {
   loginAdmin,
   logoutSession,
@@ -138,7 +139,8 @@ adminRouter.get('/orders', requireAuth, async (req: AuthenticatedRequest, res: R
 
   const orderRes = await db.execute({ sql: selectSql, args: [...queryArgs, limit, offset] });
 
-  const orders = orderRes.rows.map(r => ({
+  const orders = await Promise.all(orderRes.rows.map(async r => ({
+    ...(String(r.id).startsWith('MENU-') ? { items: (await loadOwnerOrderCompatibility(db, String(r.id)))?.lines } : {}),
     id: String(r.id),
     createdAtUtc: String(r.created_at_utc),
     createdAtIst: String(r.created_at_ist),
@@ -168,7 +170,7 @@ adminRouter.get('/orders', requireAuth, async (req: AuthenticatedRequest, res: R
     receivedBy: r.received_by ? String(r.received_by) : undefined,
     updatedAt: String(r.updated_at),
     updatedBy: String(r.updated_by),
-  }));
+  })));
 
   res.json({
     orders,

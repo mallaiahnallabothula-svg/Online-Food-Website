@@ -1,3 +1,4 @@
+import { OrderItemLines } from './OrderItemLines';
 import { uiError } from '../utils/uiCopy';
 import { useUiText } from '../context/useUiText';
 import React, { useState, useEffect, useRef } from 'react';
@@ -237,6 +238,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                 </div>
                 <div>
                   <span className="text-stone-500 block">{ui("రొట్టెల పరిమాణం:")}</span>
+                  {selectedOrder.items?.length ? <OrderItemLines items={selectedOrder.items} /> : null}
                   <strong className="text-[#78350F] dark:text-amber-400 font-mono text-sm">{selectedOrder.totalItems || selectedOrder.quantity || 0}{" "}{ui("వస్తువులు (₹")}{selectedOrder.totalAmount || selectedOrder.totalPaid || 0})</strong>
                 </div>
                 <div>
