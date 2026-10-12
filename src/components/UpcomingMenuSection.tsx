@@ -179,9 +179,7 @@ export function UpcomingMenuSection() {
                   <p className="mt-2 text-xs font-semibold text-amber-800 dark:text-amber-300">
                     {NEW_MENU_LAUNCH_ENABLED
                       ? (te ? 'ఈ మెనూ ద్వారా ఆర్డర్ చేయండి' : 'Order from this menu')
-                      : item.legacyItem
-                        ? (te ? 'ప్రస్తుతం దిగువ ఆర్డర్ ఫారంలో అందుబాటులో ఉంది' : 'Already available in the order form below')
-                        : (te ? 'కొత్త మెనూ ఆర్డర్లు త్వరలో' : 'New-menu ordering coming soon')}
+                      : (te ? 'కొత్త మెనూ ఆర్డర్లు త్వరలో' : 'New-menu ordering coming soon')}
                   </p>
                 </div>
               </div>
@@ -191,8 +189,8 @@ export function UpcomingMenuSection() {
         <UpcomingCheckoutPreview key={period} period={period} lines={selected} subtotalPaisa={subtotalPaisa} te={te} />
         <p className="mt-6 text-center text-xs leading-relaxed text-stone-500 dark:text-stone-400">
           {te
-            ? (NEW_MENU_LAUNCH_ENABLED ? 'ఆర్డర్‌కు ముందు సర్వర్ ధర, డెలివరీ ప్రాంతం, స్టాక్ మళ్లీ ధృవీకరిస్తుంది.' : 'ఇక్కడి ధరలు ప్రివ్యూ మాత్రమే. ప్రస్తుతం ఆర్డరింగ్ దిగువ ఫారంలో కొనసాగుతుంది.')
-            : (NEW_MENU_LAUNCH_ENABLED ? 'The server rechecks price, delivery area and stock before payment.' : 'These are preview prices. Existing ordering remains in the form below.')}
+            ? (NEW_MENU_LAUNCH_ENABLED ? 'ఆర్డర్‌కు ముందు ధర, డెలివరీ ప్రాంతం, స్టాక్ సర్వర్‌లో మళ్లీ ధృవీకరించబడతాయి.' : 'ఇక్కడి ధరలు ప్రివ్యూ మాత్రమే. కొత్త మెనూ ఆర్డర్లు ఇంకా ప్రారంభం కాలేదు.')
+            : (NEW_MENU_LAUNCH_ENABLED ? 'Price, delivery area and stock are rechecked on the server before payment.' : 'These are preview prices. New-menu ordering is not open yet.')}
         </p>
       </div>
     </section>

@@ -226,7 +226,7 @@ function PreviewCheckoutOnly({
             {te ? 'పేమెంట్ త్వరలో' : 'Payment coming soon'}
           </button>
           <p className="text-center text-xs text-stone-500 dark:text-stone-300">
-            {te ? 'ప్రస్తుత ఆర్డర్లు పేజీ దిగువ ఫారంలో కొనసాగుతాయి.' : 'Current orders still use the existing form below.'}
+            {te ? 'కొత్త మెనూ ఆర్డర్లు ఇంకా ప్రారంభం కాలేదు.' : 'New-menu ordering is not open yet.'}
           </p>
         </form>
       </div>
