@@ -44,7 +44,7 @@ describe('PR17 public coming-soon menu (display only)', () => {
     expect(within(menu).getByRole('button', { name: 'New menu checkout unavailable' }).hasAttribute('disabled')).toBe(true);
   });
 
-  it('shows four evening items with correct prices and points legacy orders to existing form', () => {
+  it('shows four evening items without referring customers to a separate old order form', () => {
     const { container } = mount();
     fireEvent.click(screen.getByRole('button', { name: /సాయంత్రం \(4\)/ }));
     expect(screen.getAllByTestId('upcoming-menu-card')).toHaveLength(4);
@@ -57,20 +57,18 @@ describe('PR17 public coming-soon menu (display only)', () => {
     expect(chapathi.textContent).toContain('₹10');
     expect(chapathi.textContent).toContain('5');
     fireEvent.click(screen.getByRole('button', { name: 'Use English' }));
-    expect(chapathi.textContent).toContain('Already available in the order form below');
+    expect(chapathi.textContent).toContain('New-menu ordering coming soon');
     expect(menu.textContent).toContain('New-menu ordering coming soon');
     expect(within(menu).getByRole('button', { name: 'New menu checkout unavailable' }).hasAttribute('disabled')).toBe(true);
   });
 
-  it('keeps legacy home checkout and owner flow unchanged when section is inserted', () => {
+  it('keeps the customer homepage on the 10-item menu while preserving owner and tracking access', () => {
     const app = fs.readFileSync('src/App.tsx', 'utf8');
-    const banner = app.indexOf('<OrderingHoursBanner');
     const upcoming = app.indexOf('<UpcomingMenuSection');
     const legacyOrder = app.indexOf('<OrderForm');
-    expect(banner).toBeGreaterThan(0);
-    expect(upcoming).toBeGreaterThan(banner);
-    expect(legacyOrder).toBeGreaterThan(upcoming);
-    expect(app).toContain('<PaymentModal');
+    expect(upcoming).toBeGreaterThan(0);
+    expect(legacyOrder).toBe(-1);
+    expect(app).not.toContain('Existing roti &amp; chapathi checkout');
     expect(app).toContain('<OrderTrackingModal');
     expect(app).toContain('<OwnerDashboard');
     expect(app).toContain('<AdminLogin');

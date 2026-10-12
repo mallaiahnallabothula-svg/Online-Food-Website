@@ -2,12 +2,7 @@ import { useUiText } from './context/useUiText';
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
-import { OrderingHoursBanner } from './components/OrderingHoursBanner';
-import { NEW_MENU_LAUNCH_ENABLED } from '../shared/menuCatalog.ts';
 import { UpcomingMenuSection } from './components/UpcomingMenuSection';
-import { OrderForm } from './components/OrderForm';
-import { PaymentModal } from './components/PaymentModal';
-import { OrderConfirmation } from './components/OrderConfirmation';
 import { AdminLogin } from './components/OwnerPortal/AdminLogin';
 import { OwnerDashboard } from './components/OwnerPortal/OwnerDashboard';
 import { AndroidInstallBanner } from './components/AndroidInstallBanner';
@@ -16,9 +11,8 @@ import { OfflineIndicator } from './components/OfflineIndicator';
 import { OrderTrackingModal } from './components/OrderTrackingModal';
 import { BrandEmblem } from './components/BrandEmblem';
 import { usePWAInstall } from './hooks/usePWAInstall';
-import { OrderingHoursStatus, Order, AdminRole } from './types';
+import { OrderingHoursStatus, AdminRole } from './types';
 import { getInitialOrderingStatus, normalizeOrderingStatus } from './utils/time';
-import { persistCustomerOrder } from './utils/checkout';
 import { useLanguage } from './context/LanguageContext';
 import { Phone, Clock, Lock, Smartphone } from 'lucide-react';
 
@@ -38,11 +32,6 @@ export default function App() {
   const [currentView, setCurrentView] = useState<'CUSTOMER' | 'OWNER_LOGIN' | 'OWNER_DASHBOARD'>('CUSTOMER');
   const [isAuthenticatedAdmin, setIsAuthenticatedAdmin] = useState<boolean>(false);
   const [adminRole, setAdminRole] = useState<AdminRole>('ADMIN');
-
-  // Checkout flow state
-  const [pendingOrderData, setPendingOrderData] = useState<any | null>(null);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState<boolean>(false);
-  const [confirmedOrder, setConfirmedOrder] = useState<Order | null>(null);
 
   // Customer Order Tracking & Post-Order Feedback Modal
   const [isOrderTrackingOpen, setIsOrderTrackingOpen] = useState<boolean>(false);
@@ -130,52 +119,10 @@ export default function App() {
 
   // Smooth scroll to order section
   const handleScrollToOrder = () => {
-    setConfirmedOrder(null);
-    const elem = document.getElementById(NEW_MENU_LAUNCH_ENABLED ? 'upcoming-menu' : 'order-section');
+    const elem = document.getElementById('upcoming-menu');
     if (elem) {
       elem.scrollIntoView({ behavior: 'smooth' });
     }
-  };
-
-  // Payment initiate
-  const handleProceedToPayment = (orderPayload: any) => {
-    if (!hoursStatus.isOpen || hoursStatus.apiAvailable !== true || !navigator.onLine) return;
-    setPendingOrderData(orderPayload);
-    setIsPaymentModalOpen(true);
-  };
-
-  // Payment success handler
-  const handlePaymentSuccess = (newConfirmedOrder: Order) => {
-    setIsPaymentModalOpen(false);
-    setConfirmedOrder(newConfirmedOrder);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    // Store in customer local orders list for tracking & feedback
-    try {
-      if (newConfirmedOrder.customerAccessToken) {
-        persistCustomerOrder(newConfirmedOrder.id, newConfirmedOrder.customerAccessToken);
-      }
-      const stored = localStorage.getItem('smjr_customer_orders');
-      const list = stored ? JSON.parse(stored) : [];
-      const updatedList = [
-        {
-          id: newConfirmedOrder.id,
-          customerAccessToken: newConfirmedOrder.customerAccessToken,
-          date: newConfirmedOrder.deliveryDate || newConfirmedOrder.createdAtIST,
-          qty: newConfirmedOrder.totalItems || newConfirmedOrder.quantity,
-          status: newConfirmedOrder.fulfillmentStatus
-        },
-        ...list.filter((item: any) => item.id !== newConfirmedOrder.id)
-      ].slice(0, 10);
-      localStorage.setItem('smjr_customer_orders', JSON.stringify(updatedList));
-    } catch {}
-  };
-
-  // Reset to order new rotis
-  const handleNewOrder = () => {
-    setConfirmedOrder(null);
-    setPendingOrderData(null);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Admin login handler
@@ -233,51 +180,15 @@ export default function App() {
         {/* CUSTOMER VIEW */}
         {currentView === 'CUSTOMER' && (
           <div>
-            {confirmedOrder ? (
-              <OrderConfirmation
-                order={confirmedOrder}
-                onNewOrder={handleNewOrder}
-                onOrderUpdated={(updated) => setConfirmedOrder(updated)}
+            <>
+              <HeroSection
+                onScrollToOrder={handleScrollToOrder}
+                isOpen={hoursStatus.isOpen}
+                onOpenInstallModal={() => setIsInstallModalOpen(true)}
+                isInstalled={isInstalled}
               />
-            ) : (
-              <>
-                <HeroSection
-                  onScrollToOrder={handleScrollToOrder}
-                  isOpen={hoursStatus.isOpen}
-                  onOpenInstallModal={() => setIsInstallModalOpen(true)}
-                  isInstalled={isInstalled}
-                />
-
-                {!NEW_MENU_LAUNCH_ENABLED && (
-                  <OrderingHoursBanner status={hoursStatus} />
-                )}
-
-                <UpcomingMenuSection />
-
-                {NEW_MENU_LAUNCH_ENABLED ? (
-                  <details className="mx-auto my-8 max-w-6xl rounded-2xl border border-stone-200 bg-white px-5 py-4 shadow-sm dark:border-stone-700 dark:bg-stone-900">
-                    <summary className="cursor-pointer font-bold text-stone-800 dark:text-stone-100">
-                      పాత రొట్టె &amp; చపాతీ ఆర్డర్ ఫారం / Existing roti &amp; chapathi checkout
-                    </summary>
-                    <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">
-                      ఇప్పటికే ఉన్న checkout, order history కోసం ఇక్కడ తెరవండి. Open this only for the existing checkout.
-                    </p>
-                    <div className="mt-4">
-                      <OrderingHoursBanner status={hoursStatus} />
-                      <OrderForm
-                        hoursStatus={hoursStatus}
-                        onProceedToPayment={handleProceedToPayment}
-                      />
-                    </div>
-                  </details>
-                ) : (
-                  <OrderForm
-                    hoursStatus={hoursStatus}
-                    onProceedToPayment={handleProceedToPayment}
-                  />
-                )}
-              </>
-            )}
+              <UpcomingMenuSection />
+            </>
           </div>
         )}
 
@@ -297,16 +208,6 @@ export default function App() {
           />
         )}
       </main>
-
-      {/* Payment Modal */}
-      {isPaymentModalOpen && pendingOrderData && (
-        <PaymentModal
-          isOpen={isPaymentModalOpen}
-          onClose={() => setIsPaymentModalOpen(false)}
-          orderData={pendingOrderData}
-          onPaymentSuccess={handlePaymentSuccess}
-        />
-      )}
 
       {/* Footer */}
       <footer className="mt-auto border-t border-amber-900/10 dark:border-stone-800 bg-[#FAF4EA] dark:bg-[#151413] py-8 text-xs font-telugu text-stone-600 dark:text-stone-400">
