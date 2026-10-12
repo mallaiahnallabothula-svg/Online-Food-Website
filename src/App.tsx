@@ -368,7 +368,7 @@ export default function App() {
 
             <div className="flex items-center gap-1.5 text-stone-500 text-[11px]">
               <Clock className="w-3.5 h-3.5" />
-              <span>{language === 'te' ? 'ఆర్డర్లు: 11:00 AM – 4:00 PM | డెలివరీ: 6:00 – 8:00 PM' : 'Orders: 11:00 AM – 4:00 PM | Delivery: 6:00 – 8:00 PM'}</span>
+              <span>{t.footerTimings}</span>
             </div>
           </div>
         </div>
