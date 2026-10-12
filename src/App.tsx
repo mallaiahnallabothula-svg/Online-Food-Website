@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
 import { OrderingHoursBanner } from './components/OrderingHoursBanner';
+import { NEW_MENU_LAUNCH_ENABLED } from '../shared/menuCatalog.ts';
 import { UpcomingMenuSection } from './components/UpcomingMenuSection';
 import { OrderForm } from './components/OrderForm';
 import { PaymentModal } from './components/PaymentModal';
@@ -130,7 +131,7 @@ export default function App() {
   // Smooth scroll to order section
   const handleScrollToOrder = () => {
     setConfirmedOrder(null);
-    const elem = document.getElementById('order-section');
+    const elem = document.getElementById(NEW_MENU_LAUNCH_ENABLED ? 'upcoming-menu' : 'order-section');
     if (elem) {
       elem.scrollIntoView({ behavior: 'smooth' });
     }
@@ -247,17 +248,34 @@ export default function App() {
                   isInstalled={isInstalled}
                 />
 
-                <OrderingHoursBanner
-                  status={hoursStatus}
-                />
+                {!NEW_MENU_LAUNCH_ENABLED && (
+                  <OrderingHoursBanner status={hoursStatus} />
+                )}
 
-                {/* Read-only upcoming menu; existing checkout remains unchanged below. */}
                 <UpcomingMenuSection />
 
-                <OrderForm
-                  hoursStatus={hoursStatus}
-                  onProceedToPayment={handleProceedToPayment}
-                />
+                {NEW_MENU_LAUNCH_ENABLED ? (
+                  <details className="mx-auto my-8 max-w-6xl rounded-2xl border border-stone-200 bg-white px-5 py-4 shadow-sm dark:border-stone-700 dark:bg-stone-900">
+                    <summary className="cursor-pointer font-bold text-stone-800 dark:text-stone-100">
+                      పాత రొట్టె &amp; చపాతీ ఆర్డర్ ఫారం / Existing roti &amp; chapathi checkout
+                    </summary>
+                    <p className="mt-2 text-sm text-stone-600 dark:text-stone-300">
+                      ఇప్పటికే ఉన్న checkout, order history కోసం ఇక్కడ తెరవండి. Open this only for the existing checkout.
+                    </p>
+                    <div className="mt-4">
+                      <OrderingHoursBanner status={hoursStatus} />
+                      <OrderForm
+                        hoursStatus={hoursStatus}
+                        onProceedToPayment={handleProceedToPayment}
+                      />
+                    </div>
+                  </details>
+                ) : (
+                  <OrderForm
+                    hoursStatus={hoursStatus}
+                    onProceedToPayment={handleProceedToPayment}
+                  />
+                )}
               </>
             )}
           </div>
