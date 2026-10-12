@@ -34,7 +34,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-40 w-full backdrop-blur-md transition-colors duration-200 border-b border-amber-900/10 dark:border-stone-800 bg-[#FDFBF7]/95 dark:bg-[#1A1816]/95">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 min-h-20 flex flex-wrap items-center justify-between gap-3 py-3">
         
         {/* Brand Emblem & Name */}
         <div 
@@ -74,7 +74,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex w-full items-center justify-between gap-1 sm:w-auto sm:justify-end sm:gap-3">
 
           {/* Quick Language Toggle */}
           <div className="inline-flex items-center bg-amber-100/70 dark:bg-stone-800 p-0.5 rounded-lg border border-amber-900/10 dark:border-stone-700">
@@ -95,7 +95,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={onOpenInstallModal}
               id="header-install-app-btn"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs transition-all font-telugu cursor-pointer"
+              className="hidden min-h-11 items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg sm:flex bg-emerald-700 hover:bg-emerald-800 text-white shadow-xs transition-all font-telugu cursor-pointer"
               title={ui("Android యాప్ డౌన్‌లోడ్ / Install App")}
             >
               <Smartphone className="w-3.5 h-3.5 text-emerald-200" />
@@ -127,7 +127,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Phone className="w-3.5 h-3.5 text-[#78350F] dark:text-amber-400" />
             <span className="hidden sm:inline font-mono font-medium">+91 8499865803</span>
-            <span className="sm:hidden font-telugu text-xs">{t.callOwnerBtn}</span>
+            <span className="hidden font-telugu text-xs">{t.callOwnerBtn}</span>
           </a>
 
           {/* Dark Mode Toggle */}
@@ -135,7 +135,7 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={onToggleDarkMode}
             id="toggle-theme-btn"
             aria-label={language === 'te' ? 'డార్క్ మోడ్ మార్చండి' : 'Toggle Dark Mode'}
-            className="p-2 rounded-lg text-stone-700 dark:text-stone-300 hover:bg-amber-100/60 dark:hover:bg-stone-800 transition-colors cursor-pointer"
+            className="min-h-11 min-w-11 p-2 rounded-lg text-stone-700 dark:text-stone-300 hover:bg-amber-100/60 dark:hover:bg-stone-800 transition-colors cursor-pointer"
             title={darkMode ? ui("లైట్ మోడ్") : ui("డార్క్ మోడ్")}
           >
             {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-stone-700" />}

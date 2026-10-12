@@ -22,3 +22,17 @@
   background: rgba(120, 53, 15, 0.45);
 }
 
+
+/* The menu uses local illustrative artwork; product facts stay in the catalog. */
+.menu-hero { background: #f5eddf; }
+.dark .menu-hero { background: #211e1a; }
+.menu-display { font-family: 'Noto Sans Telugu', Georgia, serif; }
+.food-artwork { background-repeat: no-repeat; background-color: #eee6d6; }
+.menu-storefront button:focus-visible, .menu-hero button:focus-visible {
+  outline: 2px solid #b77927;
+  outline-offset: 3px;
+}
+.menu-mobile-cart { bottom: max(0.75rem, env(safe-area-inset-bottom)); }
+@media (prefers-reduced-motion: reduce) {
+  .menu-storefront *, .menu-hero * { transition: none !important; animation: none !important; }
+}
