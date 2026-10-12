@@ -15,7 +15,7 @@ export const AndroidInstallBanner: React.FC<AndroidInstallBannerProps> = ({
 }) => {
   const ui = useUiText();
   const [dismissed, setDismissed] = useState<boolean>(false);
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
 
   // If already installed in standalone mode or user dismissed during session
   if (isInstalled || dismissed) {
@@ -41,9 +41,7 @@ export const AndroidInstallBanner: React.FC<AndroidInstallBannerProps> = ({
               </span>
             </div>
             <p className="text-[11px] text-amber-200/90 truncate hidden sm:block">
-              {language === 'te' 
-                ? 'మీ ఫోన్ హోమ్ స్క్రీన్‌పై డౌన్‌లోడ్ చేసుకొని సులభంగా జొన్న రొట్టెలు ఆర్డర్ చేయండి'
-                : 'Install to your phone home screen to order fresh jowar rotis anytime'}
+              {t.pwaBannerDesc}
             </p>
           </div>
         </div>
