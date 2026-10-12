@@ -73,7 +73,7 @@ function aistudioMediaPlugin(): Plugin {
 export default defineConfig(() => {
   return {
     define: {
-      'process.env.NEW_MENU_LAUNCH_ENABLED': JSON.stringify(process.env.NEW_MENU_LAUNCH_ENABLED === 'true'),
+      'process.env.NEW_MENU_LAUNCH_ENABLED': JSON.stringify(process.env.NEW_MENU_LAUNCH_ENABLED === 'true' ? 'true' : 'false'),
     },
     // Keep production customer build identical; preview-only standalone page.
     build: {
