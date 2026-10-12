@@ -177,9 +177,11 @@ export function UpcomingMenuSection() {
                     )}
                   </div>
                   <p className="mt-2 text-xs font-semibold text-amber-800 dark:text-amber-300">
-                    {item.legacyItem
-                      ? (te ? 'ప్రస్తుతం దిగువ ఆర్డర్ ఫారంలో అందుబాటులో ఉంది' : 'Already available in the order form below')
-                      : (NEW_MENU_LAUNCH_ENABLED ? (te ? 'ఆన్‌లైన్‌లో ఆర్డర్ చేయండి' : 'Order from this menu') : (te ? 'కొత్త మెనూ ఆర్డర్లు త్వరలో' : 'New-menu ordering coming soon'))}
+                    {NEW_MENU_LAUNCH_ENABLED
+                      ? (te ? 'ఈ మెనూ ద్వారా ఆర్డర్ చేయండి' : 'Order from this menu')
+                      : item.legacyItem
+                        ? (te ? 'ప్రస్తుతం దిగువ ఆర్డర్ ఫారంలో అందుబాటులో ఉంది' : 'Already available in the order form below')
+                        : (te ? 'కొత్త మెనూ ఆర్డర్లు త్వరలో' : 'New-menu ordering coming soon')}
                   </p>
                 </div>
               </div>

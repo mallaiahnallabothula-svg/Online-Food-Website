@@ -265,9 +265,9 @@ export const translations: Record<Language, Translations> = {
 
     // Hero Section
     badgeTraditional: 'స్వచ్ఛమైన గ్రామీణ సంప్రదాయ ఆహారం',
-    heroDescription: 'రోజూ సాయంత్రం పొయ్యి మీద తాజాగా కాల్చిన మెత్తటి పల్లె జొన్న రొట్టెలు (₹30) మరియు వేడివేడి చపాతీలు (₹10). ప్రతి పూర్తి 5 సంఖ్యలకు 20 గ్రా. ఉచిత పల్లెటూరి కారం (కరివేపాకు కారం లేదా అవిసె గింజల కారం).',
-    featurePriceTitle: 'రొట్టె ₹30 | చపాతీ ₹10',
-    featurePriceSub: 'కనీస ఆర్డర్: 5 సంఖ్య (Min 5)',
+    heroDescription: 'ఉదయం ఇడ్లీ, రాగి ఇడ్లీ, ప్లెయిన్/ఉల్లి పెసరట్టు, ప్లెయిన్/ఉల్లి మినప దోసె; సాయంత్రం జొన్న రొట్టె, చపాతీ, పుల్కా, గుంత పొంగనాలు — మొత్తం 10 ఇంటి వంటలు.',
+    featurePriceTitle: '10 రకాల మెనూ',
+    featurePriceSub: 'ఉదయం 6 | సాయంత్రం 4 | ₹20 నుండి',
     featureKaramTitle: 'ఉచిత కారాలు',
     featureKaramSub: 'ప్రతి 5 రొట్టెలకు 20 గ్రా. ఉచితం',
     featureDeliveryTitle: 'ఉచిత డెలివరీ',
@@ -508,9 +508,9 @@ export const translations: Record<Language, Translations> = {
 
     // Hero Section
     badgeTraditional: '100% Traditional Village Cuisine',
-    heroDescription: 'Authentic jowar rotis (₹30) and fresh hot wheat chapathis (₹10) freshly roasted on hot tawa every evening. Complimentary homemade dry podi with every 5 rotis/chapathis.',
-    featurePriceTitle: 'Roti ₹30 | Chapathi ₹10',
-    featurePriceSub: 'Minimum order: 5 nos',
+    heroDescription: 'Choose from 10 home-style dishes: idly and ragi idly, plain or onion pesarattu, plain or onion minapa dosa in the morning; jowar roti, chapathi, pulka and guntha ponganaalu in the evening.',
+    featurePriceTitle: '10-item menu',
+    featurePriceSub: '6 morning + 4 evening · from ₹20',
     featureKaramTitle: 'Free Dry Podis',
     featureKaramSub: '20g free per 5 rotis',
     featureDeliveryTitle: 'Free Delivery',
