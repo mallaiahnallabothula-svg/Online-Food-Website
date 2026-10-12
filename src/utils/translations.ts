@@ -248,7 +248,7 @@ export const translations: Record<Language, Translations> = {
     // Brand
     brandName: 'మన ఇంటి వంట',
     brandTagline: 'అచ్చమైన పల్లెటూరి రుచులు — స్వచ్ఛమైన ఆరోగ్యం',
-    brandSubtext: 'ప్రతి రోజూ వేడివేడి జొన్న రొట్టెలు & సాంప్రదాయ కారాలు',
+    brandSubtext: 'ఉదయం అల్పాహారం | సాయంత్రం ఇంటివంటలు — 10 రకాల మెనూ',
     villageLocation: 'కొల్లూరు గ్రామం',
 
     // Language switcher
@@ -268,8 +268,8 @@ export const translations: Record<Language, Translations> = {
     heroDescription: 'ఉదయం ఇడ్లీ, రాగి ఇడ్లీ, ప్లెయిన్/ఉల్లి పెసరట్టు, ప్లెయిన్/ఉల్లి మినప దోసె; సాయంత్రం జొన్న రొట్టె, చపాతీ, పుల్కా, గుంత పొంగనాలు — మొత్తం 10 ఇంటి వంటలు.',
     featurePriceTitle: '10 రకాల మెనూ',
     featurePriceSub: 'ఉదయం 6 | సాయంత్రం 4 | ₹20 నుండి',
-    featureKaramTitle: 'ఉచిత కారాలు',
-    featureKaramSub: 'ప్రతి 5 రొట్టెలకు 20 గ్రా. ఉచితం',
+    featureKaramTitle: 'ఇంటి తోడు రుచులు',
+    featureKaramSub: 'వంటకాన్ని బట్టి చట్నీ, తోడు రుచులు',
     featureDeliveryTitle: 'ఉచిత డెలివరీ',
     featureDeliverySub: 'కొల్లూరు నుండి 5 కి.మీ. పరిధిలో',
     featureTimeTitle: 'డెలివరీ సమయం',
@@ -279,15 +279,15 @@ export const translations: Record<Language, Translations> = {
 
     // Menu Highlights
     highlightsTitle: 'మన ఇంటి వంట విశిష్టతలు',
-    highlightsSubtitle: 'ఎలాంటి రసాయనాలు లేని పక్కా సహజ సిద్ధమైన గ్రామీణ రుచి',
-    pureIngredientsTitle: '100% స్వచ్ఛమైన జొన్న పిండి',
-    pureIngredientsDesc: 'ఎటువంటి మైదా, గోధుమ పిండి లేదా ప్రిజర్వేటివ్‌లు కలపకుండా రోజూ రుబ్బిన స్వచ్ఛమైన జొన్నలతో తయారుచేస్తాము.',
-    freshlyMadeTitle: 'ఆర్డర్ పైనే వేడివేడిగా',
-    freshlyMadeDesc: 'మీ ఆర్డర్ ఆధారంగా సాయంత్రం వేళ అప్పటికప్పుడు వేడి పెనంపై సిద్ధం చేసి డెలివరీకి పంపుతాము.',
-    healthyNutritiousTitle: 'షుగర్, బీపీ వారికి అమృతం',
-    healthyNutritiousDesc: 'పీచు పదార్థం, ప్రోటీన్లు సమృద్ధిగా ఉండే సంపూర్ణ ఆరోగ్యాన్నిచ్చే సహజ ఆహారం.',
-    hygienicKitchenTitle: 'అమ్మ చేతి పరిశుభ్రత',
-    hygienicKitchenDesc: 'పల్లెటూరి ఇంటి వాతావరణంలో సంపూర్ణ శుభ్రతతో, స్వచ్ఛమైన తాగునీటితో రొట్టెలను తయారుచేస్తాము.',
+    highlightsSubtitle: 'ఉదయం 6 రకాల అల్పాహారం, సాయంత్రం 4 రకాల ఇంటివంటలు',
+    pureIngredientsTitle: 'ఉదయం అల్పాహారం',
+    pureIngredientsDesc: 'ఇడ్లీ, రాగి ఇడ్లీ, పెసరట్టు మరియు మినప దోసె రకాలు.',
+    freshlyMadeTitle: 'సాయంత్రం ఇష్టమైనవి',
+    freshlyMadeDesc: 'జొన్న రొట్టె, చపాతీ, పుల్కా, గుంత పొంగనాలు.',
+    healthyNutritiousTitle: 'మీకు నచ్చినవి ఎంచుకోండి',
+    healthyNutritiousDesc: 'మెనూ నుంచి వంటకాలు, పరిమాణాలు ఎంచుకుని ఆర్డర్ వివరాలు చూడండి.',
+    hygienicKitchenTitle: 'ఇంటి వంట',
+    hygienicKitchenDesc: 'మన ఇంటి వంటలో ఉదయం, సాయంత్రం వంటకాల ఎంపికలు ఉన్నాయి.',
     freshBatchBadge: 'నేటి తాజా బ్యాచ్',
     villageCraftBadge: '100% పల్లెటూరి సంప్రదాయం',
 
@@ -467,7 +467,7 @@ export const translations: Record<Language, Translations> = {
     // Android Install Modal & Banner
     pwaInstallBadge: 'ఆండ్రాయిడ్ యాప్',
     pwaBannerHeadline: 'మన ఇంటి వంట - Android యాప్ అందుబాటులో ఉంది!',
-    pwaBannerDesc: 'మీ ఫోన్ హోమ్ స్క్రీన్‌పై డౌన్‌లోడ్ చేసుకొని సులభంగా జొన్న రొట్టెలు ఆర్డర్ చేయండి',
+    pwaBannerDesc: 'ఫోన్ హోమ్ స్క్రీన్‌లో ఇన్‌స్టాల్ చేసి 10 రకాల మెనూను చూడండి, ఆర్డర్ చేయండి.',
     pwaFreeBadge: '100% ఉచిత డౌన్‌లోడ్',
     installAppBtn: 'యాప్ ఇన్‌స్టాల్',
     noPlayStoreNeeded: 'ప్లేస్టోర్ అవసరం లేదు (Direct)',
@@ -484,14 +484,14 @@ export const translations: Record<Language, Translations> = {
     footerRights: 'మన ఇంటి వంట — అన్ని హక్కులు ప్రత్యేకించబడ్డాయి.',
     footerFreeDelivery: 'కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధిలో ఉచిత డెలివరీ.',
     ownerPortalLink: 'యజమాని పోర్టల్',
-    footerTimings: 'ఆర్డర్లు: 11:00 AM – 4:00 PM | డెలివరీ: 6:00 – 8:00 PM',
+    footerTimings: 'కొత్త మెనూ: ఉదయం 7:00 – 11:00 | సాయంత్రం 6:00 – 8:00 IST',
   },
 
   en: {
     // Brand
     brandName: 'Mana Enti Vanta',
     brandTagline: 'Authentic Homemade Village Flavors — Pure & Healthy',
-    brandSubtext: 'Daily Fresh Hot Jowar Rotis & Traditional Village Podis',
+    brandSubtext: 'Fresh breakfast & homestyle evening meals — 10 dishes',
     villageLocation: 'Kolluru Village',
 
     // Language switcher
@@ -511,8 +511,8 @@ export const translations: Record<Language, Translations> = {
     heroDescription: 'Choose from 10 home-style dishes: idly and ragi idly, plain or onion pesarattu, plain or onion minapa dosa in the morning; jowar roti, chapathi, pulka and guntha ponganaalu in the evening.',
     featurePriceTitle: '10-item menu',
     featurePriceSub: '6 morning + 4 evening · from ₹20',
-    featureKaramTitle: 'Free Dry Podis',
-    featureKaramSub: '20g free per 5 rotis',
+    featureKaramTitle: 'Homemade accompaniments',
+    featureKaramSub: 'Side options vary by dish',
     featureDeliveryTitle: 'Free Delivery',
     featureDeliverySub: 'Within 5 km of Kolluru',
     featureTimeTitle: 'Delivery Time',
@@ -522,15 +522,15 @@ export const translations: Record<Language, Translations> = {
 
     // Menu Highlights
     highlightsTitle: 'Why Choose Mana Enti Vanta?',
-    highlightsSubtitle: 'Chemical-free, zero maida, pure traditional village nutrition',
-    pureIngredientsTitle: '100% Pure Sorghum (Jowar)',
-    pureIngredientsDesc: 'Prepared from freshly milled premium jowar with zero maida, wheat, or artificial preservatives.',
-    freshlyMadeTitle: 'Freshly Made on Order',
-    freshlyMadeDesc: 'Every batch is prepared fresh on the hot tawa just before evening delivery.',
-    healthyNutritiousTitle: 'Diabetic & Heart Friendly',
-    healthyNutritiousDesc: 'High dietary fiber, rich plant proteins, and low glycemic index for complete holistic health.',
-    hygienicKitchenTitle: 'Hygienic Home Kitchen',
-    hygienicKitchenDesc: 'Crafted in a clean rural home kitchen with purified water and utmost care.',
+    highlightsSubtitle: 'Choose from 6 morning and 4 evening dishes.',
+    pureIngredientsTitle: 'Morning breakfast',
+    pureIngredientsDesc: 'Idly, ragi idly, plain and onion pesarattu, plain and onion minapa dosa.',
+    freshlyMadeTitle: 'Evening favourites',
+    freshlyMadeDesc: 'Jowar roti, chapathi, pulka and guntha ponganaalu.',
+    healthyNutritiousTitle: 'Choose what you like',
+    healthyNutritiousDesc: 'Pick dishes and quantities from the menu, then review your order details.',
+    hygienicKitchenTitle: 'Homestyle menu',
+    hygienicKitchenDesc: 'Explore 6 morning and 4 evening options from Mana Enti Vanta.',
     freshBatchBadge: "Today's Fresh Batch",
     villageCraftBadge: '100% Traditional Village Craft',
 
@@ -710,7 +710,7 @@ export const translations: Record<Language, Translations> = {
     // Android Install Modal & Banner
     pwaInstallBadge: 'Android App',
     pwaBannerHeadline: 'Mana Enti Vanta - Android App Available!',
-    pwaBannerDesc: 'Install to your phone home screen to order fresh jowar rotis anytime',
+    pwaBannerDesc: 'Install the menu on your phone home screen and browse all 10 dishes.',
     pwaFreeBadge: '100% Free Download',
     installAppBtn: 'Install App',
     noPlayStoreNeeded: 'No Play Store needed (Direct)',
@@ -727,6 +727,6 @@ export const translations: Record<Language, Translations> = {
     footerRights: 'Mana Enti Vanta — All rights reserved.',
     footerFreeDelivery: 'Free delivery within 5 km of Kolluru village.',
     ownerPortalLink: 'Owner Portal',
-    footerTimings: 'Orders: 11:00 AM – 4:00 PM | Delivery: 6:00 – 8:00 PM',
+    footerTimings: 'New menu: 7:00–11:00 AM and 6:00–8:00 PM IST',
   }
 };

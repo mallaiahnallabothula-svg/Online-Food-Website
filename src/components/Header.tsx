@@ -2,6 +2,7 @@ import { useUiText } from '../context/useUiText';
 import React from 'react';
 import { Phone, Moon, Sun, ShoppingBag, Smartphone, MessageSquareHeart, Languages } from 'lucide-react';
 import { OrderingHoursStatus } from '../types';
+import { NEW_MENU_LAUNCH_ENABLED } from '../../shared/menuCatalog.ts';
 import { BrandEmblem } from './BrandEmblem';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -54,7 +55,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Center: Status indicator for customer */}
         <div className="hidden lg:flex items-center gap-2">
-          {hoursStatus && (
+          {hoursStatus && !NEW_MENU_LAUNCH_ENABLED && (
             <div 
               className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold font-telugu ${
                 hoursStatus.isOpen 
