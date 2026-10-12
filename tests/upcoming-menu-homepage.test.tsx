@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import fs from 'node:fs';
 import { UpcomingMenuSection } from '../src/components/UpcomingMenuSection.tsx';
@@ -9,6 +9,7 @@ import { MENU_CATALOG, NEW_MENU_LAUNCH_ENABLED } from '../shared/menuCatalog.ts'
 afterEach(() => {
   cleanup();
   localStorage.clear();
+  vi.unstubAllGlobals();
 });
 
 function LanguageSwitch() {
@@ -73,5 +74,33 @@ describe('PR17 public coming-soon menu (display only)', () => {
     expect(app).toContain('<OwnerDashboard');
     expect(app).toContain('<AdminLogin');
     expect(NEW_MENU_LAUNCH_ENABLED).toBe(false);
+  });
+});
+
+
+describe('menu cart navigation', () => {
+  it('keeps the visible cart total in sync and moves to delivery without starting checkout', () => {
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+    const scroll = vi.fn();
+    const { container } = mount();
+    fireEvent.click(screen.getByRole('button', { name: 'Use English' }));
+    const delivery = container.querySelector('#menu-delivery') as HTMLElement;
+    delivery.scrollIntoView = scroll;
+    for (let i = 0; i < 4; i++) {
+      fireEvent.click(screen.getByRole('button', { name: i === 0 ? 'Add Idly to sample cart' : 'Increase Idly sample quantity' }));
+    }
+    expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹120');
+    fireEvent.click(screen.getByRole('button', { name: 'View cart' }));
+    expect(scroll).toHaveBeenCalledTimes(1);
+    expect(document.activeElement).toBe(delivery);
+    expect(fetchSpy).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Evening (4)' }));
+    expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹0');
+    expect(screen.queryByRole('button', { name: 'View cart' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Add Jowar Roti to sample cart' }));
+    expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹150');
+    expect(fetchSpy).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
   });
 });
