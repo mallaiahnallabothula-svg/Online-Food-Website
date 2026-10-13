@@ -87,7 +87,6 @@ html { background:#FAF6ED; }
 .solara-app .solara-customer #delivery-info { background-color:#e8ebdc; color:#384B35; }
 .solara-app .solara-customer :is(#brand-story,#at-the-table,#faq,#delivery-info,#contact-info) { border-color:#e6dece; }
 .solara-app .solara-customer :is(#brand-story,#at-the-table,#faq,#delivery-info,#contact-info) .solara-display { color:#384B35; }
-.solara-app .solara-customer :is(#brand-story,#at-the-table,#faq,#delivery-info,#contact-info) .text-\\[\\#A44732\\] { color:#A44732; }
 .solara-app .solara-customer .solara-hero { isolation:isolate; }
 .solara-app .solara-hero-title { text-wrap:balance; }
 .solara-app .solara-hero-art { width:100%; }
@@ -121,3 +120,9 @@ html { background:#FAF6ED; }
 .dark .solara-app .solara-customer :is(#brand-story,#at-the-table,#faq,#delivery-info,#contact-info) .solara-display { color:#f4eedf; }
 .dark .solara-app .solara-footer { background-color:#151413; }
 .dark .solara-app .solara-owner { background:#211f1c; }
+
+/* Owner screens share the palette without changing success/error/order states. */
+.solara-app .solara-owner-login :is(h1,h2),
+.solara-app .solara-owner-dashboard :is(h1,h2) { color:#384B35; }
+.dark .solara-app .solara-owner-login :is(h1,h2),
+.dark .solara-app .solara-owner-dashboard :is(h1,h2) { color:#f4eedf; }
