@@ -116,8 +116,8 @@ describe('menu cart navigation', () => {
     expect(screen.queryByRole('complementary', { name: 'Your cart summary' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'View cart' }));
     expect(navigate).toHaveBeenCalledTimes(1);
-    expect(navigate.mock.calls[0][0].period).toBe('MORNING');
-    expect(navigate.mock.calls[0][0].subtotalPaisa).toBe(12000);
+    expect(navigate.mock.calls[0]![0].period).toBe('MORNING');
+    expect(navigate.mock.calls[0]![0].subtotalPaisa).toBe(12000);
     expect(fetchSpy).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Evening (6)' }));
     expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹0');

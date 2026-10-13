@@ -8,8 +8,8 @@ import { rememberCheckoutSelection, restoreCheckoutSelection, type CheckoutSelec
 
 afterEach(() => { cleanup(); sessionStorage.clear(); localStorage.clear(); vi.unstubAllGlobals(); });
 const selection: CheckoutSelection = {
-  period: 'MORNING', lines: [{ item: MENU_CATALOG[0], quantity: 4 }],
-  subtotalPaisa: MENU_CATALOG[0].pricePaisa * 4,
+  period: 'MORNING', lines: [{ item: MENU_CATALOG[0]!, quantity: 4 }],
+  subtotalPaisa: MENU_CATALOG[0]!.pricePaisa * 4,
 };
 describe('Separate secure checkout page', () => {
   it('renders checkout with Back to Menu and preserves the launch gate', () => {
