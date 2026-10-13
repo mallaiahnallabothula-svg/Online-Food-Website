@@ -20,7 +20,7 @@ const sourceOrder = {
     { itemId: 'pappu-of-the-day', nameEn: 'Tomato Pappu', nameTe: 'టమాటా పప్పు',
       quantity: 1, saleUnit: 'PACK', piecesPerUnit: null, unitPricePaisa: 3000, lineTotalPaisa: 3000 },
   ],
-} as Order;
+} as unknown as Order;
 
 afterEach(() => {
   cleanup();
@@ -47,10 +47,10 @@ describe('one-click reorder V1 safety', () => {
       { paymentStatus: 'PENDING' }, { paymentStatus: 'FAILED' },
       { fulfillmentStatus: 'RECEIVED' }, { fulfillmentStatus: 'CANCELLED' },
       { id: 'SMJR-OLD-100' }, { items: [] }, { items: undefined },
-      { items: [{ ...sourceOrder.items![0], itemId: 'invalid-item' }] },
-      { items: [sourceOrder.items![0], sourceOrder.items![0]] },
-      { items: [sourceOrder.items![0], { ...sourceOrder.items![1], itemId: 'idly' }] },
-      { items: [{ ...sourceOrder.items![0], quantity: 0 }] },
+      { items: [{ ...sourceOrder.items![0]!, itemId: 'invalid-item' }] },
+      { items: [sourceOrder.items![0]!, sourceOrder.items![0]!] },
+      { items: [sourceOrder.items![0]!, { ...sourceOrder.items![1]!, itemId: 'idly' }] },
+      { items: [{ ...sourceOrder.items![0]!, quantity: 0 }] },
     ];
     for (const patch of cases) expect(buildReorderRequest({ ...sourceOrder, ...patch })).toBeNull();
   });

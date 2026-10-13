@@ -38,7 +38,7 @@ export function checkReorderStock(request: ReorderRequest, stock: Record<string,
     seen.add(itemId);
     if (quantity < item.minimumQuantity) return 'minimum';
     const available = stock[itemId];
-    if (!Number.isSafeInteger(available) || available < 0) return 'unavailable';
+    if (typeof available !== 'number' || !Number.isSafeInteger(available) || available < 0) return 'unavailable';
     if (quantity > available || (item.dailyPlateLimit !== null && quantity > item.dailyPlateLimit)) return 'stock';
   }
   return null;
