@@ -26,10 +26,10 @@ import {
   XCircle
 } from 'lucide-react';
 import { Order, FulfillmentStatus, AdminRole, AnalyticsData, AuditLog, OrderFeedback } from '../../types';
-import { playOrderNotificationSound } from '../../utils/audio';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { KitchenBoard } from './KitchenBoard';
 import { TomorrowPreordersSummary } from './TomorrowPreordersSummary';
+import { PaidOrderAlerts } from './PaidOrderAlerts';
 import { AuditLogs } from './AuditLogs';
 import { CustomerFeedbackView } from './CustomerFeedbackView';
 import { useLanguage } from '../../context/LanguageContext';
@@ -61,9 +61,9 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
   const [errorMessage, setErrorMessage] = useState('');
   const latestRequest = useRef(0);
   
-  // Audio chime settings
+  // Alert sound toggle is shared with the dedicated payment-verified alert feed.
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
-  const previousOrdersCountRef = useRef<number>(0);
+  const [highlightOrderId, setHighlightOrderId] = useState<string | null>(null);
   
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
@@ -95,13 +95,6 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
         if (page > (data.pagination?.totalPages || 1)) setPage(data.pagination?.totalPages || 1);
         setErrorMessage('');
 
-        // Check if new order arrived and trigger audio chime
-        if (previousOrdersCountRef.current > 0 && incomingOrders.length > previousOrdersCountRef.current) {
-          if (soundEnabled) {
-            playOrderNotificationSound();
-          }
-        }
-        previousOrdersCountRef.current = incomingOrders.length;
         setOrders(incomingOrders);
       } else if (ordersRes.status === 401) {
         onLogout();
@@ -327,6 +320,15 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
         </div>
       </div>
 
+      <PaidOrderAlerts soundEnabled={soundEnabled} onSessionExpired={onLogout}
+        onViewOrder={id => {
+          setHighlightOrderId(id);
+          setStatusFilter('ALL');
+          setDateFilter('');
+          setSearchQuery(id);
+          setPage(1);
+          setActiveTab('ORDERS');
+        }} />
       <TomorrowPreordersSummary onViewTomorrow={date => {
         setKitchenInitialDate(date);
         setActiveTab('KITCHEN');
@@ -479,7 +481,10 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                 return (
                   <div
                     key={order.id}
-                    className="bg-white dark:bg-[#211E1A] p-5 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-xs hover:border-amber-300 dark:hover:border-amber-800 transition-all space-y-4"
+                    className={'bg-white dark:bg-[#211E1A] p-5 rounded-2xl border shadow-xs transition-all space-y-4 ' +
+                      (highlightOrderId === order.id
+                        ? 'border-amber-500 ring-2 ring-amber-400 dark:border-amber-400'
+                        : 'border-stone-200 dark:border-stone-800 hover:border-amber-300 dark:hover:border-amber-800')}
                   >
                     {/* Top Order Row */}
                     <div className="flex flex-wrap items-start justify-between gap-3 border-b border-stone-100 dark:border-stone-800 pb-3">
