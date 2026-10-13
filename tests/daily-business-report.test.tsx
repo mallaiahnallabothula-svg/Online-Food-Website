@@ -89,7 +89,10 @@ describe('Daily Business Report V1 — authoritative paid delivery-date aggregat
     const today = istToday();
     const orders = [
       paid('M', { deliveryDate: today }),
-      paid('E', { deliveryDate: today, deliveryWindow: '18:00-20:00', subtotal: 100, deliveryCharge: 50, totalAmount: 150 }),
+      paid('E', { deliveryDate: today, deliveryWindow: '18:00-20:00', subtotal: 100, deliveryCharge: 50, totalAmount: 150,
+        items: [{ itemId: 'chapathi', nameEn: 'Chapathi', nameTe: 'చపాతీ', quantity: 2,
+          saleUnit: 'PIECE', piecesPerUnit: null, unitPricePaisa: 600, lineTotalPaisa: 1200 }],
+      }),
       paid('PENDING', { deliveryDate: today, paymentStatus: 'PENDING' }),
     ];
     const fetcher = vi.fn(async (url: string) => {
