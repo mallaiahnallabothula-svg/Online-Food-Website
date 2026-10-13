@@ -20,7 +20,7 @@ function startCheckout() {
   render(<LanguageProvider><LiveNewMenuCheckout period="MORNING" lines={lines} te={false}/></LanguageProvider>);
   fireEvent.change(screen.getByPlaceholderText('Your full name'), { target: { value: 'Test Customer' } });
   fireEvent.change(screen.getByPlaceholderText('10-digit mobile number'), { target: { value: '9000000001' } });
-  fireEvent.change(screen.getByPlaceholderText('Flat number, building, area'), { target: { value: 'Flat 1, Home Test Apartments, Kollur' } });
+  fireEvent.change(screen.getByPlaceholderText('Flat number, building and area'), { target: { value: 'Flat 1, Home Test Apartments, Kollur' } });
 }
 
 function choosePin(value: string) {
@@ -92,7 +92,7 @@ describe('Delivery Location Accuracy V1', () => {
     fireEvent.click(screen.getByRole('checkbox', { name: 'Confirm delivery address and map pin' }));
     fireEvent.click(screen.getByRole('button', { name: 'Check delivery and total' }));
     await screen.findByText('Review before payment');
-    fireEvent.change(screen.getByPlaceholderText('Flat number, building, area'), { target: { value: 'Flat 2, Changed Address' } });
+    fireEvent.change(screen.getByPlaceholderText('Flat number, building and area'), { target: { value: 'Flat 2, Changed Address' } });
     expect((screen.getByRole('checkbox', { name: 'Confirm delivery address and map pin' }) as HTMLInputElement).checked).toBe(false);
     expect(screen.queryByRole('button', { name: /Pay ₹170 with Razorpay/ })).toBeNull();
     expect((screen.getByRole('button', { name: 'Check delivery and total' }) as HTMLButtonElement).disabled).toBe(true);
