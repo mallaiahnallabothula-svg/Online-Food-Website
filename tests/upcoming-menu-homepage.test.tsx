@@ -45,6 +45,24 @@ describe('PR17 public coming-soon menu (display only)', () => {
     expect(within(menu).getByRole('button', { name: 'New menu checkout unavailable' }).hasAttribute('disabled')).toBe(true);
   });
 
+  it('shows small food artwork for each row, with original prices and controls', () => {
+    const { container } = mount();
+    const menu = screen.getByTestId('upcoming-menu-section');
+    const rows = screen.getAllByTestId('upcoming-menu-card');
+    expect(rows).toHaveLength(6);
+    for (const row of rows) {
+      expect(row.querySelector('[aria-hidden="true"].food-artwork')).toBeTruthy();
+    }
+    expect(container.querySelector('[data-item-id="idly"]')?.textContent).toContain('₹30');
+    fireEvent.click(within(menu).getByRole('button', { name: 'Add Idly to sample cart' }));
+    expect(within(menu).getByRole('button', { name: 'View cart' })).toBeTruthy();
+    expect(within(menu).getByTestId('menu-cart-total').textContent).toContain('₹30');
+    fireEvent.click(screen.getByRole('button', { name: 'Evening (6)' }));
+    expect(screen.getAllByTestId('upcoming-menu-card')).toHaveLength(6);
+    expect(container.querySelector('[data-item-id="pappu-of-the-day"]')?.querySelector('svg')).toBeTruthy();
+    expect(container.querySelector('[data-item-id="mixed-veg-kurma"]')?.querySelector('svg')).toBeTruthy();
+  });
+
   it('shows four evening items without referring customers to a separate old order form', () => {
     const { container } = mount();
     fireEvent.click(screen.getByRole('button', { name: 'Evening (6)' }));

@@ -6,6 +6,7 @@ import { MENU_CATALOG, NEW_MENU_LAUNCH_ENABLED, NEW_MENU_ORDER_POLICY, type Meal
 import { useLanguage } from '../context/LanguageContext';
 import { UpcomingCheckoutPreview } from './UpcomingCheckoutPreview';
 import { checkReorderStock, type ReorderError, type ReorderRequest } from '../utils/reorder';
+import { FoodArtwork } from './FoodArtwork';
 
 const money = (paisa: number) => '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
 
@@ -120,6 +121,7 @@ export function UpcomingMenuSection({ reorderRequest, onReorder }: { reorderRequ
     .map(item => ({ item, quantity: quantities[item.id]! }));
   const subtotalPaisa = selected.reduce((total, line) =>
     total + line.item.pricePaisa * line.quantity, 0);
+  const selectedQuantity = selected.reduce((total, line) => total + line.quantity, 0);
 
   function adjustQuantity(item: MenuItem, adjustment: number) {
     setReorderNotice(null);
@@ -207,7 +209,7 @@ export function UpcomingMenuSection({ reorderRequest, onReorder }: { reorderRequ
           </p>
         )}
         <div className="mt-6 flex items-center justify-between gap-3">
-          <h3 className="flex items-center gap-2 text-base font-bold text-[#36533A] dark:text-emerald-200">
+          <h3 className="flex items-center gap-2 text-2xl font-medium text-[#26231f] dark:text-stone-100">
             {period === 'MORNING' ? <Coffee size={19} aria-hidden="true" /> : <UtensilsCrossed size={19} aria-hidden="true" />}
             {te ? periods[period].titleTe : periods[period].titleEn}
           </h3>
@@ -215,42 +217,38 @@ export function UpcomingMenuSection({ reorderRequest, onReorder }: { reorderRequ
         </div>
 
         {selected.length > 0 && <p className="mt-2 text-xs text-stone-600 dark:text-stone-300">{te ? 'ప్రతి సమయానికి వేరు కార్ట్, ఆర్డర్, పేమెంట్.' : 'Each session has a separate cart, order and payment.'}</p>}
-        <div className="mt-8 grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_260px]">
-          <div className="min-w-0 border-t border-dotted border-[#c7bcb0]" role="list">
-            {visible.map((item, index) => (
+        <div className="mt-8">
+          <div className="grid min-w-0 grid-cols-1 gap-x-10 md:grid-cols-2" role="list">
+            {visible.map(item => (
               <article key={item.id} role="listitem" data-testid="upcoming-menu-card" data-item-id={item.id}
-                className="solara-menu-row grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-3 border-b border-dotted border-[#c7bcb0] py-5 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-center dark:border-stone-600">
-                <div className="min-w-0">
-                  <div className="flex items-baseline gap-3">
-                    <span className="shrink-0 font-serif text-sm italic text-[#ab4d3e]">{String(index + 1).padStart(2, '0')}</span>
-                    <div className="min-w-0">
-                      <h4 className="solara-display text-xl font-medium leading-snug text-[#26231f] dark:text-stone-100">{te ? item.nameTe : item.nameEn}</h4>
-                      <p className="mt-1 text-xs text-[#756f67] dark:text-stone-300">{serving(item, te)}{item.includesChutney && <span> · {te ? 'చట్నీతో' : 'Chutney included'}</span>}</p>
-                      <p className="mt-1 text-[11px] text-[#756f67] dark:text-stone-300">{!NEW_MENU_LAUNCH_ENABLED ? (te ? 'కొత్త మెనూ ఆర్డర్లు త్వరలో' : 'New-menu ordering coming soon') : ((availability?.stock[item.id] ?? 0) < item.minimumQuantity ? (te ? 'స్టాక్ లేదు' : 'Sold out') : (te ? 'అందుబాటులో ఉంది' : 'Available'))}</p>
-                    </div>
-                  </div>
+                className="solara-menu-row grid min-w-0 grid-cols-[64px_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2 border-b border-[#ded7ce] py-5 sm:grid-cols-[80px_minmax(0,1fr)_auto] sm:gap-x-4 dark:border-stone-600">
+                <FoodArtwork itemId={item.id} className="h-16 w-16 rounded-lg sm:h-20 sm:w-20" />
+                <div className="min-w-0 pt-1">
+                  <h4 className="text-base font-medium leading-snug text-[#26231f] dark:text-stone-100 sm:text-lg">{te ? item.nameTe : item.nameEn}</h4>
+                  <p className="mt-2 text-[11px] leading-relaxed text-[#756f67] dark:text-stone-300 sm:text-xs">{serving(item, te)}{item.includesChutney && <span> · {te ? 'చట్నీతో' : 'Chutney included'}</span>}</p>
+                  <p className="mt-1 text-[10px] leading-relaxed text-[#756f67] dark:text-stone-400">{!NEW_MENU_LAUNCH_ENABLED ? (te ? 'కొత్త మెనూ ఆర్డర్లు త్వరలో' : 'New-menu ordering coming soon') : ((availability?.stock[item.id] ?? 0) < item.minimumQuantity ? (te ? 'స్టాక్ లేదు' : 'Sold out') : (te ? 'అందుబాటులో ఉంది' : 'Available'))}</p>
                 </div>
-                <div className="shrink-0 text-right font-serif text-xl text-[#ab4d3e] dark:text-[#e8ad99]">{money(item.pricePaisa)}<span className="block text-[10px] font-sans text-[#756f67] dark:text-stone-400">{item.saleUnit === 'PACK' ? (te ? 'ప్యాక్' : 'pack') : item.saleUnit === 'PIECE' ? (te ? 'ముక్క' : 'piece') : (te ? 'ప్లేట్' : 'plate')}</span></div>
-                <div className="col-span-2 flex justify-end sm:col-span-1">
+                <div className="flex min-w-[70px] flex-col items-end gap-3 pt-0.5">
+                  <p className="text-right font-serif text-xl text-[#ab4d3e] dark:text-[#e8ad99]">{money(item.pricePaisa)}</p>
                   {(quantities[item.id] ?? 0) === 0 ? (
                     <button type="button" disabled={NEW_MENU_LAUNCH_ENABLED && (!availability || (availability.stock[item.id] ?? 0) < item.minimumQuantity)}
                       aria-label={'Add ' + item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' to cart' : ' to sample cart')}
                       onClick={() => adjustQuantity(item, 1)}
-                      className="min-h-11 rounded-full border border-[#ab4d3e] px-5 py-2 text-sm font-semibold text-[#ab4d3e] transition-colors hover:bg-[#ab4d3e] hover:text-white disabled:cursor-not-allowed disabled:opacity-40">
+                      className="min-h-11 rounded-md border border-[#ab4d3e] px-3 py-2 text-xs font-semibold text-[#ab4d3e] transition-colors hover:bg-[#ab4d3e] hover:text-white disabled:cursor-not-allowed disabled:opacity-40 sm:text-sm">
                       {NEW_MENU_LAUNCH_ENABLED && availability && (availability.stock[item.id] ?? 0) < item.minimumQuantity ? (te ? 'స్టాక్ లేదు' : 'Sold out') : (te ? 'జోడించండి +' : 'Add +')}
                     </button>
                   ) : (
-                    <div className="inline-flex h-11 items-center rounded-full border border-[#c7bcb0]">
-                      <button type="button" aria-label={'Decrease ' + item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' quantity' : ' sample quantity')} onClick={() => adjustQuantity(item, -1)} className="h-11 w-11 rounded-l-full text-lg font-bold text-[#ab4d3e]">−</button>
-                      <span aria-label={item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' quantity' : ' sample quantity')} className="min-w-7 text-center text-sm font-bold text-[#26231f] dark:text-stone-100">{quantities[item.id]}</span>
-                      <button type="button" aria-label={'Increase ' + item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' quantity' : ' sample quantity')} disabled={(quantities[item.id] ?? 0) >= (availability?.stock[item.id] ?? item.dailyPlateLimit ?? 500)} onClick={() => adjustQuantity(item, 1)} className="h-11 w-11 rounded-r-full text-lg font-bold text-[#ab4d3e] disabled:opacity-40">+</button>
+                    <div className="inline-flex h-11 items-center rounded-md border border-[#c7bcb0]">
+                      <button type="button" aria-label={'Decrease ' + item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' quantity' : ' sample quantity')} onClick={() => adjustQuantity(item, -1)} className="h-11 w-9 rounded-l-md text-base font-bold text-[#ab4d3e]">−</button>
+                      <span aria-label={item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' quantity' : ' sample quantity')} className="min-w-5 text-center text-sm font-bold text-[#26231f] dark:text-stone-100">{quantities[item.id]}</span>
+                      <button type="button" aria-label={'Increase ' + item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' quantity' : ' sample quantity')} disabled={(quantities[item.id] ?? 0) >= (availability?.stock[item.id] ?? item.dailyPlateLimit ?? 500)} onClick={() => adjustQuantity(item, 1)} className="h-11 w-9 rounded-r-md text-base font-bold text-[#ab4d3e] disabled:opacity-40">+</button>
                     </div>
                   )}
                 </div>
               </article>
             ))}
           </div>
-        <aside aria-label={te ? 'మీ కార్ట్ సారాంశం' : 'Your cart summary'} className="rounded-xl border border-[#ded7ce] bg-[#f7f2e9] p-5 lg:sticky lg:top-24 dark:border-stone-700 dark:bg-stone-800">
+        <aside aria-label={te ? 'మీ కార్ట్ సారాంశం' : 'Your cart summary'} className="mx-auto mt-8 w-full max-w-xl rounded-xl border border-[#ded7ce] bg-[#f7f2e9] p-5 dark:border-stone-700 dark:bg-stone-800">
           <h3 className="solara-display flex items-center justify-between gap-2 text-xl font-semibold text-[#26231f] dark:text-amber-100">{te ? 'మీ కార్ట్' : 'Your cart'}<ShoppingBag size={21} aria-hidden="true" /></h3>
           {selected.length === 0 ? <p className="py-8 text-sm leading-relaxed text-stone-500 dark:text-stone-300">{te ? 'మీకు నచ్చిన వంటకాలను పైన జోడించండి.' : 'Add your favourites from the menu to get started.'}</p> : <ul className="my-5 space-y-4">
             {selected.map(({ item, quantity }) => <li key={item.id} className="flex items-center gap-3 text-sm">
@@ -269,8 +267,8 @@ export function UpcomingMenuSection({ reorderRequest, onReorder }: { reorderRequ
         <div ref={checkoutRef} id="menu-delivery" tabIndex={-1} className="scroll-mt-40 sm:scroll-mt-24 rounded-2xl focus-visible:outline-2 focus-visible:outline-emerald-700">
           <UpcomingCheckoutPreview key={period + ':' + reorderCheckoutVersion} period={period} lines={selected} subtotalPaisa={subtotalPaisa} te={te} onReorder={onReorder} />
         </div>
-        {selected.length > 0 && !checkoutVisible && <div className="menu-mobile-cart fixed inset-x-3 bottom-3 z-30 flex items-center justify-between gap-3 rounded-2xl bg-[#ab4d3e] p-3 text-white shadow-xl lg:hidden">
-          <span className="pl-1 text-sm font-bold">{selected.length} {te ? 'రకాలు' : 'items'} · {money(subtotalPaisa)}<span className="block text-[10px] font-normal text-emerald-100">{te ? 'ఆహార మొత్తం' : 'Food subtotal'}</span></span>
+        {selected.length > 0 && !checkoutVisible && <div className="menu-mobile-cart fixed inset-x-3 bottom-3 z-30 flex items-center justify-between gap-3 rounded-lg bg-[#ab4d3e] p-3 text-white shadow-xl sm:left-1/2 sm:right-auto sm:w-[430px] sm:-translate-x-1/2">
+          <span className="pl-1 text-sm font-bold">{selectedQuantity} {te ? 'ఐటమ్స్' : 'items'} · {money(subtotalPaisa)}<span className="block text-[10px] font-normal text-emerald-100">{te ? 'ఆహార మొత్తం' : 'Food subtotal'}</span></span>
           <button type="button" onClick={showCheckout} className="flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 text-sm font-bold text-[#ab4d3e]">{te ? 'కార్ట్ చూడండి' : 'View cart'}<ArrowRight size={16} aria-hidden="true" /></button>
         </div>}
         <p className="mt-6 text-center text-xs leading-relaxed text-stone-500 dark:text-stone-400">
