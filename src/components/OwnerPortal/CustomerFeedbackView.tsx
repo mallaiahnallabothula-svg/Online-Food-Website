@@ -66,10 +66,12 @@ export const CustomerFeedbackView: React.FC<CustomerFeedbackViewProps> = ({
           </div>
 
           <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-4xl font-extrabold text-stone-900 dark:text-stone-100 font-mono">
-              {averageRating.toFixed(1)}
+            <span className={totalFeedbacks > 0
+              ? 'text-4xl font-extrabold text-stone-900 dark:text-stone-100 font-mono'
+              : 'text-base font-bold text-stone-600 dark:text-stone-300'}>
+              {totalFeedbacks > 0 ? averageRating.toFixed(1) : ui("ఇంకా రేటింగ్ లేదు (Not rated yet)")}
             </span>
-            <span className="text-stone-400 text-lg">/ 5.0</span>
+            {totalFeedbacks > 0 && <span className="text-stone-400 text-lg">/ 5.0</span>}
           </div>
 
           <div className="mt-2 flex items-center gap-1">

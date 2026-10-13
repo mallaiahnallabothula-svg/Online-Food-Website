@@ -38,7 +38,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
 
   const hourlyList = analytics.hourlyOrderDistribution || [];
   const maxHourlyCount = Math.max(...hourlyList.map(h => h.count), 1);
-  const avgRating = analytics.feedbackSummary?.averageRating || 5.0;
+  const avgRating = analytics.feedbackSummary?.averageRating ?? 0;
   const totalReviews = analytics.feedbackSummary?.totalReviews || 0;
 
   return (
@@ -84,8 +84,8 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
             </span>
           </div>
           <div className="text-xl sm:text-2xl font-extrabold text-[#78350F] dark:text-amber-400 font-mono flex items-baseline gap-1">
-            {avgRating.toFixed(1)}
-            <span className="text-xs text-stone-400 font-normal">/ 5.0</span>
+            {totalReviews > 0 ? avgRating.toFixed(1) : ui("ఇంకా రేటింగ్ లేదు (Not rated yet)")}
+            {totalReviews > 0 && <span className="text-xs text-stone-400 font-normal">/ 5.0</span>}
           </div>
           <div className="text-[11px] text-stone-500 mt-1">
             {totalReviews}{" "}{ui("కస్టమర్ సమీక్షలు")}{" "}</div>
@@ -129,13 +129,13 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
             <div>
               <h3 className="text-base font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-[#78350F] dark:text-amber-400" />
-                <span>{ui("గంటల వారీ ఆర్డర్ల రద్దీ (Hourly Peak Ordering Volume)")}</span>
+                <span>{ui("చెల్లించిన ఆర్డర్ల సమయాలు (Paid order placement, IST)")}</span>
               </h3>
-              <p className="text-xs text-stone-500">{ui("ఆర్డరింగ్ వేళలు: 11:00 AM – 4:00 PM IST")}</p>
+              <p className="text-xs text-stone-500">{ui("24 గంటలు · ఆర్డర్ చేసిన సమయం; డెలివరీ సమయం కాదు (24-hour placement time, not delivery)")}</p>
             </div>
           </div>
 
-          <div className="pt-4 space-y-4">
+          <div className="pt-4 grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
             {hourlyList.map((slot) => {
               const pct = Math.max((slot.count / maxHourlyCount) * 100, 4);
               return (
@@ -204,7 +204,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
           </div>
 
           <div className="mt-6 pt-4 border-t border-stone-100 dark:border-stone-800 text-center">
-            <span className="text-xs text-stone-500">{" "}{ui("డెలివరీ సమయ కిటికీ:")}{" "}<strong>{ui("సాయంత్రం 6:00 – 8:00 గంటలు")}</strong>
+            <span className="text-xs text-stone-500">{" "}{ui("డెలివరీ సమయాలు:")}{" "}<strong>{ui("ఉదయం 7–11 · సాయంత్రం 6–8 (Morning 7–11 AM; Evening 6–8 PM, when offered)")}</strong>
             </span>
           </div>
         </div>

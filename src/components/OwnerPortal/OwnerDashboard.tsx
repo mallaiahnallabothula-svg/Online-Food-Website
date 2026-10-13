@@ -62,6 +62,10 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({ total: 0, totalPages: 1 });
   const [errorMessage, setErrorMessage] = useState('');
+  const [ordersError, setOrdersError] = useState(false);
+  const [analyticsError, setAnalyticsError] = useState(false);
+  const [feedbackError, setFeedbackError] = useState(false);
+  const [auditError, setAuditError] = useState(false);
   const latestRequest = useRef(0);
   
   // Alert sound toggle is shared with the dedicated payment-verified alert feed.
@@ -100,6 +104,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
         setErrorMessage('');
 
         setOrders(incomingOrders);
+        setOrdersError(false);
       } else if (ordersRes.status === 401) {
         onLogout();
         return;
@@ -108,30 +113,69 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
         throw new Error(error.error?.message || 'Unable to load orders. Please refresh.');
       }
 
-      // 2. Analytics
-      const analyticsRes = await fetch('/api/admin/analytics', { credentials: 'include' });
-      if (analyticsRes.ok) {
-        const aData = await analyticsRes.json();
-        setAnalytics(aData);
+      // Sections fail independently. A failed/partial feed must never retain old figures.
+      // Check request identity after EVERY await to avoid races when filters change.
+      try {
+        const res = await fetch('/api/admin/analytics', { credentials: 'include', cache: 'no-store' });
+        if (request !== latestRequest.current) return;
+        if (res.status === 401) { onLogout(); return; }
+        if (!res.ok) throw new Error('Analytics unavailable');
+        const data = await res.json();
+        if (request !== latestRequest.current) return;
+        if (!data?.summary || !data?.feedbackSummary || !Array.isArray(data?.hourlyOrderDistribution)) {
+          throw new Error('Incomplete analytics');
+        }
+        setAnalytics(data);
+        setAnalyticsError(false);
+      } catch {
+        if (request !== latestRequest.current) return;
+        setAnalytics(null);
+        setAnalyticsError(true);
       }
 
-      // 3. Feedback
-      const feedbackRes = await fetch('/api/admin/feedback', { credentials: 'include' });
-      if (feedbackRes.ok) {
-        const fData = await feedbackRes.json();
-        setFeedbacks(fData.feedback || []);
+      try {
+        const res = await fetch('/api/admin/feedback', { credentials: 'include', cache: 'no-store' });
+        if (request !== latestRequest.current) return;
+        if (res.status === 401) { onLogout(); return; }
+        if (!res.ok) throw new Error('Feedback unavailable');
+        const data = await res.json();
+        if (request !== latestRequest.current) return;
+        if (!Array.isArray(data?.feedback)) throw new Error('Incomplete feedback');
+        setFeedbacks(data.feedback);
+        setFeedbackError(false);
+      } catch {
+        if (request !== latestRequest.current) return;
+        setFeedbacks([]);
+        setFeedbackError(true);
       }
 
-      // 4. Audit logs (Admin role only)
       if (role === 'ADMIN') {
-        const auditRes = await fetch('/api/admin/audit-logs', { credentials: 'include' });
-        if (auditRes.ok) {
-          const aLogs = await auditRes.json();
-          setAuditLogs(aLogs.auditLogs || []);
+        try {
+          const res = await fetch('/api/admin/audit-logs', { credentials: 'include', cache: 'no-store' });
+          if (request !== latestRequest.current) return;
+          if (res.status === 401) { onLogout(); return; }
+          if (!res.ok) throw new Error('Audit logs unavailable');
+          const data = await res.json();
+          if (request !== latestRequest.current) return;
+          if (!Array.isArray(data?.auditLogs)) throw new Error('Incomplete audit logs');
+          setAuditLogs(data.auditLogs);
+          setAuditError(false);
+        } catch {
+          if (request !== latestRequest.current) return;
+          setAuditLogs([]);
+          setAuditError(true);
         }
       }
     } catch (err) {
-      if (request === latestRequest.current) setErrorMessage(err instanceof Error ? err.message : 'Unable to load orders. Please refresh.');
+      if (request === latestRequest.current) {
+        setOrders([]);
+        setPagination({ total: 0, totalPages: 1 });
+        setOrdersError(true);
+        setAnalytics(null); setAnalyticsError(true);
+        setFeedbacks([]); setFeedbackError(true);
+        setAuditLogs([]); setAuditError(true);
+        setErrorMessage(err instanceof Error ? err.message : 'Unable to load orders. Please refresh.');
+      }
     } finally {
       if (request === latestRequest.current) setIsRefreshing(false);
     }
@@ -358,7 +402,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
               : 'border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
           }`}
         >
-          {isTe ? 'ఆర్డర్లు' : 'Orders'} ({pagination.total})
+          {isTe ? 'ఆర్డర్లు' : 'Orders'} ({ordersError ? '—' : pagination.total})
         </button>
 
         <button
@@ -503,13 +547,18 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-xs">
+          {!ordersError && <div className="flex items-center justify-between text-xs">
             <button type="button" disabled={page <= 1 || isRefreshing} onClick={() => setPage(prev => prev - 1)} className="px-3 py-2 rounded-lg bg-stone-100 dark:bg-stone-800 disabled:opacity-40">{isTe ? 'మునుపటి' : 'Previous'}</button>
             <span>{isTe ? 'పేజీ' : 'Page'} {page} / {pagination.totalPages}</span>
             <button type="button" disabled={page >= pagination.totalPages || isRefreshing} onClick={() => setPage(prev => prev + 1)} className="px-3 py-2 rounded-lg bg-stone-100 dark:bg-stone-800 disabled:opacity-40">{isTe ? 'తరువాతి' : 'Next'}</button>
-          </div>
+          </div>}
           {/* Orders Cards Grid */}
-          {orders.length === 0 ? (
+          {ordersError ? (
+            <p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-bold text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
+              {isTe ? 'ఆర్డర్ల డేటా అందుబాటులో లేదు. సున్నా ఆర్డర్లు ఉన్నాయని అనుకోవద్దు. Refresh చేయండి.' :
+                'Orders unavailable. The count is unknown, not zero. Please refresh.'}
+            </p>
+          ) : orders.length === 0 ? (
             <div className="bg-white dark:bg-[#211E1A] p-12 text-center rounded-2xl border border-stone-200 dark:border-stone-800 space-y-2">
               <ChefHat className="w-10 h-10 text-stone-300 mx-auto" />
               <p className="font-bold text-stone-700 dark:text-stone-300">
@@ -731,27 +780,34 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
       )}
 
       {/* 2. ANALYTICS TAB */}
-      {activeTab === 'ANALYTICS' && (
-        <AnalyticsDashboard analytics={analytics} />
-      )}
+      {activeTab === 'ANALYTICS' && (analyticsError ? (
+        <p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-bold text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
+          {isTe ? 'Analytics డేటా ప్రస్తుతం అందుబాటులో లేదు. పాత లెక్కలు చూపించడం లేదు. Refresh చేయండి.' :
+            'Analytics unavailable. Previous totals are hidden. Please refresh.'}
+        </p>
+      ) : <AnalyticsDashboard analytics={analytics} />)}
 
       {/* 3. FEEDBACK TAB */}
-      {activeTab === 'FEEDBACK' && (
-        <CustomerFeedbackView
+      {activeTab === 'FEEDBACK' && (feedbackError || analyticsError ? (
+        <p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-bold text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
+          {isTe ? 'రివ్యూ వివరాలు పూర్తిగా అందుబాటులో లేవు. Refresh చేయండి.' : 'Feedback summary unavailable. Please refresh.'}
+        </p>
+      ) : <CustomerFeedbackView
           feedbacks={feedbacks}
           isAdmin={role === 'ADMIN'}
           updatingFeedbackId={updatingFeedbackId}
           onUpdatePublication={updateFeedbackPublication}
-          averageRating={analytics?.feedbackSummary?.averageRating || 5.0}
+          averageRating={analytics?.feedbackSummary?.averageRating ?? 0}
           totalFeedbacks={analytics?.feedbackSummary?.totalReviews || 0}
           ratingDistribution={analytics?.feedbackSummary?.ratingCounts || { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }}
-        />
-      )}
+        />)}
 
       {/* 4. AUDIT LOGS TAB (Admin Only) */}
-      {activeTab === 'AUDIT' && role === 'ADMIN' && (
-        <AuditLogs logs={auditLogs} />
-      )}
+      {activeTab === 'AUDIT' && role === 'ADMIN' && (auditError ? (
+        <p role="alert" className="rounded-xl border border-red-300 bg-red-50 p-4 text-sm font-bold text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">
+          {isTe ? 'Audit logs అందుబాటులో లేవు. Refresh చేయండి.' : 'Audit logs unavailable. Please refresh.'}
+        </p>
+      ) : <AuditLogs logs={auditLogs} />)}
     </div>
   );
 };
