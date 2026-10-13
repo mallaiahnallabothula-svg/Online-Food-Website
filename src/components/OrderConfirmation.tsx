@@ -61,11 +61,11 @@ export const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ order, onN
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 font-telugu">
+    <div className="solara-confirmation max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12 font-telugu">
       <div className="bg-white dark:bg-[#211E1A] rounded-2xl shadow-xl border border-stone-200 dark:border-stone-800 overflow-hidden">
         
         {/* Success Banner */}
-        <div className="p-6 sm:p-8 text-center text-white bg-gradient-to-r from-emerald-700 to-emerald-800">
+        <div className="p-6 sm:p-8 text-center text-white bg-[#475b47]">
           <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xs flex items-center justify-center mx-auto mb-3 shadow-inner">
             <CheckCircle2 className="w-10 h-10 text-white" />
           </div>
@@ -87,7 +87,7 @@ export const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ order, onN
           {currentOrder.customerAccessToken && (
             <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
               <div className="flex items-center gap-2">
-                <Key className="w-4 h-4 text-[#78350F] dark:text-amber-400 shrink-0" />
+                <Key className="w-4 h-4 text-[#ab4d3e] dark:text-amber-400 shrink-0" />
                 <div>
                   <span className="font-bold text-amber-900 dark:text-amber-200">
                     {isTe ? 'మీ వ్యక్తిగత ట్రాకింగ్ కీ (Private Tracking Key):' : 'Your Private Tracking Key:'}
@@ -108,12 +108,12 @@ export const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ order, onN
           )}
 
           {/* Order Snapshot Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-[#FAF4EA] dark:bg-stone-900 border border-amber-900/10 dark:border-stone-800">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-[#f7f2e9] dark:bg-stone-900 border border-amber-900/10 dark:border-stone-800">
             <div>
               <span className="text-xs text-stone-500 dark:text-stone-400 block">{t.orderDetailsTitle}:</span>
               <div className="space-y-1 mt-0.5">
                 {(currentOrder.jowarQuantity > 0) && (
-                  <div className="text-sm font-bold text-[#78350F] dark:text-amber-400 font-mono">
+                  <div className="text-sm font-bold text-[#ab4d3e] dark:text-amber-400 font-mono">
                     🌾 {currentOrder.jowarQuantity} {language === 'en' ? 'Jowar Rotis' : 'జొన్న రొట్టెలు'}
                     <span className="text-[11px] text-stone-500 dark:text-stone-400 font-normal block font-sans">
                       ₹30 × {currentOrder.jowarQuantity} = ₹{currentOrder.jowarQuantity * 30}
@@ -160,7 +160,7 @@ export const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ order, onN
               <span className="text-sm font-bold text-stone-900 dark:text-stone-100 block">
                 {currentOrder.deliveryDate}
               </span>
-              <span className="text-xs text-[#78350F] dark:text-amber-400 font-semibold flex items-center gap-1 mt-0.5">
+              <span className="text-xs text-[#ab4d3e] dark:text-amber-400 font-semibold flex items-center gap-1 mt-0.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500" />
                 <span>{currentOrder.deliveryWindow || '6:00 PM – 8:00 PM'}</span>
               </span>

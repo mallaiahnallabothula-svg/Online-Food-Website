@@ -151,7 +151,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f7f2e9] dark:bg-[#1A1816] text-[#26231f] dark:text-[#E7E5E4] transition-colors duration-200">
+    <div className="solara-app min-h-screen flex flex-col bg-[#f7f2e9] dark:bg-[#1A1816] text-[#26231f] dark:text-[#E7E5E4] transition-colors duration-200">
       
       {/* Android Install Announcement Banner */}
       <AndroidInstallBanner
@@ -182,7 +182,7 @@ export default function App() {
       <main className="flex-1">
         {/* CUSTOMER VIEW */}
         {currentView === 'CUSTOMER' && (
-          <div>
+          <div className="solara-customer">
             <>
               <HeroSection
                 onScrollToOrder={handleScrollToOrder}
@@ -198,24 +198,24 @@ export default function App() {
 
         {/* OWNER LOGIN VIEW */}
         {currentView === 'OWNER_LOGIN' && (
-          <AdminLogin
+          <div className="solara-owner"><AdminLogin
             onLoginSuccess={handleLoginSuccess}
             onCancel={() => setCurrentView('CUSTOMER')}
-          />
+          /></div>
         )}
 
         {/* OWNER DASHBOARD VIEW */}
         {currentView === 'OWNER_DASHBOARD' && (
-          <OwnerDashboard
+          <div className="solara-owner"><OwnerDashboard
             role={adminRole}
             onLogout={handleAdminLogout}
-          />
+          /></div>
         )}
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-amber-900/10 dark:border-stone-800 bg-[#201f1c] dark:bg-[#151413] py-8 text-xs font-telugu text-[#e8ded2] dark:text-stone-400">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+      <footer className="solara-footer mt-auto border-t border-amber-900/10 dark:border-stone-800 bg-[#201f1c] dark:bg-[#151413] py-8 text-xs font-telugu text-[#e8ded2] dark:text-stone-400">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-7">
           <div className="flex items-center gap-3 text-center md:text-left">
             <BrandEmblem size="sm" />
             <div className="space-y-0.5">
@@ -276,6 +276,11 @@ export default function App() {
               <span>{t.footerTimings}</span>
             </div>
           </div>
+          {currentView === 'CUSTOMER' && (
+            <nav aria-label="Footer" className="solara-footer-links flex flex-wrap gap-x-5 gap-y-3 text-sm">
+              <a href="#home">Home</a><a href="#upcoming-menu">Menu</a><a href="#brand-story">Our Story</a><a href="#delivery-info">Delivery</a><a href="#faq">FAQs</a><a href="#contact-info">Contact</a>
+            </nav>
+          )}
         </div>
       </footer>
 

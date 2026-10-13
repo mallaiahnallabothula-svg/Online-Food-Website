@@ -60,15 +60,15 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onCancel
   };
 
   return (
-    <div className="max-w-md mx-auto my-12 px-4 font-telugu">
-      <div className="bg-white dark:bg-[#211E1A] rounded-2xl shadow-xl border border-stone-200 dark:border-stone-800 p-6 sm:p-8">
+    <div className="solara-owner-login max-w-md mx-auto my-12 px-4 font-telugu">
+      <div className="bg-white dark:bg-[#211E1A] rounded-xl shadow-sm border border-[#ded7ce] dark:border-stone-800 p-6 sm:p-8">
         
         {/* Header with Brand Emblem */}
         <div className="text-center mb-6">
           <div className="flex justify-center mb-3">
             <BrandEmblem size="lg" />
           </div>
-          <h2 className="text-2xl font-bold text-[#451A03] dark:text-amber-100">
+          <h2 className="text-2xl font-bold text-[#26231f] dark:text-amber-100">
             {isTe ? 'అధీకృత అడ్మిన్ లాగిన్' : 'Authorized Admin Portal'}
           </h2>
           <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
@@ -108,7 +108,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onCancel
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 autoComplete="username"
-                className="w-full pl-9 pr-3 py-2.5 bg-stone-50 dark:bg-[#1A1816] border border-stone-300 dark:border-stone-700 rounded-xl text-stone-900 dark:text-stone-100 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
+                className="w-full pl-9 pr-3 py-2.5 bg-stone-50 dark:bg-[#1A1816] border border-stone-300 dark:border-stone-700 rounded-xl text-stone-900 dark:text-stone-100 text-sm focus:ring-2 focus:ring-[#ab4d3e] focus:border-[#ab4d3e] transition-colors"
                 placeholder="admin"
                 disabled={isLoading}
               />
@@ -128,7 +128,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onCancel
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
-                className="w-full pl-9 pr-10 py-2.5 bg-stone-50 dark:bg-[#1A1816] border border-stone-300 dark:border-stone-700 rounded-xl text-stone-900 dark:text-stone-100 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-colors"
+                className="w-full pl-9 pr-10 py-2.5 bg-stone-50 dark:bg-[#1A1816] border border-stone-300 dark:border-stone-700 rounded-xl text-stone-900 dark:text-stone-100 text-sm focus:ring-2 focus:ring-[#ab4d3e] focus:border-[#ab4d3e] transition-colors"
                 placeholder="••••••••"
                 disabled={isLoading}
               />

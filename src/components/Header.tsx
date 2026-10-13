@@ -33,8 +33,8 @@ export const Header: React.FC<HeaderProps> = ({
   const { language, setLanguage, t } = useLanguage();
 
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur-md transition-colors duration-200 border-b border-[#ded7ce] dark:border-stone-800 bg-[#f7f2e9]/95 dark:bg-[#1A1816]/95">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 min-h-20 flex flex-wrap items-center justify-between gap-3 py-3">
+    <header className="solara-header sticky top-0 z-40 w-full backdrop-blur-md transition-colors duration-200 border-b border-[#ded7ce] dark:border-stone-800 bg-[#f7f2e9]/95 dark:bg-[#1A1816]/95">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 min-h-18 flex flex-wrap items-center justify-between gap-3 py-2.5">
         
         {/* Brand Emblem & Name */}
         <div 
@@ -53,7 +53,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {!isOwnerView && <nav aria-label="On-page sections" className="hidden items-center gap-5 text-sm text-[#514a43] xl:flex">
+        {!isOwnerView && <nav aria-label="On-page sections" className="hidden items-center gap-5 text-sm text-[#514a43] lg:flex">
           <a href="#home" className="hover:text-[#ab4d3e]">Home</a>
           <a href="#upcoming-menu" className="hover:text-[#ab4d3e]">Menu</a>
           <a href="#brand-story" className="hover:text-[#ab4d3e]">Our Story</a>
@@ -81,7 +81,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Right Actions */}
-        <div className="flex w-full items-center justify-between gap-1 sm:w-auto sm:justify-end sm:gap-3">
+        <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:justify-end sm:gap-3">
 
           {/* Quick Language Toggle */}
           <div className="inline-flex items-center bg-[#eee8dc] dark:bg-stone-800 p-0.5 rounded-lg border border-amber-900/10 dark:border-stone-700">
@@ -92,7 +92,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-md text-amber-950 dark:text-amber-100 hover:bg-white/60 dark:hover:bg-stone-700 transition-colors cursor-pointer"
               title={ui("భాష మార్చండి / Change Language")}
             >
-              <Languages className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
+              <Languages className="w-3.5 h-3.5 text-[#ab4d3e] dark:text-amber-400" />
               <span>{language === 'te' ? 'English' : 'తెలుగు'}</span>
             </button>
           </div>
@@ -119,7 +119,7 @@ export const Header: React.FC<HeaderProps> = ({
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg text-[#ab4d3e] dark:text-amber-300 bg-[#fcf9f3] hover:bg-[#eee8dc] dark:bg-stone-800 dark:hover:bg-stone-700 border border-[#ded7ce] dark:border-stone-700 transition-colors font-telugu cursor-pointer"
               title={ui("నా ఆర్డర్లు — ఆర్డర్ స్థితి చూడండి / My Orders — Track your order")}
             >
-              <ShoppingBag className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
+              <ShoppingBag className="w-3.5 h-3.5 text-[#ab4d3e] dark:text-amber-400" />
               <span className="hidden sm:inline">{t.trackFeedbackBtn}</span>
               <span className="sm:hidden">{t.trackFeedbackBtn}</span>
             </button>
@@ -142,7 +142,7 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={onToggleDarkMode}
             id="toggle-theme-btn"
             aria-label={language === 'te' ? 'డార్క్ మోడ్ మార్చండి' : 'Toggle Dark Mode'}
-            className="min-h-11 min-w-11 p-2 rounded-lg text-stone-700 dark:text-stone-300 hover:bg-amber-100/60 dark:hover:bg-stone-800 transition-colors cursor-pointer"
+            className="min-h-11 min-w-11 p-2 rounded-lg text-stone-700 dark:text-stone-300 hover:bg-[#eee8dc] dark:hover:bg-stone-800 transition-colors cursor-pointer"
             title={darkMode ? ui("లైట్ మోడ్") : ui("డార్క్ మోడ్")}
           >
             {darkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-stone-700" />}
