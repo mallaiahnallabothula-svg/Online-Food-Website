@@ -5,6 +5,7 @@ import { OrderTrackingModal } from './OrderTrackingModal';
 import { persistCustomerOrder } from '../utils/checkout';
 import type { ReorderRequest } from '../utils/reorder';
 import { parsePreparedPreorderSlot, type ConfirmedPreorderSlot } from '../utils/preorderNotices';
+import { parseGoogleMapsCoordinates, googleMapsPinUrl } from '../utils/location';
 
 type Line = { item: MenuItem; quantity: number };
 type Quote = {
@@ -40,7 +41,12 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
   const [address, setAddress] = useState('');
   const [landmark, setLandmark] = useState('');
   const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [locationSource, setLocationSource] = useState<'GPS' | 'MAPS' | null>(null);
+  const [mapLinkDraft, setMapLinkDraft] = useState('');
+  const [confirmedLocationKey, setConfirmedLocationKey] = useState<string | null>(null);
   const [locationBusy, setLocationBusy] = useState(false);
+  const locationRequestId = useRef(0);
+  const quoteRequestId = useRef(0);
   const [quote, setQuote] = useState<Quote['quote'] | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -54,6 +60,8 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
   const lastInputKey = useRef('');
   const paymentProof = useRef<GatewayResult | null>(null);
   const inputKey = JSON.stringify({ period, name, mobile, address, landmark, coordinates, lines: lines.map(x => [x.item.id, x.quantity]) });
+  const selectedLocationKey = coordinates ? JSON.stringify({ coordinates, address: address.trim(), landmark: landmark.trim() }) : '';
+  const locationConfirmed = selectedLocationKey !== '' && selectedLocationKey === confirmedLocationKey;
 
   function rotateRequestKey() {
     requestKey.current = crypto.randomUUID();
@@ -63,6 +71,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
     if (lastInputKey.current && lastInputKey.current !== inputKey) {
       setQuote(null);
       setError('');
+      quoteRequestId.current += 1;
       rotateRequestKey();
     }
     lastInputKey.current = inputKey;
@@ -90,26 +99,69 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
 
   function change(setter: (value: string) => void, value: string) {
     setter(value); setQuote(null); setError(''); setStatus('');
+    quoteRequestId.current += 1;
+  }
+  function clearSelectedLocation() {
+    setCoordinates(null); setLocationSource(null); setConfirmedLocationKey(null); setQuote(null);
+    quoteRequestId.current += 1;
   }
   function getLocation() {
-    if (!navigator.geolocation) { setError(te ? 'ఈ పరికరంలో లొకేషన్ అందుబాటులో లేదు.' : 'Location is unavailable on this device.'); return; }
+    const requestId = ++locationRequestId.current;
+    clearSelectedLocation();
+    setMapLinkDraft('');
+    if (!navigator.geolocation) {
+      setError(te ? 'ఈ పరికరంలో లొకేషన్ అందుబాటులో లేదు. Google Maps pin వాడండి.' : 'GPS is unavailable. Use a Google Maps pin.');
+      return;
+    }
     setLocationBusy(true); setError('');
     navigator.geolocation.getCurrentPosition(
-      position => { setCoordinates({ latitude: position.coords.latitude, longitude: position.coords.longitude }); setQuote(null); setLocationBusy(false); },
-      () => { setError(te ? 'లొకేషన్ అనుమతి ఇవ్వండి లేదా మళ్లీ ప్రయత్నించండి.' : 'Allow location access and try again.'); setLocationBusy(false); },
-      { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 },
+      position => {
+        if (locationRequestId.current !== requestId) return;
+        setCoordinates({ latitude: position.coords.latitude, longitude: position.coords.longitude });
+        setLocationSource('GPS'); setLocationBusy(false);
+      },
+      () => {
+        if (locationRequestId.current !== requestId) return;
+        setError(te ? 'GPS అనుమతి రాలేదు. Google Maps link ద్వారా ఇంటి location ఇవ్వండి.' : 'GPS unavailable or denied. Paste a Google Maps link for your delivery address.');
+        setLocationBusy(false);
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 },
     );
+  }
+  function editMapLink(value: string) {
+    locationRequestId.current += 1;
+    setLocationBusy(false);
+    setMapLinkDraft(value);
+    clearSelectedLocation();
+    setError('');
+  }
+  function useMapPin() {
+    const parsed = parseGoogleMapsCoordinates(mapLinkDraft);
+    if (!parsed) {
+      clearSelectedLocation();
+      setError(te
+        ? 'Coordinates ఉన్న పూర్తి Google Maps link ఇవ్వండి. Short maps.app.goo.gl links ప్రస్తుతం support కావు.'
+        : 'Paste a full Google Maps URL with coordinates. Short maps.app.goo.gl links are not supported yet.');
+      return;
+    }
+    locationRequestId.current += 1;
+    setLocationBusy(false);
+    clearSelectedLocation();
+    setCoordinates(parsed);
+    setLocationSource('MAPS');
+    setError('');
   }
 
   function requestBody() {
     if (!coordinates) throw new Error(te ? 'ముందుగా మీ డెలివరీ లొకేషన్ ఎంచుకోండి.' : 'Choose your delivery location first.');
+    if (!locationConfirmed) throw new Error(te ? 'Payment ముందు delivery address, pin confirm చేయండి.' : 'Confirm your delivery address and map pin before checkout.');
     if (lines.length === 0) throw new Error(te ? 'కార్ట్‌లో ఐటమ్స్ జోడించండి.' : 'Add items to your cart.');
     return {
       lines: lines.map(({ item, quantity }) => ({ itemId: item.id, quantity })),
       customer: {
         name: name.trim(), mobile, address: address.trim(), landmark: landmark.trim(),
         ...coordinates,
-        locationLink: `https://maps.google.com/?q=${coordinates.latitude},${coordinates.longitude}`,
+        locationLink: googleMapsPinUrl(coordinates.latitude, coordinates.longitude),
       },
     };
   }
@@ -130,8 +182,9 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
     event.preventDefault(); setBusy(true); setError(''); setStatus('');
     try {
       const cart = requestBody();
+      const requestId = quoteRequestId.current;
       const result = await post('/quote', cart) as Quote;
-      setQuote(result.quote);
+      if (quoteRequestId.current === requestId) setQuote(result.quote);
     } catch (e) { setError(e instanceof Error ? e.message : 'Unable to check delivery.'); }
     finally { setBusy(false); }
   }
@@ -163,6 +216,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
 
   async function pay() {
     if (busy) return;
+    if (!locationConfirmed) { setQuote(null); setError(te ? 'ముందు delivery address, pin confirm చేయండి.' : 'Confirm the delivery address and pin before paying.'); return; }
     setBusy(true); setError(''); setStatus('');
     try {
       if (paymentProof.current && trackingToken) {
@@ -306,9 +360,58 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
               </p>
               <p className="mt-2 text-center text-xs leading-relaxed text-stone-600 dark:text-stone-300">
                 {coordinates
-                  ? (te ? 'లొకేషన్ సిద్ధం. పైన ఉన్న చిరునామా సరిచూసి కొనసాగించండి.' : 'Location ready. Check your address above before continuing.')
-                  : (te ? 'డెలివరీ ప్రాంతం, ఛార్జీ నిర్ధారించడానికి లొకేషన్ అవసరం.' : 'Location is needed to check your delivery area and charge.')}
+                  ? (te ? 'లొకేషన్ సిద్ధం. క్రింద pin సరిచూసి confirm చేయండి.' : 'Location selected. Review the pin below and confirm.')
+                  : (te ? 'GPS లేదా Google Maps pin ద్వారా delivery address ఎంచుకోండి.' : 'Choose the delivery address using GPS or a Google Maps pin.')}
               </p>
+              <div className="mt-4 space-y-2 border-t border-emerald-800/15 pt-4 dark:border-emerald-400/20">
+                <label htmlFor="new-menu-map-link" className="block text-xs font-bold text-stone-800 dark:text-stone-100">
+                  {te ? 'Google Maps location link (ఐచ్ఛికం — GPS బదులు)' : 'Google Maps location link (instead of GPS)'}
+                </label>
+                <input id="new-menu-map-link" type="url" value={mapLinkDraft} maxLength={2000}
+                  onChange={event => editMapLink(event.target.value)}
+                  placeholder="https://www.google.com/maps?q=17.44421,78.251478"
+                  className="min-h-11 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 dark:border-stone-600 dark:bg-stone-900 dark:text-white" />
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-emerald-800 underline dark:text-emerald-300">
+                    {te ? 'Google Maps తెరవండి' : 'Open Google Maps'}
+                  </a>
+                  <button type="button" onClick={useMapPin} disabled={locationBusy || !mapLinkDraft.trim()}
+                    className="min-h-10 rounded-lg border border-emerald-700 bg-white px-3 text-xs font-bold text-emerald-800 disabled:opacity-50 dark:bg-stone-900 dark:text-emerald-300">
+                    {te ? 'ఈ Maps pin వాడండి' : 'Use this Maps pin'}
+                  </button>
+                </div>
+                <p className="text-xs text-stone-600 dark:text-stone-300">
+                  {te ? 'Coordinates ఉన్న పూర్తి Maps link మాత్రమే. Short share links support కావు.' : 'Use a full Google Maps link with coordinates, not a shortened share link.'}
+                </p>
+              </div>
+              {coordinates && (
+                <div className="mt-3 rounded-lg border border-emerald-300 bg-white p-3 text-xs dark:border-emerald-800 dark:bg-stone-900">
+                  <p className="font-bold text-stone-800 dark:text-stone-100">
+                    {locationSource === 'GPS' ? (te ? 'GPS ద్వారా ఎంపిక' : 'Selected using GPS') : (te ? 'Google Maps ద్వారా ఎంపిక' : 'Selected from Google Maps')}
+                  </p>
+                  <p className="mt-1 font-mono text-stone-600 dark:text-stone-300">
+                    {coordinates.latitude.toFixed(6)}, {coordinates.longitude.toFixed(6)}
+                  </p>
+                  <a href={googleMapsPinUrl(coordinates.latitude, coordinates.longitude)} target="_blank" rel="noopener noreferrer"
+                    className="mt-2 inline-block font-bold text-blue-700 underline dark:text-blue-300">
+                    {te ? 'డెలివరీ pin మ్యాప్స్‌లో చూడండి ↗' : 'Review delivery pin on Maps ↗'}
+                  </a>
+                  <p className="mt-1 text-stone-600 dark:text-stone-300">
+                    {te ? 'ఈ pin నుంచే delivery distance/charge calculate అవుతుంది.' : 'Delivery distance and charge use exactly this pin.'}
+                  </p>
+                </div>
+              )}
+              <label className="mt-3 flex items-start gap-2 rounded-lg bg-white p-3 text-sm text-stone-800 dark:bg-stone-900 dark:text-stone-100">
+                <input type="checkbox" checked={locationConfirmed}
+                  disabled={!coordinates || address.trim().length < 5 || locationBusy}
+                  onChange={event => {
+                    setConfirmedLocationKey(event.target.checked ? selectedLocationKey : null);
+                    setQuote(null); quoteRequestId.current += 1;
+                  }} className="mt-1 h-4 w-4 accent-emerald-700"
+                  aria-label="Confirm delivery address and map pin" />
+                <span>{te ? 'నా డెలివరీ చిరునామా, మ్యాప్ pin సరిగా ఉన్నాయి. ఇక్కడికే ఫుడ్ పంపండి.' :
+                  'I checked my delivery address and map pin. Deliver my food to this location.'}</span>
+              </label>
             </div>
           </div>
         </section>
@@ -359,12 +462,12 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
 
         <div className="space-y-3 border-t border-stone-200 pt-5 dark:border-stone-700">
           {!quote ? (
-            <button type="submit" disabled={busy || lines.length === 0} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#26543A] px-4 py-3.5 text-base font-extrabold text-white shadow-sm transition-colors hover:bg-[#1A402B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:cursor-not-allowed disabled:bg-[#92A99B] disabled:text-white disabled:shadow-none">
+            <button type="submit" disabled={busy || lines.length === 0 || !locationConfirmed} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#26543A] px-4 py-3.5 text-base font-extrabold text-white shadow-sm transition-colors hover:bg-[#1A402B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:cursor-not-allowed disabled:bg-[#92A99B] disabled:text-white disabled:shadow-none">
               {busy ? <RefreshCw size={20} className="animate-spin" aria-hidden="true" /> : <ArrowRight size={19} aria-hidden="true" />}
               {busy ? (te ? 'దయచేసి వేచి ఉండండి…' : 'Checking…') : te ? 'డెలివరీ & మొత్తం చెక్ చేయండి' : 'Check delivery and total'}
             </button>
           ) : (
-            <button type="button" onClick={pay} disabled={busy || completed} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#78350F] px-4 py-3.5 text-base font-extrabold text-white shadow-sm transition-colors hover:bg-[#602A0C] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-700 disabled:cursor-not-allowed disabled:opacity-60">
+            <button type="button" onClick={pay} disabled={busy || completed || !locationConfirmed} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#78350F] px-4 py-3.5 text-base font-extrabold text-white shadow-sm transition-colors hover:bg-[#602A0C] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-700 disabled:cursor-not-allowed disabled:opacity-60">
               {busy ? <RefreshCw size={19} className="animate-spin" aria-hidden="true" /> : <Lock size={19} aria-hidden="true" />}
               {completed ? (te ? 'ఆర్డర్ ఖరారైంది' : 'Order confirmed') : busy ? (te ? 'దయచేసి వేచి ఉండండి…' : 'Please wait…') : te ? 'Razorpay ద్వారా చెల్లించండి' : 'Pay ' + money(quote.totalAmountPaisa) + ' with Razorpay'}
             </button>
