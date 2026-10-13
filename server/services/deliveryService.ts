@@ -1,4 +1,4 @@
-import { BUSINESS_CONFIG } from '../config/business.ts';
+import { DELIVERY_POLICY, deliveryTierForDistanceKm } from '../../shared/deliveryPolicy.ts';
 
 export interface DeliveryCalculationResult {
   eligible: boolean;
@@ -7,6 +7,7 @@ export interface DeliveryCalculationResult {
   deliveryChargeRupees: number;
   freeRadiusKm: number;
   maxRadiusKm: number;
+  standardRadiusKm: number;
   calculationMethod: 'geodesic_haversine';
   reason?: string;
   reasonTe?: string;
@@ -20,7 +21,7 @@ export interface DeliveryCalculationResult {
  * d = R * c
  * Where R = 6371 km
  */
-export function calculateHaversineDistanceKm(
+function rawHaversineDistanceKm(
   lat1: number,
   lon1: number,
   lat2: number,
@@ -41,15 +42,19 @@ export function calculateHaversineDistanceKm(
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distance = R * c;
 
-  // Round to 1 decimal place for clean, predictable user presentation
-  return Math.round(distance * 10) / 10;
+  return distance;
+}
+
+/** Rounded distance for display; fee band decisions use unrounded GPS distance. */
+export function calculateHaversineDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  return Math.round(rawHaversineDistanceKm(lat1, lon1, lat2, lon2) * 10) / 10;
 }
 
 export function calculateDelivery(latitude?: number, longitude?: number, defaultDistanceKm?: number): DeliveryCalculationResult {
-  const kitchen = BUSINESS_CONFIG.kitchen;
-  const deliveryConfig = BUSINESS_CONFIG.delivery;
+  const kitchen = { latitude: DELIVERY_POLICY.kitchenLatitude, longitude: DELIVERY_POLICY.kitchenLongitude };
+  const deliveryConfig = DELIVERY_POLICY;
 
-  let distanceKm = 0;
+  let exactDistanceKm = 0;
 
   if (typeof latitude === 'number' && typeof longitude === 'number') {
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
@@ -60,20 +65,23 @@ export function calculateDelivery(latitude?: number, longitude?: number, default
         deliveryChargeRupees: 0,
         freeRadiusKm: deliveryConfig.freeRadiusKm,
         maxRadiusKm: deliveryConfig.maxRadiusKm,
+        standardRadiusKm: deliveryConfig.standardRadiusKm,
         calculationMethod: 'geodesic_haversine',
         reason: 'Invalid GPS coordinates provided',
         reasonTe: 'చెల్లని GPS కోఆర్డినేట్‌లు ఇవ్వబడ్డాయి',
       };
     }
-    distanceKm = calculateHaversineDistanceKm(kitchen.latitude, kitchen.longitude, latitude, longitude);
-  } else if (typeof defaultDistanceKm === 'number' && defaultDistanceKm >= 0) {
-    distanceKm = Math.round(defaultDistanceKm * 10) / 10;
+    exactDistanceKm = rawHaversineDistanceKm(kitchen.latitude, kitchen.longitude, latitude, longitude);
+  } else if (typeof defaultDistanceKm === 'number' && Number.isFinite(defaultDistanceKm) && defaultDistanceKm >= 0) {
+    exactDistanceKm = defaultDistanceKm;
   } else {
     // Default inside Kollur central hub (0.8 km)
-    distanceKm = 0.8;
+    exactDistanceKm = 0.8;
   }
 
-  if (distanceKm > deliveryConfig.maxRadiusKm) {
+  const distanceKm = Math.round(exactDistanceKm * 10) / 10;
+  const tier = deliveryTierForDistanceKm(exactDistanceKm);
+  if (!tier.eligible) {
     return {
       eligible: false,
       distanceKm,
@@ -81,20 +89,15 @@ export function calculateDelivery(latitude?: number, longitude?: number, default
       deliveryChargeRupees: 0,
       freeRadiusKm: deliveryConfig.freeRadiusKm,
       maxRadiusKm: deliveryConfig.maxRadiusKm,
+      standardRadiusKm: deliveryConfig.standardRadiusKm,
       calculationMethod: 'geodesic_haversine',
       reason: `Location is ${distanceKm} km away, which exceeds our maximum delivery range of ${deliveryConfig.maxRadiusKm} km from Kollur`,
       reasonTe: `లొకేషన్ ${distanceKm} కి.మీ దూరంలో ఉంది, మా గరిష్ట డెలివరీ పరిధి ${deliveryConfig.maxRadiusKm} కి.మీ మించింది`,
     };
   }
 
-  // Delivery charge calculation in integer paise:
-  // <= 5 km: Free (0 paise)
-  // > 5 km: ₹9/km (900 paise/km) for excess distance beyond 5 km
-  let deliveryChargePaisa = 0;
-  if (distanceKm > deliveryConfig.freeRadiusKm) {
-    const excessKm = distanceKm - deliveryConfig.freeRadiusKm;
-    deliveryChargePaisa = Math.round(excessKm * deliveryConfig.extraKmRatePaisa);
-  }
+  // Fixed tiers: 0–5 km free; >5–7 km ₹30; >7–10 km ₹50.
+  const deliveryChargePaisa = tier.deliveryChargePaisa;
 
   return {
     eligible: true,
@@ -103,6 +106,7 @@ export function calculateDelivery(latitude?: number, longitude?: number, default
     deliveryChargeRupees: deliveryChargePaisa / 100,
     freeRadiusKm: deliveryConfig.freeRadiusKm,
     maxRadiusKm: deliveryConfig.maxRadiusKm,
+    standardRadiusKm: deliveryConfig.standardRadiusKm,
     calculationMethod: 'geodesic_haversine',
   };
 }

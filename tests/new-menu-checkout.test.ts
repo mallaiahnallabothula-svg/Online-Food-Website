@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createClient, type Client } from '@libsql/client';
 import { DB_SCHEMA } from '../server/db/schema.ts';
 import { NEW_MENU_LAUNCH_ENABLED } from '../shared/menuCatalog.ts';
+import { DELIVERY_POLICY } from '../shared/deliveryPolicy.ts';
 import { createPendingNewMenuCheckout, priceNewMenuCheckout, type NewMenuCheckoutRequest } from '../server/services/newMenuCheckoutService.ts';
 import { getMenuStockRemaining } from '../server/services/menuStockService.ts';
 
@@ -48,6 +49,18 @@ describe('inactive new menu checkout foundation',()=>{
     const evening=priceNewMenuCheckout(request([{itemId:'pulka',quantity:4}]),new Date('2026-10-10T08:30:00.000Z'));
     expect(evening.deliveryWindow).toBe('18:00-20:00');
     expect(evening.deliveryDateIst).toBe('2026-10-10');
+  });
+  it('adds exact tier fees to new-menu checkout without modifying menu item prices', () => {
+    const at = (km: number) => ({ ...basket, customer: {
+      ...customer, latitude: DELIVERY_POLICY.kitchenLatitude + km / 111.195,
+      longitude: DELIVERY_POLICY.kitchenLongitude,
+    } });
+    expect(priceNewMenuCheckout(at(3), placedAt).totalAmountPaisa).toBe(14000);
+    expect(priceNewMenuCheckout(at(6), placedAt).deliveryChargePaisa).toBe(3000);
+    expect(priceNewMenuCheckout(at(6), placedAt).totalAmountPaisa).toBe(17000);
+    expect(priceNewMenuCheckout(at(8), placedAt).deliveryChargePaisa).toBe(5000);
+    expect(priceNewMenuCheckout(at(8), placedAt).totalAmountPaisa).toBe(19000);
+    expect(() => priceNewMenuCheckout(at(11), placedAt)).toThrow('outside');
   });
   it('rejects invalid customer coordinates and unsupported delivery area',()=>{
     expect(()=>priceNewMenuCheckout({...basket,customer:{...customer,mobile:'broken'}},placedAt)).toThrow('customer');
