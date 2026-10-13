@@ -87,6 +87,35 @@ adminRouter.get('/me', requireAuth, (req: AuthenticatedRequest, res: Response) =
 // Protected Operations (ADMIN or STAFF)
 // -------------------------------------------------------------
 
+/**
+ * Owner-only, read-only paid-order alert feed. Independent of dashboard filters.
+ * Newly settled orders move to the front because payment settlement updates
+ * updated_at. A short bounded snapshot avoids loading item lines every 12s.
+ */
+adminRouter.get('/paid-order-alerts', requireAuth, async (_req: AuthenticatedRequest, res: Response) => {
+  const db = getDb();
+  const result = await db.execute({
+    sql: `SELECT id, customer_name, delivery_date, delivery_window, total_amount_paisa,
+                 fulfillment_status, updated_at
+          FROM orders
+          WHERE payment_status = 'PAID' AND fulfillment_status <> 'CANCELLED'
+          ORDER BY updated_at DESC, id DESC LIMIT 100`,
+    args: [],
+  });
+  res.json({
+    alerts: result.rows.map(row => ({
+      id: String(row.id),
+      customerName: String(row.customer_name),
+      deliveryDate: String(row.delivery_date),
+      deliveryWindow: String(row.delivery_window),
+      totalAmount: Number(row.total_amount_paisa) / 100,
+      fulfillmentStatus: String(row.fulfillment_status),
+      updatedAt: String(row.updated_at),
+      paymentStatus: 'PAID',
+    })),
+  });
+});
+
 // Orders List with pagination, search, status, and date filters
 adminRouter.get('/orders', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const db = getDb();
