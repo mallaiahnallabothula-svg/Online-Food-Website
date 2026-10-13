@@ -16,7 +16,9 @@ const temporaryPhotos: Record<string, string> = {
 };
 
 export function FoodArtwork({ itemId, className = '' }: { itemId: string; className?: string }) {
-  const photo = temporaryPhotos[itemId];
+  // Use existing site-owned food photos when available; other items remain illustrations.
+  const localPhotos: Record<string, string> = { 'jowar-roti': '/jowar_roti.jpg', chapathi: '/chapathi.jpg' };
+  const photo = localPhotos[itemId] ?? temporaryPhotos[itemId];
   if (photo) return <img src={photo} alt="" aria-hidden="true" loading="lazy" decoding="async" className={'object-cover ' + className} />;
 
   const tile = tiles[itemId];

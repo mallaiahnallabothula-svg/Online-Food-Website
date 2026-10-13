@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
 import { UpcomingMenuSection } from './components/UpcomingMenuSection';
+import { HomeInfoSections } from './components/HomeInfoSections';
 import { AdminLogin } from './components/OwnerPortal/AdminLogin';
 import { OwnerDashboard } from './components/OwnerPortal/OwnerDashboard';
 import { AndroidInstallBanner } from './components/AndroidInstallBanner';
@@ -190,6 +191,7 @@ export default function App() {
                 isInstalled={isInstalled}
               />
               <UpcomingMenuSection reorderRequest={reorderRequest} onReorder={setReorderRequest} />
+              <HomeInfoSections />
             </>
           </div>
         )}
@@ -212,7 +214,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-amber-900/10 dark:border-stone-800 bg-[#FAF4EA] dark:bg-[#151413] py-8 text-xs font-telugu text-stone-600 dark:text-stone-400">
+      <footer className="mt-auto border-t border-stone-200 dark:border-stone-800 bg-white dark:bg-[#151A16] py-8 text-xs font-telugu text-stone-600 dark:text-stone-400">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3 text-center md:text-left">
             <BrandEmblem size="sm" />
