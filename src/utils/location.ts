@@ -30,3 +30,15 @@ export function googleMapsPinUrl(latitude: number, longitude: number): string {
   }
   return `https://maps.google.com/?q=${latitude},${longitude}`;
 }
+
+/** Only Google Maps' exact short-share host and opaque token are accepted. */
+export function isGoogleMapsShortLink(value: string): boolean {
+  try {
+    const url = new URL(value.trim());
+    return url.protocol === 'https:' && url.hostname === 'maps.app.goo.gl' &&
+      !url.username && !url.password && !url.port && !url.search && !url.hash &&
+      /^\/[A-Za-z0-9_-]{5,120}\/?$/.test(url.pathname);
+  } catch {
+    return false;
+  }
+}
