@@ -42,7 +42,8 @@ describe('PR17 public coming-soon menu (display only)', () => {
     expect(menu.textContent).toContain('₹40');
     // Sample cart is interactive, but real payment/order checkout stays disabled.
     expect(within(menu).queryByText('Pay Now')).toBeNull();
-    expect(within(menu).getByRole('button', { name: 'New menu checkout unavailable' }).hasAttribute('disabled')).toBe(true);
+    expect(within(menu).queryByRole('button', { name: 'New menu checkout unavailable' })).toBeNull();
+    expect(within(menu).queryByTestId('upcoming-preview-form')).toBeNull();
   });
 
   it('shows small food artwork for each row, with original prices and controls', () => {
@@ -82,7 +83,8 @@ describe('PR17 public coming-soon menu (display only)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Use English' }));
     expect(chapathi.textContent).toContain('New-menu ordering coming soon');
     expect(menu.textContent).toContain('New-menu ordering coming soon');
-    expect(within(menu).getByRole('button', { name: 'New menu checkout unavailable' }).hasAttribute('disabled')).toBe(true);
+    expect(within(menu).queryByRole('button', { name: 'New menu checkout unavailable' })).toBeNull();
+    expect(within(menu).queryByTestId('upcoming-preview-form')).toBeNull();
   });
 
   it('keeps the customer homepage on the 10-item menu while preserving owner and tracking access', () => {
@@ -104,19 +106,18 @@ describe('menu cart navigation', () => {
   it('keeps the visible cart total in sync and moves to delivery without starting checkout', () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal('fetch', fetchSpy);
-    const scroll = vi.fn();
-    const { container } = mount();
+    const navigate = vi.fn();
+    const { container } = render(<LanguageProvider><LanguageSwitch /><UpcomingMenuSection onCheckout={navigate} /></LanguageProvider>);
     fireEvent.click(screen.getByRole('button', { name: 'Use English' }));
-    const delivery = container.querySelector('#menu-delivery') as HTMLElement;
-    delivery.scrollIntoView = scroll;
     for (let i = 0; i < 4; i++) {
       fireEvent.click(screen.getByRole('button', { name: i === 0 ? 'Add Idly to sample cart' : 'Increase Idly sample quantity' }));
     }
     expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹120');
     expect(screen.queryByRole('complementary', { name: 'Your cart summary' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'View cart' }));
-    expect(scroll).toHaveBeenCalledTimes(1);
-    expect(document.activeElement).toBe(delivery);
+    expect(navigate).toHaveBeenCalledTimes(1);
+    expect(navigate.mock.calls[0]![0].period).toBe('MORNING');
+    expect(navigate.mock.calls[0]![0].subtotalPaisa).toBe(12000);
     expect(fetchSpy).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Evening (6)' }));
     expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹0');

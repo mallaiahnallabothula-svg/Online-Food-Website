@@ -4,6 +4,8 @@ import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
 import { SolaraEditorialContent } from './components/SolaraEditorialContent';
 import { UpcomingMenuSection } from './components/UpcomingMenuSection';
+import { SecureCheckoutPage } from './components/SecureCheckoutPage';
+import { rememberCheckoutSelection, restoreCheckoutSelection, type CheckoutSelection } from './utils/checkoutSelection';
 import { AdminLogin } from './components/OwnerPortal/AdminLogin';
 import { OwnerDashboard } from './components/OwnerPortal/OwnerDashboard';
 import { OfflineIndicator } from './components/OfflineIndicator';
@@ -35,6 +37,31 @@ export default function App() {
   const [isOrderTrackingOpen, setIsOrderTrackingOpen] = useState<boolean>(false);
   const [trackingOrderId, setTrackingOrderId] = useState<string>('');
   const [reorderRequest, setReorderRequest] = useState<ReorderRequest | null>(null);
+  const [checkoutRoute, setCheckoutRoute] = useState(() => window.location.pathname === '/checkout');
+  const [checkoutSelection, setCheckoutSelection] = useState<CheckoutSelection | null>(restoreCheckoutSelection);
+  const [checkoutVersion, setCheckoutVersion] = useState(0);
+
+  // Real, refreshable checkout URL; no new router or changes to payment state.
+  useEffect(() => {
+    const syncPath = () => setCheckoutRoute(window.location.pathname === '/checkout');
+    window.addEventListener('popstate', syncPath);
+    return () => window.removeEventListener('popstate', syncPath);
+  }, []);
+
+  const openCheckout = (selection: CheckoutSelection) => {
+    if (selection.subtotalPaisa < 10_000) return;
+    rememberCheckoutSelection(selection);
+    setCheckoutSelection(selection);
+    setCheckoutVersion(v => v + 1); // Old quotes/consent must not survive a new visit.
+    window.history.pushState({ checkout: true }, '', '/checkout');
+    setCheckoutRoute(true);
+    window.scrollTo?.({ top: 0, behavior: 'auto' });
+  };
+  const backToMenu = () => {
+    if (window.location.pathname === '/checkout') window.history.pushState({}, '', '/');
+    setCheckoutRoute(false);
+    requestAnimationFrame(() => document.getElementById('upcoming-menu')?.scrollIntoView({ block: 'start' }));
+  };
 
   // Check initial admin session status from server cookie
   useEffect(() => {
@@ -146,7 +173,7 @@ export default function App() {
     <div className="solara-app min-h-screen flex flex-col bg-[#f7f2e9] dark:bg-[#1A1816] text-[#26231f] dark:text-[#E7E5E4] transition-colors duration-200">
       
       {/* Header */}
-      <Header
+      {!(currentView === 'CUSTOMER' && checkoutRoute) && <Header
         hoursStatus={hoursStatus}
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode(prev => !prev)}
@@ -160,22 +187,26 @@ export default function App() {
         isOwnerView={currentView !== 'CUSTOMER'}
         onBackToCustomerView={() => setCurrentView('CUSTOMER')}
         onOpenOrderTracker={() => setIsOrderTrackingOpen(true)}
-      />
+      />}
 
       {/* MAIN VIEWPORT */}
       <main className="flex-1">
         {/* CUSTOMER VIEW */}
         {currentView === 'CUSTOMER' && (
-          <div className="solara-customer">
+          <div className="solara-customer" hidden={checkoutRoute}>
             <>
               <HeroSection
                 onScrollToOrder={handleScrollToOrder}
                 isOpen={hoursStatus.isOpen}
               />
-              <UpcomingMenuSection reorderRequest={reorderRequest} onReorder={setReorderRequest} />
+              <UpcomingMenuSection reorderRequest={reorderRequest} initialCheckoutSelection={checkoutSelection} onCheckout={openCheckout} />
               <SolaraEditorialContent />
             </>
           </div>
+        )}
+
+        {currentView === 'CUSTOMER' && checkoutRoute && (
+          <SecureCheckoutPage key={checkoutVersion} selection={checkoutSelection} onBack={backToMenu} onReorder={request => { backToMenu(); setReorderRequest(request); }} />
         )}
 
         {/* OWNER LOGIN VIEW */}
@@ -196,7 +227,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="solara-footer mt-auto border-t border-[#403b35] bg-[#201f1c] py-12 text-[#e8ded2] dark:bg-[#151413]">
+      {!(currentView === 'CUSTOMER' && checkoutRoute) && <footer className="solara-footer mt-auto border-t border-[#403b35] bg-[#201f1c] py-12 text-[#e8ded2] dark:bg-[#151413]">
         <div className="mx-auto grid max-w-6xl gap-9 px-5 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.5fr_1fr_1fr] lg:gap-14">
           <div className="min-w-0">
             <h4 className="solara-display text-xl font-semibold text-[#f5e7db]">{t.brandName}</h4>
@@ -238,7 +269,7 @@ export default function App() {
             </nav>
           )}
         </div>
-      </footer>
+      </footer>}
 
             {/* Customer Order Tracking & Feedback Modal */}
       <OrderTrackingModal
@@ -247,6 +278,7 @@ export default function App() {
         initialOrderId={trackingOrderId}
         onReorder={request => {
           setIsOrderTrackingOpen(false);
+          if (checkoutRoute) backToMenu();
           setReorderRequest(request);
         }}
       />

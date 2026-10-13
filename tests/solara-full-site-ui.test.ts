@@ -12,7 +12,8 @@ describe('Solara full-site UI protects business workflows', () => {
     const menu=source('src/components/UpcomingMenuSection.tsx');
     const checkout=source('src/components/UpcomingCheckoutPreview.tsx');
     const live=source('src/components/LiveNewMenuCheckout.tsx');
-    expect(menu).toContain('NEW_MENU_LAUNCH_ENABLED'); expect(menu).toContain('<UpcomingCheckoutPreview');
+    expect(menu).toContain('NEW_MENU_LAUNCH_ENABLED'); expect(menu).not.toContain('<UpcomingCheckoutPreview');
+    expect(source('src/components/SecureCheckoutPage.tsx')).toContain('<UpcomingCheckoutPreview');
     expect(menu).toContain('minimumQuantity'); expect(menu).toContain('menu-cart-total');
     expect(checkout).toContain('<LiveNewMenuCheckout');
     expect(live).toContain('loadRazorpay'); expect(live).toContain('onSubmit={checkQuote}');
