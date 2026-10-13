@@ -31,6 +31,7 @@ import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { AuditLogs } from './AuditLogs';
 import { CustomerFeedbackView } from './CustomerFeedbackView';
 import { useLanguage } from '../../context/LanguageContext';
+import { createWhatsAppOrderUpdate } from '../../utils/whatsappOrderUpdates';
 
 interface OwnerDashboardProps {
   role: AdminRole;
@@ -63,6 +64,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
   
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+  const [waPreviewOrderId, setWaPreviewOrderId] = useState<string | null>(null);
   const [isExportingCsv, setIsExportingCsv] = useState<boolean>(false);
   const [updatingFeedbackId, setUpdatingFeedbackId] = useState<string | null>(null);
 
@@ -449,6 +451,8 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                 const distanceKm = order.distanceKm ?? 0.8;
                 const totalPaid = order.totalAmount || order.totalPaid || 0;
                 const canFulfill = order.paymentStatus === 'PAID' && !['DELIVERED', 'CANCELLED'].includes(order.fulfillmentStatus);
+                const waUpdate = createWhatsAppOrderUpdate(order, language);
+                const waPreviewOpen = waPreviewOrderId === order.id && !!waUpdate;
 
                 return (
                   <div
@@ -536,16 +540,16 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                             <span>{customerMobile}</span>
                           </a>
 
-                          <a
-                            href={`https://wa.me/91${customerMobile}?text=${encodeURIComponent(
-                              isTe ? `నమస్కారం ${customerName} గారు, మీ మన ఇంటి వంట ఆర్డర్ (${order.id}) సిద్ధమవుతోంది. సాయంత్రం 6-8 గంటల మధ్య డెలివరీ చేయబడుతుంది.` : `Hello ${customerName}, your Mana Enti Vanta order (${order.id}) is being prepared. Delivery is between 6 and 8 PM.`
-                            )}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-50 dark:bg-emerald-950 border border-emerald-300 text-emerald-700 dark:text-emerald-300 rounded-lg font-bold hover:bg-emerald-100"
+                          <button
+                            type="button"
+                            disabled={!waUpdate}
+                            aria-expanded={waPreviewOpen}
+                            onClick={() => setWaPreviewOrderId(previous => previous === order.id ? null : order.id)}
+                            title={!waUpdate ? (isTe ? 'చెల్లించిన ఆర్డర్, సరైన మొబైల్ నంబర్ అవసరం' : 'Requires a paid order and valid mobile') : undefined}
+                            className="inline-flex items-center gap-1 rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-800 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:border-stone-300 disabled:bg-stone-100 disabled:text-stone-500 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 dark:disabled:border-stone-700 dark:disabled:bg-stone-800"
                           >
-                            <span>WhatsApp</span>
-                          </a>
+                            {isTe ? 'WhatsApp అప్‌డేట్' : 'WhatsApp update'}
+                          </button>
 
                           {order.locationLink && (
                             <a
@@ -557,6 +561,21 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                               <MapPin className="w-3 h-3" />
                               <span>{ui("మ్యాప్స్ డైరెక్షన్స్")}</span>
                             </a>
+                          )}
+                          {waUpdate && waPreviewOpen && (
+                            <div className="mt-2 w-full space-y-2 rounded-xl border border-emerald-200 bg-white p-3 text-sm dark:border-emerald-800 dark:bg-stone-900" data-testid="owner-whatsapp-update-preview">
+                              <p className="font-bold text-emerald-800 dark:text-emerald-200">
+                                {isTe ? 'WhatsApp మెసేజ్ ప్రివ్యూ' : 'WhatsApp message preview'} · {waUpdate.label}
+                              </p>
+                              <p className="whitespace-pre-line break-words rounded-lg bg-emerald-50 p-3 text-stone-800 dark:bg-emerald-950/30 dark:text-stone-200">{waUpdate.message}</p>
+                              <a href={waUpdate.url} target="_blank" rel="noopener noreferrer"
+                                 className="inline-flex min-h-11 items-center rounded-lg bg-[#26543A] px-4 py-2 text-sm font-bold text-white hover:bg-[#1E4330]">
+                                {isTe ? 'WhatsApp తెరిచి పంపండి' : 'Open WhatsApp to send'}
+                              </a>
+                              <p className="text-xs leading-relaxed text-stone-500 dark:text-stone-300">
+                                {isTe ? 'మెసేజ్ ఆటోమేటిక్‌గా పంపబడదు. WhatsAppలో నంబర్ చూసి Send నొక్కండి.' : 'Not sent automatically. Check the recipient and press Send in WhatsApp.'}
+                              </p>
+                            </div>
                           )}
                         </div>
                       </div>
