@@ -306,8 +306,8 @@ export const translations: Record<Language, Translations> = {
     selectQuantitySubtitle: 'తాజా జొన్న రొట్టెలు (₹30) మరియు మెత్తటి చపాతీలు (₹10)',
     rotisUnit: 'రొట్టెలు',
     subtotalLabel: 'మొత్తం ఉపమొత్తం:',
-    freeKollurDeliveryBadge: '✓ కొల్లూరు నుండి 5 కి.మీ. వరకు ఉచిత డెలివరీ (5 కి.మీ. దాటితే ₹9/కి.మీ.)',
-    deliveryAbove5kmNote: '5 కి.మీ. వరకు ఉచితం. 5 కి.మీ. పైబడిన దూరానికి ₹9/కి.మీ. చొప్పున డెలివరీ ఛార్జీ వర్తిస్తుంది.',
+    freeKollurDeliveryBadge: '✓ కిచెన్ నుండి 5 కి.మీ. వరకు ఉచితం | 5–7 కి.మీ. ₹30 | 7–10 కి.మీ. ₹50',
+    deliveryAbove5kmNote: 'కిచెన్ నుండి 0–5 కి.మీ. ఉచితం, 5–7 కి.మీ. ₹30, 7–10 కి.మీ. ₹50. 10 కి.మీ. దాటితే డెలివరీ లేదు.',
     noCodBadge: '🚫 నో క్యాష్ ఆన్ డెలివరీ (ఆన్‌లైన్ పేమెంట్ తర్వాతే ఆర్డర్)',
     chapathiItemName: 'వేడివేడి చపాతీలు (Chapathi)',
     chapathiPriceTag: 'ధర: ₹10 / ఒక్కటి (కనీస ఆర్డర్ 5)',
@@ -350,7 +350,7 @@ export const translations: Record<Language, Translations> = {
     customerNameLabel: 'కస్టమర్ పూర్తి పేరు',
     customerNamePlaceholder: 'ఉదాహరణ: సురేష్ కుమార్',
     customerMobileLabel: 'మొబైల్ సంఖ్య (10 అంకెలు)',
-    deliveryAreaLabel: 'డెలివరీ ప్రాంతం (కొల్లూరు 5 కి.మీ. పరిధి)',
+    deliveryAreaLabel: 'డెలివరీ ప్రాంతం (కిచెన్ నుండి 10 కి.మీ. వరకు)',
     detectGpsBtn: 'నా ప్రస్తుత GPS లొకేషన్ గుర్తించండి',
     detectingGps: 'గుర్తిస్తోంది...',
     freeDeliveryTag: 'ఉచిత డెలివరీ',
@@ -379,7 +379,7 @@ export const translations: Record<Language, Translations> = {
     errMobileEmpty: 'దయచేసి మొబైల్ నంబర్ నమోదు చేయండి.',
     errMobileDigits: 'సరైన 10 అంకెల మొబైల్ నంబర్ నమోదు చేయండి (ఉదా: 8499865803).',
     errAddress: 'దయచేసి పూర్తి డెలివరీ చిరునామా (ఇంటి నం, కాలనీ) నమోదు చేయండి.',
-    errDistance: 'కొల్లూరు గ్రామం నుండి 35 కి.మీ. పరిధి దాటింది. దయచేసి సర్వీస్ చేయగల ప్రాంతాన్ని ఎంచుకోండి.',
+    errDistance: 'కిచెన్ నుండి 10 కి.మీ. పరిధి దాటింది. దయచేసి సర్వీస్ చేసే ప్రాంతాన్ని ఎంచుకోండి.',
     errKaram: 'దయచేసి కనీసం ఒక ఉచిత కారాన్ని ఎంచుకోండి (కరివేపాకు లేదా అవిసె గింజల కారం).',
 
     // Order Form - Section 4: Review & Checkout
@@ -392,7 +392,7 @@ export const translations: Record<Language, Translations> = {
     missingDetailsPrompt: 'ఆర్డర్ చేయడానికి పైన పేరు, మొబైల్ నంబర్ మరియు చిరునామా నమోదు చేయండి.',
     proceedPaymentBtn: 'చెల్లింపుకు కొనసాగించండి',
     hoursClosedWarning: '⚠️ ఆర్డర్ల సమయం (11:00 AM – 4:00 PM IST) ముగిసినందున చెకౌట్ డిసేబుల్ చేయబడింది.',
-    beyondRadiusWarning: '⚠️ దయచేసి కొల్లూరు గ్రామం నుండి 35 కి.మీ. పరిధిలోని చిరునామాను ఎంచుకోండి.',
+    beyondRadiusWarning: '⚠️ కిచెన్ నుండి 10 కి.మీ. పరిధిలోని డెలివరీ చిరునామాను ఎంచుకోండి.',
     paymentOptionsNote: 'ఆన్‌లైన్ UPI చెల్లింపు మాత్రమే (No Cash on Delivery). చెల్లింపు పూర్తయిన తర్వాతే ఆర్డర్ నమోదవుతుంది.',
 
     // Payment Modal
@@ -549,8 +549,8 @@ export const translations: Record<Language, Translations> = {
     selectQuantitySubtitle: 'Fresh hot Jowar Rotis (₹30) & Soft Wheat Chapathis (₹10)',
     rotisUnit: 'Rotis',
     subtotalLabel: 'Order Subtotal:',
-    freeKollurDeliveryBadge: '✓ Free delivery up to 5 km (₹9/km above 5 km)',
-    deliveryAbove5kmNote: 'Free within 5 km. ₹9/km delivery charge applies for distance above 5 km.',
+    freeKollurDeliveryBadge: '✓ 0–5 km Free | 5–7 km ₹30 | 7–10 km ₹50',
+    deliveryAbove5kmNote: '0–5 km free; 5–7 km ₹30; 7–10 km ₹50. No delivery beyond 10 km from the kitchen.',
     noCodBadge: '🚫 No Cash on Delivery (Order placed after payment only)',
     chapathiItemName: 'Fresh Soft Chapathis',
     chapathiPriceTag: 'Price: ₹10 each (Min. 5 nos)',
@@ -587,13 +587,13 @@ export const translations: Record<Language, Translations> = {
 
     // Order Form - Section 3: Customer Details & 5km Radius
     customerDetailsSectionTitle: 'Customer & Delivery Address',
-    customerDetailsSectionSub: 'Free home delivery within 5 km radius of Kolluru village',
+    customerDetailsSectionSub: 'Free within 5 km from kitchen; paid delivery up to 10 km',
     sampleFillBtn: 'Fill Sample Details',
     sampleFillTitle: 'Fill sample details for quick testing with one click',
     customerNameLabel: 'Customer Full Name',
     customerNamePlaceholder: 'e.g., Suresh Kumar',
     customerMobileLabel: 'Mobile Number (10 digits)',
-    deliveryAreaLabel: 'Delivery Area (Kolluru 5 km Radius)',
+    deliveryAreaLabel: 'Delivery Area (up to 10 km from kitchen)',
     detectGpsBtn: 'Detect My Current GPS Location',
     detectingGps: 'Detecting...',
     freeDeliveryTag: 'Free Delivery',
@@ -622,7 +622,7 @@ export const translations: Record<Language, Translations> = {
     errMobileEmpty: 'Please enter mobile number.',
     errMobileDigits: 'Please enter a valid 10-digit mobile number (e.g., 8499865803).',
     errAddress: 'Please enter complete delivery address (House No, Colony).',
-    errDistance: 'Address is beyond 35 km from Kolluru village. Please select a serviceable locality.',
+    errDistance: 'Address is beyond 10 km from the kitchen. Please choose a serviceable location.',
     errKaram: 'Please select at least one complimentary podi (Curry Leaf or Flax Seeds).',
 
     // Order Form - Section 4: Review & Checkout
@@ -635,7 +635,7 @@ export const translations: Record<Language, Translations> = {
     missingDetailsPrompt: 'Please enter name, mobile number and address above to proceed.',
     proceedPaymentBtn: 'Proceed to Payment',
     hoursClosedWarning: '⚠️ Ordering is currently paused outside schedule (11:00 AM – 4:00 PM IST).',
-    beyondRadiusWarning: '⚠️ Please select an address within 35 km of Kolluru village.',
+    beyondRadiusWarning: '⚠️ Please choose a delivery address within 10 km of the kitchen.',
     paymentOptionsNote: 'Online UPI payment only (No Cash on Delivery). Order is placed only after payment.',
 
     // Payment Modal

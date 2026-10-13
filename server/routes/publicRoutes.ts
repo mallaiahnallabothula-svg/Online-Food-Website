@@ -3,6 +3,7 @@ import { getOrderingStatus } from '../services/timeService.ts';
 import { calculateDelivery } from '../services/deliveryService.ts';
 import { DeliveryCalculationSchema } from '../validation/schemas.ts';
 import { BUSINESS_CONFIG } from '../config/business.ts';
+import { DELIVERY_POLICY } from '../../shared/deliveryPolicy.ts';
 import { getDb } from '../db/index.ts';
 
 export const publicRouter = Router();
@@ -30,11 +31,17 @@ publicRouter.get('/status', (req: Request, res: Response) => {
         chapathiRupees: Math.round(BUSINESS_CONFIG.prices.chapathiPaisa / 100),
       },
       delivery: {
-        freeRadiusKm: BUSINESS_CONFIG.delivery.freeRadiusKm,
-        maxRadiusKm: BUSINESS_CONFIG.delivery.maxRadiusKm,
-        extraKmRateRupees: Math.round(BUSINESS_CONFIG.delivery.extraKmRatePaisa / 100),
+        freeRadiusKm: DELIVERY_POLICY.freeRadiusKm,
+        standardRadiusKm: DELIVERY_POLICY.standardRadiusKm,
+        maxRadiusKm: DELIVERY_POLICY.maxRadiusKm,
+        standardChargeRupees: DELIVERY_POLICY.standardChargePaisa / 100,
+        outerChargeRupees: DELIVERY_POLICY.outerChargePaisa / 100,
       },
-      kitchen: BUSINESS_CONFIG.kitchen,
+      kitchen: {
+        ...BUSINESS_CONFIG.kitchen,
+        latitude: DELIVERY_POLICY.kitchenLatitude,
+        longitude: DELIVERY_POLICY.kitchenLongitude,
+      },
     },
   });
 });

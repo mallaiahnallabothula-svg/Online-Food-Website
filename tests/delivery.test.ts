@@ -1,102 +1,76 @@
 import { describe, it, expect } from 'vitest';
 import { calculateHaversineDistanceKm, calculateDelivery } from '../server/services/deliveryService.ts';
-import { BUSINESS_CONFIG } from '../server/config/business.ts';
+import { DELIVERY_POLICY, deliveryTierForDistanceKm } from '../shared/deliveryPolicy.ts';
+import { PRESET_LOCALITIES, KOLLUR_CENTER, checkKollurDeliveryEligibility, calculateDeliveryCharge } from '../src/data/kollurAreas.ts';
 
-describe('Delivery Service & Geodesic Calculation', () => {
-  const kitchen = BUSINESS_CONFIG.kitchen;
+describe('Delivery tiers and kitchen location — authoritative policy', () => {
+  const kitchen = { latitude: DELIVERY_POLICY.kitchenLatitude, longitude: DELIVERY_POLICY.kitchenLongitude };
 
-  it('calculates 0 km distance when coordinates match kitchen', () => {
-    const dist = calculateHaversineDistanceKm(
-      kitchen.latitude,
-      kitchen.longitude,
-      kitchen.latitude,
-      kitchen.longitude
-    );
-    expect(dist).toBe(0);
+  it('uses the exact requested kitchen GPS coordinates', () => {
+    expect(kitchen).toEqual({ latitude: 17.444210, longitude: 78.251478 });
+    expect(KOLLUR_CENTER.lat).toBe(17.444210);
+    expect(KOLLUR_CENTER.lng).toBe(78.251478);
+    expect(calculateHaversineDistanceKm(kitchen.latitude, kitchen.longitude, kitchen.latitude, kitchen.longitude)).toBe(0);
+    expect(calculateDelivery(kitchen.latitude, kitchen.longitude)).toMatchObject({
+      eligible: true, distanceKm: 0, deliveryChargePaisa: 0, maxRadiusKm: 10,
+    });
   });
 
-  it('correctly calculates distance for nearby location in Hyderabad', () => {
-    // A point approx 3.5 km away
-    const testLat = kitchen.latitude + 0.025;
-    const testLon = kitchen.longitude + 0.02;
-    const dist = calculateHaversineDistanceKm(kitchen.latitude, kitchen.longitude, testLat, testLon);
-    expect(dist).toBeGreaterThan(2);
-    expect(dist).toBeLessThan(5);
+  it.each([
+    [0, true, 0],
+    [4.9, true, 0],
+    [5, true, 0],
+    [5.0001, true, 3000],
+    [5.1, true, 3000],
+    [6, true, 3000],
+    [7, true, 3000],
+    [7.0001, true, 5000],
+    [7.1, true, 5000],
+    [8, true, 5000],
+    [10, true, 5000],
+    [10.0001, false, 0],
+    [10.1, false, 0],
+    [35, false, 0],
+  ])('prices a distance of %s km -> eligible=%s fee=%s paisa', (km, eligible, price) => {
+    const tier = deliveryTierForDistanceKm(km);
+    const charge = calculateDelivery(undefined, undefined, km);
+    expect(tier).toEqual({ eligible, deliveryChargePaisa: price });
+    expect(charge.eligible).toBe(eligible);
+    expect(charge.deliveryChargePaisa).toBe(price);
+    expect(charge.deliveryChargeRupees).toBe(price / 100);
+    expect(charge.freeRadiusKm).toBe(5);
+    expect(charge.standardRadiusKm).toBe(7);
+    expect(charge.maxRadiusKm).toBe(10);
   });
 
-  it('grants free delivery within free radius (<= 5km)', () => {
-    // Within 2km of kitchen
-    const lat = kitchen.latitude + 0.01;
-    const lon = kitchen.longitude + 0.01;
-    const result = calculateDelivery(lat, lon);
-
-    expect(result.eligible).toBe(true);
-    expect(result.distanceKm).toBeLessThanOrEqual(5);
-    expect(result.deliveryChargeRupees).toBe(0);
-    expect(result.deliveryChargePaisa).toBe(0);
+  it('rejects bad GPS, and does not round a just-outside-10km location into service range', () => {
+    expect(calculateDelivery(999, -999).eligible).toBe(false);
+    expect(deliveryTierForDistanceKm(Number.NaN).eligible).toBe(false);
+    expect(deliveryTierForDistanceKm(-1).eligible).toBe(false);
+    // Move due north by ~10.01 km using the sphere's meridional arc.
+    const latitude = kitchen.latitude + 10.01 / 111.195;
+    const check = calculateDelivery(latitude, kitchen.longitude);
+    expect(check.eligible).toBe(false);
+    expect(check.reason).toContain('10 km');
   });
 
-  it('calculates delivery fee for distance between 5km and 10km', () => {
-    // Approx 7km away
-    const lat = kitchen.latitude + 0.05;
-    const lon = kitchen.longitude + 0.04;
-    const result = calculateDelivery(lat, lon);
-
-    expect(result.eligible).toBe(true);
-    expect(result.distanceKm).toBeGreaterThan(5);
-    expect(result.deliveryChargeRupees).toBeGreaterThan(0);
-    expect(result.deliveryChargePaisa).toBe(result.deliveryChargeRupees * 100);
+  it('uses kitchen coordinates for actual GPS fees, not old Kollur reference location', () => {
+    const actual = calculateDelivery(kitchen.latitude + 6 / 111.195, kitchen.longitude);
+    expect(actual.eligible).toBe(true);
+    expect(actual.deliveryChargeRupees).toBe(30);
+    const farther = calculateDelivery(kitchen.latitude + 8.5 / 111.195, kitchen.longitude);
+    expect(farther.deliveryChargeRupees).toBe(50);
   });
 
-  it('handles boundary conditions: 0km, 5km (free), 5.1km (charged), 35km (eligible), 35.1km (rejected)', () => {
-    // 0km
-    const r0 = calculateDelivery(undefined, undefined, 0);
-    expect(r0.eligible).toBe(true);
-    expect(r0.distanceKm).toBe(0);
-    expect(r0.deliveryChargePaisa).toBe(0);
-    expect(r0.deliveryChargeRupees).toBe(0);
-
-    // 5km (free boundary)
-    const r5 = calculateDelivery(undefined, undefined, 5.0);
-    expect(r5.eligible).toBe(true);
-    expect(r5.distanceKm).toBe(5.0);
-    expect(r5.deliveryChargePaisa).toBe(0);
-    expect(r5.deliveryChargeRupees).toBe(0);
-
-    // 5.1km (extra 0.1km @ 900 paise = 90 paise = ~₹1)
-    const r51 = calculateDelivery(undefined, undefined, 5.1);
-    expect(r51.eligible).toBe(true);
-    expect(r51.distanceKm).toBe(5.1);
-    expect(r51.deliveryChargePaisa).toBe(90);
-
-    // 35km (maximum deliverable radius boundary)
-    const r35 = calculateDelivery(undefined, undefined, 35.0);
-    expect(r35.eligible).toBe(true);
-    expect(r35.distanceKm).toBe(35.0);
-    // (35 - 5) * 900 = 27000 paise = ₹270
-    expect(r35.deliveryChargeRupees).toBe(270);
-
-    // 35.1km (exceeds 35km cutoff)
-    const r351 = calculateDelivery(undefined, undefined, 35.1);
-    expect(r351.eligible).toBe(false);
-    expect(r351.distanceKm).toBe(35.1);
-    expect(r351.reason).toContain('exceeds our maximum delivery range of 35 km');
-  });
-
-  it('rejects delivery beyond maximum delivery radius (> 35km)', () => {
-    // 50km away
-    const farLat = kitchen.latitude + 0.5;
-    const farLon = kitchen.longitude + 0.5;
-    const result = calculateDelivery(farLat, farLon);
-
-    expect(result.eligible).toBe(false);
-    expect(result.distanceKm).toBeGreaterThan(35);
-    expect(result.reason).toBeDefined();
-    expect(result.reasonTe).toBeDefined();
-  });
-
-  it('rejects invalid coordinate inputs', () => {
-    const invalidResult = calculateDelivery(999, -999);
-    expect(invalidResult.eligible).toBe(false);
+  it('front-end presets and helper never advertise old ₹9/km or 35km eligibility', () => {
+    for (const area of PRESET_LOCALITIES) {
+      const result = checkKollurDeliveryEligibility(area.lat, area.lng);
+      expect(area.distanceKm).toBe(result.distanceKm);
+      expect(area.isEligible).toBe(result.isEligible);
+      expect(area.deliveryCharge).toBe(result.deliveryCharge);
+    }
+    expect(calculateDeliveryCharge(6).deliveryCharge).toBe(30);
+    expect(calculateDeliveryCharge(8).deliveryCharge).toBe(50);
+    expect(checkKollurDeliveryEligibility(undefined, undefined, 11).isEligible).toBe(false);
   });
 });

@@ -218,13 +218,12 @@ export const OrderForm: React.FC<OrderFormProps> = ({
   const chapathiSubtotal = chapathiQuantity * pricePerChapathi;
   const itemsSubtotal = jowarSubtotal + chapathiSubtotal;
 
-  // Delivery charge calculation: Free within 5 km, ₹9/km for distance above 5 km
+  // Delivery charges are returned by the server: 0–5 km ₹0, >5–7 km ₹30, >7–10 km ₹50.
   const currentDist = typeof deliveryEligibility.distanceKm === 'number' 
     ? deliveryEligibility.distanceKm 
     : (currentDistanceKm || 0.5);
-  const extraKm = deliveryEligibility.extraKm || 0;
   const deliveryCharge = deliveryEligibility.deliveryCharge || 0;
-  const isFreeDelivery = currentDist <= 5.0;
+  const isFreeDelivery = deliveryEligibility.isFreeDelivery === true;
   const totalAmount = itemsSubtotal + deliveryCharge;
 
   const setsOf5 = Math.max(1, Math.floor(totalQuantity / 5));
@@ -868,7 +867,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
           </div>
         </div>
 
-        {/* SECTION 3: Customer & Delivery Details with 5km Kollur Service Area Check */}
+        {/* SECTION 3: Customer & Delivery Details with 10 km kitchen service radius */}
         <div className="bg-white dark:bg-[#211E1A] rounded-2xl p-6 sm:p-8 shadow-sm border border-amber-900/10 dark:border-stone-800">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-5 border-b border-stone-100 dark:border-stone-800">
             <div className="flex items-center gap-3">
@@ -950,7 +949,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
               )}
             </div>
 
-            {/* Delivery Locality Preset & 5km Radius Check */}
+            {/* Delivery localities; server determines 10 km eligibility and fixed delivery tier */}
             <div>
               <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
                 <label htmlFor="locality-select" className="text-sm font-bold text-stone-800 dark:text-stone-200">
@@ -987,7 +986,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                 })}
               </select>
 
-              {/* Real-time 5km Service Area Status */}
+              {/* Real-time kitchen distance / fee returned by the server */}
               <div className={`mt-2 p-3 rounded-xl text-xs flex items-start gap-2 ${
                 deliveryEligibility.isEligible
                   ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-800'
@@ -1241,7 +1240,7 @@ export const OrderForm: React.FC<OrderFormProps> = ({
                 <span className="text-[11px] text-stone-500 dark:text-stone-400 block">
                   {isFreeDelivery 
                     ? (language === 'en' ? 'Within 5 km radius (Free)' : 'కొల్లూరు కేంద్రం నుండి 5 కి.మీ. పరిధిలో ఉచితం')
-                    : (language === 'en' ? `${extraKm} km above 5 km @ ₹9/km` : `5 కి.మీ. పైబడిన ${extraKm} కి.మీ. (కి.మీ.కు ₹9 చొప్పున)`)}
+                    : (language === 'en' ? (currentDist <= 7 ? '5–7 km — fixed ₹30' : '7–10 km — fixed ₹50') : (currentDist <= 7 ? '5–7 కి.మీ. — ₹30' : '7–10 కి.మీ. — ₹50'))}
                 </span>
               </div>
               <span className={`font-bold font-mono ${isFreeDelivery ? 'text-emerald-700 dark:text-emerald-400' : 'text-[#78350F] dark:text-amber-400'}`}>

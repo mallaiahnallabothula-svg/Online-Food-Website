@@ -301,6 +301,9 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
                 {locationBusy ? <RefreshCw size={18} className="animate-spin" aria-hidden="true" /> : <LocateFixed size={18} aria-hidden="true" />}
                 {locationBusy ? (te ? 'లొకేషన్ తీసుకుంటోంది…' : 'Getting location…') : coordinates ? (te ? 'లొకేషన్ తీసుకుంది ✓' : 'Location captured ✓') : (te ? 'డెలివరీ లొకేషన్ ఎంచుకోండి' : 'Use delivery location')}
               </button>
+              <p className="mt-2 text-center text-xs font-semibold leading-relaxed text-stone-700 dark:text-stone-200">
+                {te ? 'కిచెన్ నుండి 0–5 కి.మీ. ఉచితం · 5–7 కి.మీ. ₹30 · 7–10 కి.మీ. ₹50 · 10 కి.మీ. దాటితే డెలివరీ లేదు' : 'From kitchen: 0–5 km free · 5–7 km ₹30 · 7–10 km ₹50 · No delivery beyond 10 km (straight-line distance)'}
+              </p>
               <p className="mt-2 text-center text-xs leading-relaxed text-stone-600 dark:text-stone-300">
                 {coordinates
                   ? (te ? 'లొకేషన్ సిద్ధం. పైన ఉన్న చిరునామా సరిచూసి కొనసాగించండి.' : 'Location ready. Check your address above before continuing.')
