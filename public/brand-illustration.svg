@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Mana Enti Vanta illustrated home kitchen logo">
+<rect width="512" height="512" rx="112" fill="#F2E3C8"/>
+<circle cx="256" cy="269" r="175" fill="#F7EBD8"/>
+<path d="M314 163 L374 110 L442 163" fill="none" stroke="#A96E44" stroke-width="17" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M385 163V213M428 163V223" fill="none" stroke="#B8865B" stroke-width="11" stroke-linecap="round"/>
+<path d="M259 127c-33-37 28-52 0-93M302 143c-26-31 20-45 3-72M217 153c-23-25 10-46 2-62" fill="none" stroke="#D08A4B" stroke-width="14" stroke-linecap="round" opacity=".9"/>
+<path d="M153 331C98 300 89 261 77 225c51 12 77 39 90 81M156 338C98 342 74 358 53 395c52 10 91-2 120-45M359 337c48-58 70-94 96-102-1 55-20 96-79 119M368 358c59-7 87 14 102 40-57 19-103 2-113-21" fill="#688054"/>
+<path d="M141 351c-27-32-29-79-32-106M155 349c-33 17-54 28-77 39M374 344c15-41 39-69 59-88M377 362c35 9 55 19 72 32" fill="none" stroke="#45663F" stroke-width="8" stroke-linecap="round"/>
+<ellipse cx="258" cy="382" rx="145" ry="24" fill="#A88368" opacity=".22"/>
+<path d="M158 248c4 64-7 102 34 131 31 24 117 26 148-2 39-34 31-95 30-129" fill="#B75835" stroke="#863C28" stroke-width="8" stroke-linejoin="round"/>
+<path d="M190 260c5 65-2 88 21 111 17 15 41 18 65 17-56 6-100-11-110-43-10-26-7-49-7-87" fill="#D47A4A" opacity=".86"/>
+<ellipse cx="264" cy="246" rx="114" ry="36" fill="#8B3F2A"/>
+<ellipse cx="264" cy="239" rx="113" ry="32" fill="#D17B48"/>
+<ellipse cx="264" cy="237" rx="95" ry="23" fill="#DDA74D"/>
+<path d="M192 236c25-16 42 14 66-1 19-14 42-4 69-4" fill="none" stroke="#E7BD73" stroke-width="12" stroke-linecap="round"/>
+<circle cx="243" cy="232" r="8" fill="#6E844C"/><circle cx="290" cy="247" r="7" fill="#6E844C"/><circle cx="308" cy="223" r="5" fill="#A56B34"/>
+<path d="M187 333c44 26 88 32 139 12" fill="none" stroke="#E49D69" stroke-width="8" stroke-linecap="round" stroke-dasharray="11 20"/>
+<path d="M175 396c52 21 121 23 170 0" fill="none" stroke="#7A8B4D" stroke-width="8" stroke-linecap="round"/>
+</svg>

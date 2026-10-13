@@ -6,18 +6,13 @@ interface BrandEmblemProps {
   showText?: boolean;
 }
 
-// Simple text monogram replaces the photo logo everywhere it was used.
+// Lightweight illustrated mark. Header copy stays managed by Header.tsx.
 export const BrandEmblem: React.FC<BrandEmblemProps> = ({ size = 'md', className = '', showText = false }) => {
-  const sizes = {
-    sm: 'h-9 w-9 text-xl', md: 'h-12 w-12 text-2xl',
-    lg: 'h-16 w-16 text-3xl', xl: 'h-20 w-20 text-4xl',
-    '2xl': 'h-28 w-28 text-5xl',
-  };
+  const sizes = { sm: 36, md: 48, lg: 64, xl: 80, '2xl': 112 };
   return (
     <div className={`inline-flex items-center gap-2.5 ${className}`}>
-      <span aria-hidden="true" className={`${sizes[size]} inline-flex shrink-0 select-none items-center justify-center rounded-full bg-[#a34636] font-serif font-normal leading-none text-[#fffaf4]`}>
-        మ
-      </span>
+      <img src="/brand-illustration.svg" alt="" width={sizes[size]} height={sizes[size]}
+        className="shrink-0 rounded-xl object-contain" aria-hidden="true" />
       {showText && (
         <span className="min-w-0">
           <span className="block font-bold leading-tight tracking-tight text-[#26231f] dark:text-amber-100">Mana Enti Vanta</span>

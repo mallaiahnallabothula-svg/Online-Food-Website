@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { LanguageProvider } from '../src/context/LanguageContext.tsx';
 import { LiveNewMenuCheckout } from '../src/components/LiveNewMenuCheckout.tsx';
 import { MENU_CATALOG } from '../shared/menuCatalog.ts';
@@ -20,6 +20,10 @@ describe('Example 2 compact checkout UI', () => {
     expect(detail.textContent).toContain('Idly × 2');
     expect(detail.textContent).toContain('Ragi Idly × 2');
     expect(screen.getByLabelText('Checkout progress')).toBeTruthy();
+    const alternative = screen.getByTestId('checkout-maps-alternative') as HTMLDetailsElement;
+    expect(alternative.open).toBe(false);
+    fireEvent.click(screen.getByText('Use Google Maps instead'));
+    expect(alternative.open).toBe(true);
     expect(screen.getByLabelText('Google Maps location link (instead of GPS)')).toBeTruthy();
     expect(screen.getByRole('checkbox', { name: 'Confirm delivery address and map pin' })).toBeTruthy();
     expect((screen.getByRole('button', { name: 'Check delivery and total' }) as HTMLButtonElement).disabled).toBe(true);

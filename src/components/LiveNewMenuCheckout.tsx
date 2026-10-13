@@ -300,7 +300,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
 
   return (
     <div
-      className="solara-checkout compact-checkout mx-auto mt-8 max-w-3xl overflow-hidden rounded-2xl border border-[#ded7ce] bg-white text-stone-900 shadow-[0_14px_36px_-30px_rgba(65,45,33,0.4)] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
+      className="solara-checkout compact-checkout mx-auto mt-5 max-w-3xl overflow-hidden rounded-2xl border border-[#ded7ce] bg-white text-stone-900 shadow-[0_14px_36px_-30px_rgba(65,45,33,0.4)] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
       data-testid="live-new-menu-checkout"
     >
       <div className="border-b border-[#ded7ce] bg-[#f7f2e9] px-4 py-4 dark:border-stone-700 dark:bg-stone-800 sm:px-6 sm:py-5">
@@ -321,7 +321,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
         </div>
       </div>
 
-      <form noValidate autoComplete="on" onSubmit={checkQuote} className="space-y-4 px-4 py-4 sm:px-6 sm:py-6">
+      <form noValidate autoComplete="on" onSubmit={checkQuote} className="space-y-3 px-3 py-3 sm:px-5 sm:py-4">
         <div className="rounded-xl border border-[#e8dccf] bg-[#fcf8f1] p-3 dark:border-stone-600 dark:bg-stone-900/70" aria-label={te ? 'ఆర్డర్ సారాంశం' : 'Order summary'}>
           <div className="flex items-center gap-2 text-sm font-bold text-[#26231f] dark:text-stone-100">
             <ShoppingBag size={17} aria-hidden="true" />
@@ -360,7 +360,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
             <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[#f7f2e9] text-[#ab4d3e] dark:bg-stone-700 dark:text-emerald-200"><UserRound size={17} aria-hidden="true" /></span>
             {te ? 'కస్టమర్ వివరాలు' : 'Customer details'}
           </h4>
-          <div className="mt-2 grid gap-3 sm:grid-cols-2">
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
             <label className="block text-sm font-semibold text-stone-700 dark:text-stone-200">
               {te ? 'పేరు' : 'Name'}
               <input required autoComplete="name" maxLength={100} value={name} onChange={e => change(setName, e.target.value)} placeholder={te ? 'మీ పూర్తి పేరు' : 'Your full name'} className="mt-1 block min-h-11 w-full min-w-0 rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-base font-normal text-stone-900 placeholder:text-stone-400 focus-visible:border-[#ab4d3e] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#ab4d3e] dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100" />
@@ -377,16 +377,16 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
             <span className="flex h-7 w-7 items-center justify-center rounded-md bg-[#f7f2e9] text-[#ab4d3e] dark:bg-stone-700 dark:text-emerald-200"><MapPin size={17} aria-hidden="true" /></span>
             {te ? 'డెలివరీ చిరునామా' : 'Delivery address'}
           </h4>
-          <div className="mt-2 space-y-3">
+          <div className="mt-2 space-y-2">
             <label className="block text-sm font-semibold text-stone-700 dark:text-stone-200">
               {te ? 'పూర్తి చిరునామా' : 'Full address'}
-              <textarea required autoComplete="street-address" rows={2} maxLength={500} value={address} onChange={e => change(setAddress, e.target.value)} placeholder={te ? 'ఫ్లాట్ నంబర్, బిల్డింగ్, ఏరియా' : 'Flat number, building and area'} className="mt-1 block min-h-20 w-full min-w-0 resize-y rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-base font-normal text-stone-900 placeholder:text-stone-400 focus-visible:border-[#ab4d3e] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#ab4d3e] dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100" />
+              <textarea required autoComplete="street-address" rows={2} maxLength={500} value={address} onChange={e => change(setAddress, e.target.value)} placeholder={te ? 'ఫ్లాట్ నంబర్, బిల్డింగ్, ఏరియా' : 'Flat number, building and area'} className="mt-1 block min-h-16 w-full min-w-0 resize-y rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-base font-normal text-stone-900 placeholder:text-stone-400 focus-visible:border-[#ab4d3e] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#ab4d3e] dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100" />
             </label>
             <label className="block text-sm font-semibold text-stone-700 dark:text-stone-200">
               {te ? 'ల్యాండ్‌మార్క్ (ఐచ్ఛికం)' : 'Landmark (optional)'}
               <input maxLength={200} value={landmark} onChange={e => change(setLandmark, e.target.value)} placeholder={te ? 'దగ్గరలో గుర్తించగల స్థలం' : 'Nearby landmark'} className="mt-1 block min-h-11 w-full min-w-0 rounded-lg border border-stone-300 bg-white px-3 py-2.5 text-base font-normal text-stone-900 placeholder:text-stone-400 focus-visible:border-[#ab4d3e] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#ab4d3e] dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100" />
             </label>
-            <div className="rounded-xl border border-[#d8e0cf] bg-[#f0f4ea] p-3 dark:border-emerald-400/30 dark:bg-emerald-950/20">
+            <div className="rounded-xl border border-[#d8e0cf] bg-[#f0f4ea] p-2.5 dark:border-emerald-400/30 dark:bg-emerald-950/20">
               <button type="button" onClick={getLocation} disabled={locationBusy} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-[#3d7152] bg-white px-3 py-2 text-sm font-semibold text-[#315c43] transition-colors hover:bg-[#fafdf8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ab4d3e] disabled:cursor-wait disabled:opacity-60 dark:border-emerald-400/60 dark:bg-stone-800 dark:text-emerald-200 dark:hover:bg-stone-700">
                 {locationBusy ? <RefreshCw size={18} className="animate-spin" aria-hidden="true" /> : <LocateFixed size={18} aria-hidden="true" />}
                 {locationBusy ? (te ? 'లొకేషన్ తీసుకుంటోంది…' : 'Getting location…') : coordinates ? (te ? 'లొకేషన్ తీసుకుంది ✓' : 'Location captured ✓') : (te ? 'డెలివరీ లొకేషన్ ఎంచుకోండి' : 'Use delivery location')}
@@ -399,7 +399,12 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
                   ? (te ? 'లొకేషన్ సిద్ధం. క్రింద pin సరిచూసి confirm చేయండి.' : 'Location selected. Review the pin below and confirm.')
                   : (te ? 'GPS లేదా Google Maps pin ద్వారా delivery address ఎంచుకోండి.' : 'Choose the delivery address using GPS or a Google Maps pin.')}
               </p>
-              <div className="mt-3 space-y-2 border-t border-[#d8e0cf] pt-3 dark:border-emerald-400/20">
+              <details data-testid="checkout-maps-alternative" className="group mt-2 border-t border-[#d8e0cf] pt-2 dark:border-emerald-400/20">
+                <summary className="flex min-h-10 cursor-pointer items-center justify-between gap-2 rounded-md py-1 text-xs font-semibold text-[#315c43] focus-visible:outline-2 focus-visible:outline-[#ab4d3e] dark:text-emerald-200">
+                  <span>{te ? 'GPS బదులు Google Maps link వాడండి' : 'Use Google Maps instead'}</span>
+                  <span aria-hidden="true" className="text-base group-open:rotate-180">⌄</span>
+                </summary>
+                <div className="mt-2 space-y-2">
                 <label htmlFor="new-menu-map-link" className="block text-xs font-bold text-stone-800 dark:text-stone-100">
                   {te ? 'Google Maps location link (ఐచ్ఛికం — GPS బదులు)' : 'Google Maps location link (instead of GPS)'}
                 </label>
@@ -419,7 +424,8 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
                 <p className="text-xs text-stone-600 dark:text-stone-300">
                   {te ? 'Google Mapsలో Copy link ద్వారా పొందిన maps.app.goo.gl short link కూడా వాడవచ్చు. Pin తప్పనిసరిగా confirm చేయండి.' : 'Paste a full Google Maps coordinates URL or a maps.app.goo.gl share link. Always review and confirm the pin.'}
                 </p>
-              </div>
+                </div>
+              </details>
               {coordinates && (
                 <div className="mt-3 rounded-lg border border-emerald-300 bg-white p-3 text-xs dark:border-emerald-800 dark:bg-stone-900">
                   <p className="font-bold text-stone-800 dark:text-stone-100">
@@ -437,7 +443,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
                   </p>
                 </div>
               )}
-              <label className="mt-3 flex items-start gap-2 rounded-lg border border-[#d8e0cf] bg-white p-2.5 text-xs leading-relaxed text-stone-800 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100">
+              <label className="mt-2 flex items-start gap-2 rounded-lg border border-[#d8e0cf] bg-white p-2 text-xs leading-relaxed text-stone-800 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100">
                 <input type="checkbox" checked={locationConfirmed}
                   disabled={!coordinates || address.trim().length < 5 || locationBusy}
                   onChange={event => {
@@ -496,7 +502,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
           </div>
         )}
 
-        <div className="space-y-2.5 border-t border-stone-200 pt-4 dark:border-stone-700">
+        <div className="space-y-2 border-t border-stone-200 pt-3 dark:border-stone-700">
           {!quote ? (
             <button type="submit" disabled={busy || lines.length === 0 || !locationConfirmed} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#ab4d3e] px-4 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-[#934034] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ab4d3e] disabled:cursor-not-allowed disabled:bg-[#b0bdb2] disabled:text-white disabled:shadow-none">
               {busy ? <RefreshCw size={20} className="animate-spin" aria-hidden="true" /> : <ArrowRight size={19} aria-hidden="true" />}
@@ -514,7 +520,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
               {te ? 'నా ఆర్డర్ ట్రాక్ చేయండి' : 'Track this order'}
             </button>
           )}
-          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pt-1 text-center text-xs text-stone-500 dark:text-stone-300">
+          <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 pt-0.5 text-center text-[11px] text-stone-500 dark:text-stone-300">
             <span className="inline-flex items-center gap-1.5"><ShieldCheck size={14} aria-hidden="true" />{te ? 'ధర, స్టాక్ మళ్లీ చెక్ చేస్తాం' : 'Price and stock rechecked'}</span>
             <span className="inline-flex items-center gap-1.5"><Lock size={13} aria-hidden="true" />{te ? 'Razorpay పేమెంట్' : 'Razorpay payment'}</span>
           </div>
