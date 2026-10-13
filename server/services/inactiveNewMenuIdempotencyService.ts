@@ -82,6 +82,7 @@ function fingerprintOf(request: NewMenuCheckoutRequest): string {
       latitude: c.latitude, longitude: c.longitude, locationLink: c.locationLink ?? '',
     },
     requestedDeliveryDateIst: request.requestedDeliveryDateIst ?? null,
+    expectedPappu: request.expectedPappu ?? null,
   });
   return crypto.createHash('sha256').update(canonical).digest('hex');
 }

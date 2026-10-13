@@ -38,7 +38,7 @@ describe('PR14 Render Free feasibility checks — local only, not a Render deplo
     expect(server).toContain('express.static(distPath)');
     expect(server).toContain("app.get('*'");
     expect(NEW_MENU_LAUNCH_ENABLED).toBe(false);
-    expect(MENU_CATALOG).toHaveLength(10);
+    expect(MENU_CATALOG).toHaveLength(12);
     // Source inspection does NOT prove the production bundle starts on Render.
   });
 

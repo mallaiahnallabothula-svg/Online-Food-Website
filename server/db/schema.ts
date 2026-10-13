@@ -1,4 +1,5 @@
-export const DB_SCHEMA = `
+import { MENU_EXPANSION_SCHEMA } from './menuExpansionSchema.ts';
+export const DB_SCHEMA = MENU_EXPANSION_SCHEMA + `
 CREATE TABLE IF NOT EXISTS admin_users (
   id TEXT PRIMARY KEY,
   username TEXT UNIQUE NOT NULL,
@@ -78,7 +79,7 @@ CREATE TABLE IF NOT EXISTS order_items (
   item_name_en TEXT NOT NULL,
   item_name_te TEXT NOT NULL,
   meal_period TEXT NOT NULL CHECK(meal_period IN ('MORNING', 'EVENING')),
-  sale_unit TEXT NOT NULL CHECK(sale_unit IN ('PIECE', 'PLATE')),
+  sale_unit TEXT NOT NULL CHECK(sale_unit IN ('PIECE', 'PLATE', 'PACK')),
   pieces_per_unit INTEGER CHECK(pieces_per_unit IS NULL OR pieces_per_unit > 0),
   quantity INTEGER NOT NULL CHECK(quantity > 0),
   unit_price_paisa INTEGER NOT NULL CHECK(unit_price_paisa >= 0),

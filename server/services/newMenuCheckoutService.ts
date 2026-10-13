@@ -2,6 +2,7 @@
  * INACTIVE new-menu checkout foundation. No routes/UI/payment provider import
  * this module. Gateway integration and user approval are required before launch.
  */
+import { applyPappuSnapshot } from './pappuService.ts';
 import crypto from 'node:crypto';
 import type { Client } from '@libsql/client';
 import { MENU_CATALOG, NEW_MENU_LAUNCH_ENABLED, NEW_MENU_ORDER_POLICY, type MealPeriod, type MenuItem } from '../../shared/menuCatalog.ts';
@@ -21,6 +22,7 @@ export interface NewMenuCheckoutRequest {
   readonly customer: NewMenuCustomer;
   /** Optional requested slot; the next eligible IST date is calculated server-side. */
   readonly requestedDeliveryDateIst?: string;
+  readonly expectedPappu?: string;
 }
 export interface NewMenuPricing {
   readonly period: MealPeriod;
@@ -145,6 +147,8 @@ export async function createPendingNewMenuCheckout(
   await withDbRetry(async () => {
     const tx = await db.transaction('write');
     try {
+      if (mode === 'production' && pricing.items.some(line => line.item.id === 'pappu-of-the-day') && !request.expectedPappu) throw new Error('Review pappu variety before payment');
+      await applyPappuSnapshot(tx, pricing, request.expectedPappu);
       await tx.execute({
         sql: [
           'INSERT INTO orders (id,public_token_hash,created_at_utc,created_at_ist,delivery_date,delivery_window,',

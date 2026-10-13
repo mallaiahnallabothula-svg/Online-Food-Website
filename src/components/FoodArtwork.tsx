@@ -8,7 +8,8 @@ const tiles: Record<string, number> = {
 };
 
 export function FoodArtwork({ itemId, className = '' }: { itemId: string; className?: string }) {
-  const tile = tiles[itemId] ?? 0;
+  const tile = tiles[itemId];
+  if (tile === undefined) return <div aria-hidden="true" className={'flex items-center justify-center bg-amber-50 text-4xl ' + className}>🍲</div>;
   return <div aria-hidden="true" className={'food-artwork ' + className} style={{
     backgroundImage: `url(${atlas})`,
     backgroundSize: '500% 200%',

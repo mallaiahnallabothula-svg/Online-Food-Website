@@ -104,7 +104,7 @@ export async function reserveStockForPendingOrderInTransaction(
   const requested = new Map<string, number>();
   for (const line of lines) {
     const item = byId.get(line.itemId);
-    if (!item || item.dailyPlateLimit === null || item.saleUnit !== 'PLATE' ||
+    if (!item || item.dailyPlateLimit === null ||
         !positiveSafeInteger(line.plates) || line.plates > item.dailyPlateLimit ||
         requested.has(line.itemId)) {
       throw new Error('Invalid or duplicate capped menu item');
@@ -173,7 +173,7 @@ export async function reserveStockForPendingOrderInTransaction(
       const item = byId.get(id)!;
       const used = await occupiedPlates(tx, id, deliveryDateIst, nowMs);
       if (used + qty > item.dailyPlateLimit!) {
-        throw new Error('OUT_OF_STOCK: insufficient plates for ' + id);
+        throw new Error('OUT_OF_STOCK: insufficient units for ' + id);
       }
       await tx.execute({
         sql: [

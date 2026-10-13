@@ -9,29 +9,29 @@ import { BUSINESS_CONFIG } from '../server/config/business.ts';
 
 describe('10-item menu catalog foundation (not live)', () => {
   it('contains six morning and four evening items with unique stable IDs', () => {
-    expect(MENU_CATALOG).toHaveLength(10);
-    expect(new Set(MENU_CATALOG.map(item => item.id)).size).toBe(10);
+    expect(MENU_CATALOG).toHaveLength(12);
+    expect(new Set(MENU_CATALOG.map(item => item.id)).size).toBe(12);
     expect(MENU_CATALOG.filter(item => item.mealPeriod === 'MORNING')).toHaveLength(6);
-    expect(MENU_CATALOG.filter(item => item.mealPeriod === 'EVENING')).toHaveLength(4);
+    expect(MENU_CATALOG.filter(item => item.mealPeriod === 'EVENING')).toHaveLength(6);
     expect(NEW_MENU_LAUNCH_ENABLED).toBe(false);
   });
 
   it('preserves current jowar and chapathi unit prices and minimum quantities', () => {
     expect(findMenuItem('jowar-roti')).toMatchObject({
       pricePaisa: BUSINESS_CONFIG.prices.jowarRotiPaisa,
-      minimumQuantity: 5, saleUnit: 'PIECE', legacyItem: true,
+      minimumQuantity: 3, saleUnit: 'PIECE', legacyItem: true,
     });
     expect(findMenuItem('chapathi')).toMatchObject({
       pricePaisa: BUSINESS_CONFIG.prices.chapathiPaisa,
-      minimumQuantity: 5, saleUnit: 'PIECE', legacyItem: true,
+      minimumQuantity: 3, saleUnit: 'PIECE', legacyItem: true,
     });
   });
 
   it('matches approved new-item prices, plate sizes, chutney and per-day stock', () => {
     const expected = [
       ['idly', 3000, 4, true], ['ragi-idly', 4000, 4, true],
-      ['plain-pesarattu', 3000, null, true], ['onion-pesarattu', 4000, null, true],
-      ['plain-minapa-dosa', 2000, null, true], ['onion-minapa-dosa', 4000, null, true],
+      ['plain-pesarattu', 3000, 1, true], ['onion-pesarattu', 4000, 1, true],
+      ['plain-minapa-dosa', 2000, 1, true], ['onion-minapa-dosa', 4000, 1, true],
       ['pulka', 3000, 5, false], ['guntha-ponganaalu', 4000, 12, true],
     ] as const;
     for (const [id, pricePaisa, piecesPerUnit, includesChutney] of expected) {
@@ -51,7 +51,7 @@ describe('10-item menu catalog foundation (not live)', () => {
       MORNING: { start: '07:00', end: '11:00' },
       EVENING: { start: '18:00', end: '20:00' },
     });
-    expect(NEW_MENU_ORDER_POLICY.complimentaryKaram).toBe('COMING_SOON');
+    expect(NEW_MENU_ORDER_POLICY.complimentaryKaram).toBe('REMOVED');
     expect(NEW_MENU_LAUNCH_ENABLED).toBe(false);
   });
 });

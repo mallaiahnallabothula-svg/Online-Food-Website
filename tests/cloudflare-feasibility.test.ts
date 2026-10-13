@@ -10,7 +10,7 @@ import path from 'node:path';
 
 describe('PR13 offline Cloudflare Workers feasibility probes (NOT a Workers runtime test)', () => {
   it('confirms current frontend is still inactive and has a separate Vite entry', () => {
-    expect(MENU_CATALOG).toHaveLength(10);
+    expect(MENU_CATALOG).toHaveLength(12);
     expect(NEW_MENU_LAUNCH_ENABLED).toBe(false);
     const conf = fs.readFileSync(path.resolve('vite.config.ts'),'utf8');
     expect(conf).toContain('menu-preview.html');

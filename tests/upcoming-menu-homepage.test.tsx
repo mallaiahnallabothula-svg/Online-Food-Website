@@ -29,14 +29,14 @@ function mount() {
 describe('PR17 public coming-soon menu (display only)', () => {
   it('displays all six morning menu cards from existing approved catalog', () => {
     expect(NEW_MENU_LAUNCH_ENABLED).toBe(false);
-    expect(MENU_CATALOG).toHaveLength(10);
+    expect(MENU_CATALOG).toHaveLength(12);
     const { container } = mount();
     const menu = screen.getByTestId('upcoming-menu-section');
     expect(screen.getAllByTestId('upcoming-menu-card')).toHaveLength(6);
     for (const item of MENU_CATALOG.filter(x => x.mealPeriod === 'MORNING')) {
       expect(container.querySelector('[data-item-id="' + item.id + '"]')).toBeTruthy();
     }
-    expect(within(menu).getByRole('heading', { level: 2 }).textContent).toContain('10');
+    expect(within(menu).getByRole('heading', { level: 2 }).textContent).toContain('12');
     expect(menu.textContent).toContain('7:00 AM – 11:00 AM');
     expect(menu.textContent).toContain('₹30');
     expect(menu.textContent).toContain('₹40');
@@ -47,8 +47,8 @@ describe('PR17 public coming-soon menu (display only)', () => {
 
   it('shows four evening items without referring customers to a separate old order form', () => {
     const { container } = mount();
-    fireEvent.click(screen.getByRole('button', { name: /సాయంత్రం \(4\)/ }));
-    expect(screen.getAllByTestId('upcoming-menu-card')).toHaveLength(4);
+    fireEvent.click(screen.getByRole('button', { name: /సాయంత్రం \(6\)/ }));
+    expect(screen.getAllByTestId('upcoming-menu-card')).toHaveLength(6);
     const menu = screen.getByTestId('upcoming-menu-section');
     expect(menu.textContent).toContain('6:00 PM – 8:00 PM');
     for (const item of MENU_CATALOG.filter(x => x.mealPeriod === 'EVENING')) {
@@ -56,7 +56,7 @@ describe('PR17 public coming-soon menu (display only)', () => {
     }
     const chapathi = container.querySelector('[data-item-id="chapathi"]') as HTMLElement;
     expect(chapathi.textContent).toContain('₹10');
-    expect(chapathi.textContent).toContain('5');
+    expect(chapathi.textContent).toContain('3');
     fireEvent.click(screen.getByRole('button', { name: 'Use English' }));
     expect(chapathi.textContent).toContain('New-menu ordering coming soon');
     expect(menu.textContent).toContain('New-menu ordering coming soon');
@@ -95,11 +95,13 @@ describe('menu cart navigation', () => {
     expect(scroll).toHaveBeenCalledTimes(1);
     expect(document.activeElement).toBe(delivery);
     expect(fetchSpy).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Evening (4)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Evening (6)' }));
     expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹0');
     expect(screen.queryByRole('button', { name: 'View cart' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Add Jowar Roti to sample cart' }));
-    expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹150');
+    expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹90');
+    fireEvent.click(screen.getByRole('button', { name: 'Morning (6)' }));
+    expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹120');
     expect(fetchSpy).not.toHaveBeenCalled();
     vi.unstubAllGlobals();
   });

@@ -1,3 +1,5 @@
+import { resolvePappu } from '../services/pappuService.ts';
+import { PAPPU_VARIETIES, pappuForDate } from '../../shared/pappu.ts';
 import { Router, Response } from 'express';
 import crypto from 'crypto';
 import { loadOwnerOrderCompatibility } from '../services/ownerMenuCompatibilityService.ts';
@@ -405,4 +407,22 @@ adminRouter.post('/exports/csv', requireAuth, requireAdminCsrf, async (req: Auth
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   res.send(csv);
+});
+
+// Authenticated, CSRF-protected date overrides; rotation remains the default.
+adminRouter.get('/pappu/:date', requireAuth, async (req, res) => {
+  try { return res.json({ variety: await resolvePappu(getDb(), String(req.params.date)) }); }
+  catch { return res.status(400).json({ error: 'Unable to load this delivery date.' }); }
+});
+adminRouter.put('/pappu/:date', requireAuth, requireRole(['ADMIN']), requireAdminCsrf, async (req, res) => {
+  const date = String(req.params.date);
+  try {
+    if (!pappuForDate(date)) return res.status(400).json({ error: 'Wednesday is closed.' });
+    const variety = req.body?.variety;
+    if (variety !== null && !Object.hasOwn(PAPPU_VARIETIES, variety)) return res.status(400).json({ error: 'Invalid variety.' });
+    const db = getDb();
+    if (variety === null) await db.execute({ sql: 'DELETE FROM menu_pappu_overrides WHERE delivery_date=?', args: [date] });
+    else await db.execute({ sql: 'INSERT INTO menu_pappu_overrides (delivery_date,variety,updated_at_utc) VALUES (?,?,?) ON CONFLICT(delivery_date) DO UPDATE SET variety=excluded.variety, updated_at_utc=excluded.updated_at_utc', args: [date, variety, new Date().toISOString()] });
+    return res.json({ variety: await resolvePappu(db, date) });
+  } catch { return res.status(400).json({ error: 'Unable to save pappu. Please retry.' }); }
 });

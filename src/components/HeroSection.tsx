@@ -18,7 +18,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder, onOpe
       <div className="relative z-10">
         <p className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-emerald-800 dark:text-emerald-300">{te ? 'ఉదయం 6 రకాలు · సాయంత్రం 4 రకాలు' : '6 morning favourites · 4 evening favourites'}</p>
         <h1 className="menu-display text-3xl font-bold leading-snug text-[#4B2F1D] sm:text-5xl dark:text-amber-100">{te ? 'ఇంటి రుచులు.' : 'Homestyle food.'}<br />{te ? 'ఉదయం నుంచి సాయంత్రం వరకు.' : 'Morning to evening.'}</h1>
-        <p className="mt-4 max-w-md text-base leading-relaxed text-stone-600 dark:text-stone-300">{te ? 'మన ఇంటి వంట — మీకు నచ్చిన వంటకాలను 10 రకాల మెనూ నుంచి ఎంచుకోండి.' : 'Mana Enti Vanta — choose your favourites from our 10-item menu.'}</p>
+        <p className="mt-4 max-w-md text-base leading-relaxed text-stone-600 dark:text-stone-300">{te ? 'మన ఇంటి వంట — మీకు నచ్చిన వంటకాలను 12 రకాల మెనూ నుంచి ఎంచుకోండి.' : 'Mana Enti Vanta — choose your favourites from our 12-item menu.'}</p>
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <button onClick={onScrollToOrder} id="hero-order-now-btn" className="inline-flex min-h-12 items-center justify-center gap-3 rounded-full bg-[#26543A] px-7 py-3 font-bold text-white transition hover:bg-[#1E4330]">{t.orderNowBtn}<ArrowDown size={18} aria-hidden="true" /></button>
           {!isInstalled && onOpenInstallModal && <button onClick={onOpenInstallModal} id="hero-install-app-btn" className="inline-flex min-h-12 items-center gap-2 rounded-full border border-stone-300 px-4 py-3 text-sm font-semibold text-stone-700 dark:border-stone-600 dark:text-stone-200"><Smartphone size={17} aria-hidden="true" />{t.androidAppBtn}</button>}
