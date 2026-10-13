@@ -1,6 +1,4 @@
-import { useUiText } from '../context/useUiText';
 import React from 'react';
-import logoImage from '../assets/images/mana_enti_vanta_logo_1789296509537.jpg';
 
 interface BrandEmblemProps {
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
@@ -8,39 +6,23 @@ interface BrandEmblemProps {
   showText?: boolean;
 }
 
-export const BrandEmblem: React.FC<BrandEmblemProps> = ({
-  size = 'md',
-  className = '',
-  showText = false,
-}) => {
-  const ui = useUiText();
-  const sizeClasses = {
-    sm: 'w-9 h-9',
-    md: 'w-12 h-12',
-    lg: 'w-16 h-16',
-    xl: 'w-20 h-20',
-    '2xl': 'w-28 h-28',
+// Simple text monogram replaces the photo logo everywhere it was used.
+export const BrandEmblem: React.FC<BrandEmblemProps> = ({ size = 'md', className = '', showText = false }) => {
+  const sizes = {
+    sm: 'h-9 w-9 text-xl', md: 'h-12 w-12 text-2xl',
+    lg: 'h-16 w-16 text-3xl', xl: 'h-20 w-20 text-4xl',
+    '2xl': 'h-28 w-28 text-5xl',
   };
-
   return (
     <div className={`inline-flex items-center gap-2.5 ${className}`}>
-      <div
-        className={`${sizeClasses[size]} rounded-full overflow-hidden shadow-md shadow-amber-950/20 border-2 border-amber-600/40 dark:border-amber-500/30 flex-shrink-0 select-none bg-amber-50`}
-        title={ui("మన ఇంటి వంట (Mana Enti Vanta) Rotis")}
-      >
-        <img
-          src={logoImage}
-          alt={ui("మన ఇంటి వంట - అచ్చమైన పల్లెటూరి రుచులు")}
-          className="w-full h-full object-cover"
-          referrerPolicy="no-referrer"
-        />
-      </div>
-
+      <span aria-hidden="true" className={`${sizes[size]} inline-flex shrink-0 select-none items-center justify-center rounded-full bg-[#a34636] font-serif font-normal leading-none text-[#fffaf4]`}>
+        మ
+      </span>
       {showText && (
-        <div className="space-y-0.5">
-          <h2 className="font-extrabold font-telugu text-[#451A03] dark:text-amber-100 leading-tight">{" "}{ui("మన ఇంటి వంట")}{" "}</h2>
-          <p className="text-[11px] font-medium text-amber-800/80 dark:text-amber-300/80 font-telugu">{" "}{ui("అచ్చమైన పల్లెటూరి రుచులు")}{" "}</p>
-        </div>
+        <span className="min-w-0">
+          <span className="block font-bold leading-tight tracking-tight text-[#26231f] dark:text-amber-100">Mana Enti Vanta</span>
+          <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.18em] text-[#756f67] dark:text-stone-400">HOME KITCHEN · KOLLUR</span>
+        </span>
       )}
     </div>
   );

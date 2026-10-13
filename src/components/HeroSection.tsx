@@ -1,16 +1,14 @@
 import React from 'react';
-import { ArrowDown, Clock3, Smartphone } from 'lucide-react';
+import { ArrowDown, Clock3 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 interface HeroSectionProps {
   onScrollToOrder: () => void;
   isOpen: boolean;
-  onOpenInstallModal?: () => void;
-  isInstalled?: boolean;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder, onOpenInstallModal, isInstalled = false }) => {
-  const { language, t } = useLanguage();
+export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder }) => {
+  const { language } = useLanguage();
   const te = language === 'te';
   return (
     <section id="home" className="solara-hero relative overflow-hidden border-b border-[#ded7ce] bg-[#f7f2e9] px-4 py-16 text-[#26231f] dark:border-stone-700 dark:bg-[#211f1c] dark:text-stone-100 sm:px-6 sm:py-20">
@@ -29,7 +27,6 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder, onOpe
               {te ? 'మెనూ చూడండి' : 'Explore the menu'} <ArrowDown size={17} aria-hidden="true"/>
             </button>
             <a href="#delivery-info" className="border-b border-[#ab4d3e] pb-1 text-[#ab4d3e] hover:text-[#934034]">{te ? 'డెలివరీ వివరాలు' : 'Delivery details'}</a>
-            {!isInstalled && onOpenInstallModal && <button type="button" id="hero-install-app-btn" onClick={onOpenInstallModal} className="inline-flex min-h-11 items-center gap-2 border-b border-[#ab4d3e] text-[#ab4d3e]"><Smartphone size={16} aria-hidden="true"/>{t.androidAppBtn}</button>}
           </div>
           <p className="mt-8 flex items-center gap-2 text-xs tracking-wide text-[#756f67] dark:text-stone-400"><Clock3 size={16} aria-hidden="true"/>{te ? 'ఉదయం 7–11 AM · సాయంత్రం 6–8 PM · బుధవారం సెలవు' : 'Morning 7–11 AM · Evening 6–8 PM · Wednesday closed'}</p>
         </div>
