@@ -9,6 +9,7 @@ import {
 
 type Props = {
   onStatusChange: (orderId: string, status: FulfillmentStatus) => Promise<boolean>;
+  initialDate?: string;
 };
 
 const filters: { key: KitchenFilter; en: string; te: string }[] = [
@@ -18,10 +19,10 @@ const filters: { key: KitchenFilter; en: string; te: string }[] = [
   { key: 'UNCLASSIFIED', en: 'Other / Review', te: 'ఇతర / తనిఖీ' },
 ];
 
-export function KitchenBoard({ onStatusChange }: Props) {
+export function KitchenBoard({ onStatusChange, initialDate }: Props) {
   const { language } = useLanguage();
   const te = language === 'te';
-  const [date, setDate] = useState(istToday);
+  const [date, setDate] = useState(() => initialDate ?? istToday());
   const [session, setSession] = useState<KitchenFilter>('ALL');
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
