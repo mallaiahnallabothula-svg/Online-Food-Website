@@ -46,7 +46,11 @@ describe('Solara full-site UI protects business workflows', () => {
   });
   it('retains all approved content-rich pages and FAQ', () => {
     const editorial=source('src/components/SolaraEditorialContent.tsx');
-    for(const id of ['brand-story','details','at-the-table','how-it-works','delivery-info','faq','contact-info'])expect(editorial).toContain('id="'+id+'"');
+    for(const id of ['brand-story','at-the-table','delivery-info','faq','contact-info'])expect(editorial).toContain('id="'+id+'"');
     expect(editorial).toContain('Are these pictures from your kitchen?');
+    expect(editorial).not.toContain('id="details"');
+    expect(editorial).not.toContain('id="how-it-works"');
+    expect(source('src/App.tsx')).not.toContain('<BrandEmblem');
+    expect(source('src/components/HeroSection.tsx')).toContain('Morning favourites');
   });
 });

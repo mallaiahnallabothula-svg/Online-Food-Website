@@ -392,7 +392,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
                 {locationBusy ? (te ? 'లొకేషన్ తీసుకుంటోంది…' : 'Getting location…') : coordinates ? (te ? 'లొకేషన్ తీసుకుంది ✓' : 'Location captured ✓') : (te ? 'డెలివరీ లొకేషన్ ఎంచుకోండి' : 'Use delivery location')}
               </button>
               <p className="mt-2 text-center text-[11px] font-medium leading-relaxed text-stone-700 dark:text-stone-200">
-                {te ? 'కిచెన్ నుండి 0–5 కి.మీ. ఉచితం · 5–7 కి.మీ. ₹30 · 7–10 కి.మీ. ₹50 · 10 కి.మీ. దాటితే డెలివరీ లేదు' : 'From kitchen: 0–5 km free · 5–7 km ₹30 · 7–10 km ₹50 · No delivery beyond 10 km (straight-line distance)'}
+                {te ? 'కిచెన్ నుండి 0–5 కి.మీ. ఉచితం · 5–7 కి.మీ. ₹27 · 7–10 కి.మీ. ₹45 · 10 కి.మీ. దాటితే డెలివరీ లేదు' : 'From kitchen: 0–5 km free · 5–7 km ₹27 · 7–10 km ₹45 · No delivery beyond 10 km (straight-line distance)'}
               </p>
               <p className="mt-1 text-center text-[11px] leading-relaxed text-stone-600 dark:text-stone-300">
                 {coordinates

@@ -20,14 +20,14 @@ describe('Delivery tiers and kitchen location — authoritative policy', () => {
     [0, true, 0],
     [4.9, true, 0],
     [5, true, 0],
-    [5.0001, true, 3000],
-    [5.1, true, 3000],
-    [6, true, 3000],
-    [7, true, 3000],
-    [7.0001, true, 5000],
-    [7.1, true, 5000],
-    [8, true, 5000],
-    [10, true, 5000],
+    [5.0001, true, 2700],
+    [5.1, true, 2700],
+    [6, true, 2700],
+    [7, true, 2700],
+    [7.0001, true, 4500],
+    [7.1, true, 4500],
+    [8, true, 4500],
+    [10, true, 4500],
     [10.0001, false, 0],
     [10.1, false, 0],
     [35, false, 0],
@@ -57,9 +57,9 @@ describe('Delivery tiers and kitchen location — authoritative policy', () => {
   it('uses kitchen coordinates for actual GPS fees, not old Kollur reference location', () => {
     const actual = calculateDelivery(kitchen.latitude + 6 / 111.195, kitchen.longitude);
     expect(actual.eligible).toBe(true);
-    expect(actual.deliveryChargeRupees).toBe(30);
+    expect(actual.deliveryChargeRupees).toBe(27);
     const farther = calculateDelivery(kitchen.latitude + 8.5 / 111.195, kitchen.longitude);
-    expect(farther.deliveryChargeRupees).toBe(50);
+    expect(farther.deliveryChargeRupees).toBe(45);
   });
 
   it('front-end presets and helper never advertise old ₹9/km or 35km eligibility', () => {
@@ -69,8 +69,8 @@ describe('Delivery tiers and kitchen location — authoritative policy', () => {
       expect(area.isEligible).toBe(result.isEligible);
       expect(area.deliveryCharge).toBe(result.deliveryCharge);
     }
-    expect(calculateDeliveryCharge(6).deliveryCharge).toBe(30);
-    expect(calculateDeliveryCharge(8).deliveryCharge).toBe(50);
+    expect(calculateDeliveryCharge(6).deliveryCharge).toBe(27);
+    expect(calculateDeliveryCharge(8).deliveryCharge).toBe(45);
     expect(checkKollurDeliveryEligibility(undefined, undefined, 11).isEligible).toBe(false);
   });
 });
