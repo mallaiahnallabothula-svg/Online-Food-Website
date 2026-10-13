@@ -11,32 +11,32 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder }) => 
   const { language } = useLanguage();
   const te = language === 'te';
   return (
-    <section id="home" className="solara-hero relative overflow-hidden border-b border-[#ded7ce] bg-[#f7f2e9] px-4 py-16 text-[#26231f] dark:border-stone-700 dark:bg-[#211f1c] dark:text-stone-100 sm:px-6 sm:py-20">
-      <div className="solara-orbit pointer-events-none absolute left-1/2 top-1/2 -z-0 hidden h-[630px] w-[630px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#ab4d3e]/10 lg:block" aria-hidden="true" />
-      <div className="relative mx-auto grid max-w-6xl items-center gap-9 lg:grid-cols-[1.1fr_.9fr] lg:gap-16">
+    <section id="home" className="solara-hero relative overflow-hidden border-b border-[#e6dece] bg-[#FAF6ED] px-4 py-14 text-[#384B35] dark:border-stone-700 dark:bg-[#211f1c] dark:text-stone-100 sm:px-6 sm:py-20">
+      <div className="solara-orbit pointer-events-none absolute left-1/2 top-1/2 -z-0 hidden h-[570px] w-[570px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#A44732]/10 lg:block" aria-hidden="true" />
+      <div className="solara-hero-inner relative mx-auto grid w-full max-w-7xl items-center gap-10 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)] lg:gap-10 xl:gap-16">
         <div>
-          <p className="mb-5 text-xs font-bold uppercase tracking-[0.22em] text-[#ab4d3e] dark:text-[#e3a795]">KOLLUR · HYDERABAD · HOME KITCHEN</p>
-          <h1 className="solara-display m-0 text-[clamp(3rem,7vw,6.25rem)] leading-[1.2] tracking-[-0.05em]">
-            {te ? <>మన ఇంటి<br /><em className="not-italic text-[#ab4d3e]">వంట.</em></> : <>Everyday food.<br /><em className="not-italic text-[#ab4d3e]">Always familiar.</em></>}
+          <p className="mb-5 text-[11px] font-bold uppercase tracking-[0.22em] text-[#A44732] dark:text-[#e3a795]">KOLLUR · HYDERABAD · HOME KITCHEN</p>
+          <h1 className="solara-display solara-hero-title m-0 text-[clamp(3rem,4.85vw,5rem)] leading-[1.09] tracking-[-0.055em]">
+            {te ? <>మన ఇంటి<br /><em className="not-italic text-[#A44732]">వంట.</em></> : <>Everyday food.<br /><em className="not-italic text-[#A44732] lg:whitespace-nowrap">Always familiar.</em></>}
           </h1>
-          <p className="mt-6 max-w-xl text-base leading-loose text-[#5f584f] dark:text-stone-300">
+          <p className="mt-6 max-w-lg text-base leading-relaxed text-[#50584B] dark:text-stone-300">
             {te ? 'ఉదయం టిఫిన్లు. సాయంత్రం ఇంటి వంటకాలు. మీకు నచ్చిన రోజు, సమయం కోసం ముందుగా ఎంచుకోండి.' : 'Start with idly or dosa. Come back for rotis, pappu and kurma. Explore everyday Telugu favourites, with clear portions and prices.'}
           </p>
-          <div className="mt-8 flex flex-wrap items-center gap-5 text-xs font-bold uppercase tracking-[0.1em]">
-            <button id="hero-order-now-btn" onClick={onScrollToOrder} type="button" className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[#ab4d3e] px-6 py-3 text-white transition-colors hover:bg-[#934034]">
+          <div className="mt-8 flex flex-wrap items-center gap-5 text-xs font-bold tracking-[0.04em]">
+            <button id="hero-order-now-btn" onClick={onScrollToOrder} type="button" className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-[#A44732] px-6 py-3 text-white transition-colors hover:bg-[#8e3928]">
               {te ? 'మెనూ చూడండి' : 'Explore the menu'} <ArrowDown size={17} aria-hidden="true"/>
             </button>
-            <a href="#delivery-info" className="border-b border-[#ab4d3e] pb-1 text-[#ab4d3e] hover:text-[#934034]">{te ? 'డెలివరీ వివరాలు' : 'Delivery details'}</a>
+            <a href="#delivery-info" className="border-b border-[#A44732] pb-1 text-[#384B35] hover:text-[#A44732]">{te ? 'డెలివరీ వివరాలు' : 'Delivery details'}</a>
           </div>
-          <p className="mt-8 flex items-center gap-2 text-xs tracking-wide text-[#756f67] dark:text-stone-400"><Clock3 size={16} aria-hidden="true"/>{te ? 'ఉదయం 7–11 AM · సాయంత్రం 6–8 PM · బుధవారం సెలవు' : 'Morning 7–11 AM · Evening 6–8 PM · Wednesday closed'}</p>
+          <p className="mt-7 flex items-center gap-2 text-xs tracking-wide text-[#63685A] dark:text-stone-400"><Clock3 size={16} aria-hidden="true"/>{te ? 'ఉదయం 7–11 AM · సాయంత్రం 6–8 PM · బుధవారం సెలవు' : 'Morning 7–11 AM · Evening 6–8 PM · Wednesday closed'}</p>
         </div>
-        <div className="solara-hero-art grid grid-cols-3 gap-2 sm:gap-4" aria-label={te ? 'ఉదయం, పెసరట్టు, సాయంత్రం వంటకాల సూచన చిత్రాలు' : 'Three home-food editorial illustrations'}>
+        <div className="solara-hero-art grid min-w-0 grid-cols-3 items-end gap-2 sm:gap-4" aria-label={te ? 'ఉదయం, పెసరట్టు, సాయంత్రం వంటకాల సూచన చిత్రాలు' : 'Three home-food editorial illustrations'}>
           {([
             { key: 'idly', en: 'Morning favourites', te: 'ఉదయం టిఫిన్లు', dark: false },
             { key: 'pesarattu', en: 'A familiar flavour', te: 'తెలిసిన ఇంటి రుచి', dark: true },
             { key: 'roti', en: 'Evening comfort', te: 'సాయంత్రం రుచులు', dark: false },
           ] as const).map(item => (
-            <div key={item.key} className={'relative aspect-[2/3] overflow-hidden rounded-2xl ' + (item.dark ? 'bg-[#60452e]' : 'bg-[#e8dec5]')} role="img"
+            <div key={item.key} className={'relative aspect-[2/3] overflow-hidden rounded-2xl ' + (item.dark ? 'bg-[#384B35]' : 'bg-[#e8dec5]')} role="img"
               aria-label={te ? item.te + ' — సూచన చిత్రం' : item.en + ' — illustrative artwork'}>
               <svg className="absolute inset-0 h-full w-full" viewBox="0 0 160 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path d="M68 59 C59 50 66 44 69 39 M87 59 C77 49 87 42 90 36" fill="none" stroke={item.dark ? '#cdaa7e' : '#c7b49b'} strokeWidth="1.6" strokeLinecap="round"/>

@@ -89,10 +89,10 @@ function PreviewCheckoutOnly({
       data-testid="upcoming-checkout-preview"
       className="solara-checkout mt-8 overflow-hidden rounded-xl border border-[#ded7ce] bg-white shadow-sm dark:border-stone-700 dark:bg-stone-800"
     >
-      <div className="border-b border-stone-200 bg-[#f7f2e9] px-4 py-5 dark:border-stone-700 dark:bg-emerald-950/40 sm:px-6">
+      <div className="border-b border-stone-200 bg-[#FAF6ED] px-4 py-5 dark:border-stone-700 dark:bg-emerald-950/40 sm:px-6">
         <div className="flex flex-wrap items-center gap-2">
-          <ShoppingBag size={19} aria-hidden="true" className="text-[#ab4d3e] dark:text-emerald-300" />
-          <h3 className="text-lg font-extrabold text-[#26231f] dark:text-emerald-100">
+          <ShoppingBag size={19} aria-hidden="true" className="text-[#A44732] dark:text-emerald-300" />
+          <h3 className="text-lg font-extrabold text-[#384B35] dark:text-emerald-100">
             {te ? 'శాంపిల్ కార్ట్ & చెకౌట్' : 'Sample cart & checkout preview'}
           </h3>
           <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-900 dark:bg-amber-900/50 dark:text-amber-100">
@@ -127,7 +127,7 @@ function PreviewCheckoutOnly({
           )}
           <div className="mt-4 flex items-center justify-between border-t border-stone-200 pt-3 dark:border-stone-700">
             <span className="font-bold text-stone-900 dark:text-stone-100">{te ? 'ఆహార ధర మొత్తం' : 'Food subtotal'}</span>
-            <strong className="text-xl text-[#ab4d3e] dark:text-emerald-300" data-testid="upcoming-cart-subtotal">{money(subtotalPaisa)}</strong>
+            <strong className="text-xl text-[#A44732] dark:text-emerald-300" data-testid="upcoming-cart-subtotal">{money(subtotalPaisa)}</strong>
           </div>
           <p role="status" className="mt-2 text-xs font-semibold text-stone-600 dark:text-stone-300" data-testid="upcoming-minimum-message">
             {missingPaisa > 0
@@ -139,12 +139,12 @@ function PreviewCheckoutOnly({
               ? 'ఇది ఆహార ధర మాత్రమే. డెలివరీ ఛార్జీలు, స్టాక్, లొకేషన్ లైవ్ చెకౌట్‌లోనే ధృవీకరించాలి.'
               : 'Food subtotal only. Delivery fee, location eligibility and stock are not checked in this preview.'}
           </p>
-          <div className="mt-5 rounded-xl bg-[#f7f2e9] p-3 dark:bg-stone-700/70" data-testid="upcoming-slot-preview">
+          <div className="mt-5 rounded-xl bg-[#FAF6ED] p-3 dark:bg-stone-700/70" data-testid="upcoming-slot-preview">
             <div className="flex items-center gap-2 text-sm font-bold text-stone-800 dark:text-stone-100">
               <Clock3 size={16} aria-hidden="true" />
               {te ? 'తదుపరి అర్హత గల డెలివరీ విండో (IST)' : 'Next eligible delivery window (IST)'}
             </div>
-            <p className="mt-2 text-sm font-bold text-[#ab4d3e] dark:text-emerald-300">
+            <p className="mt-2 text-sm font-bold text-[#A44732] dark:text-emerald-300">
               {slot.deliveryDateIst} · {slot.windowStartIst}–{slot.windowEndIst} IST
             </p>
             <p className="mt-1 text-xs text-stone-600 dark:text-stone-300">
@@ -195,7 +195,7 @@ function PreviewCheckoutOnly({
           </label>
           <button
             type="submit"
-            className="min-h-11 w-full rounded-xl border border-[#ab4d3e] bg-white px-4 py-2.5 text-sm font-bold text-[#ab4d3e] hover:bg-[#f7f2e9] dark:border-emerald-400 dark:bg-stone-800 dark:text-emerald-200"
+            className="min-h-11 w-full rounded-xl border border-[#A44732] bg-white px-4 py-2.5 text-sm font-bold text-[#A44732] hover:bg-[#FAF6ED] dark:border-emerald-400 dark:bg-stone-800 dark:text-emerald-200"
           >
             {te ? 'ప్రివ్యూ వివరాలు చెక్ చేయండి' : 'Check preview details'}
           </button>
