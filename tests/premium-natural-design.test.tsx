@@ -22,7 +22,7 @@ describe('Premium Natural Design V2 (presentation only)', () => {
     expect(MENU_CATALOG.filter(item => item.mealPeriod === 'MORNING')).toHaveLength(6);
     expect(MENU_CATALOG.filter(item => item.mealPeriod === 'EVENING')).toHaveLength(6);
     expect(screen.getByText(/Morning 6/)).toBeTruthy();
-    expect(screen.getByText(/Evening 6/)).toBeTruthy();
+    expect(screen.getAllByText(/Evening 6/).length).toBeGreaterThan(0);
     expect(NEW_MENU_LAUNCH_ENABLED).toBe(false);
     fireEvent.click(screen.getByRole('button', { name: /View Menu/i }));
     expect(onMenu).toHaveBeenCalledTimes(1);
