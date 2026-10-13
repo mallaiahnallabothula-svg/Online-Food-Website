@@ -7,6 +7,7 @@ import { persistCustomerOrder } from '../utils/checkout';
 type Line = { item: MenuItem; quantity: number };
 type Quote = {
   quote: {
+    expectedPappu?: string;
     items: Array<{ itemId: string; itemName: string; quantity: number; lineTotalPaisa: number }>;
     deliveryDateIst: string; deliveryWindow: string; subtotalPaisa: number;
     deliveryChargePaisa: number; totalAmountPaisa: number; distanceKm: number;
@@ -165,7 +166,7 @@ export function LiveNewMenuCheckout({ period, lines, te }: { period: MealPeriod;
           return;
         }
       }
-      const request = requestBody();
+      const request = { ...requestBody(), expectedPappu: quote?.expectedPappu, requestedDeliveryDateIst: quote?.deliveryDateIst };
       const prepared = await post('/prepare', { request, requestKey: requestKey.current });
       const orderId = prepared.checkout.orderId as string;
       const token = prepared.checkout.customerAccessToken as string;
@@ -198,7 +199,13 @@ export function LiveNewMenuCheckout({ period, lines, te }: { period: MealPeriod;
         setBusy(false);
       });
       checkout.open();
-    } catch (e) { setError(e instanceof Error ? e.message : 'Unable to start payment.'); setBusy(false); }
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Unable to start payment.';
+      if (message.includes('fresh quote') || message.includes('next eligible')) {
+        setQuote(null); rotateRequestKey();
+      }
+      setError(message); setBusy(false);
+    }
   }
 
   const selected = lines.reduce((sum, line) => sum + line.item.pricePaisa * line.quantity, 0);
@@ -219,7 +226,7 @@ export function LiveNewMenuCheckout({ period, lines, te }: { period: MealPeriod;
       <label className="block text-xs font-semibold">{te ? 'ల్యాండ్‌మార్క్ (ఐచ్ఛికం)' : 'Landmark (optional)'}<input maxLength={200} value={landmark} onChange={e => change(setLandmark, e.target.value)} className="mt-1 block min-h-11 w-full min-w-0 rounded-xl border border-stone-300 bg-white px-3 py-3 text-base text-stone-900 focus:outline-2 focus:outline-emerald-700 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100" /></label>
       <button type="button" onClick={getLocation} disabled={locationBusy} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-emerald-700 px-4 py-2.5 text-sm font-bold text-emerald-800 disabled:opacity-50 dark:text-emerald-200"><LocateFixed size={17} />{locationBusy ? (te ? 'లొకేషన్ తీసుకుంటోంది…' : 'Getting location…') : coordinates ? (te ? 'లొకేషన్ తీసుకుంది ✓' : 'Location captured ✓') : (te ? 'డెలివరీ లొకేషన్ ఎంచుకోండి' : 'Use delivery location')}</button>
       {coordinates && <p className="text-xs text-stone-500">{te ? 'లొకేషన్ సిద్ధం. చిరునామా సరిచూసి కొనసాగించండి.' : 'Location ready. Confirm the address before continuing.'}</p>}
-      {quote && <div className="rounded-xl bg-stone-50 p-3 text-sm dark:bg-stone-900"><p className="flex justify-between"><span>{te ? 'డెలివరీ' : 'Delivery'} ({quote.distanceKm} km)</span><strong>{money(quote.deliveryChargePaisa)}</strong></p><p className="mt-1 flex justify-between border-t pt-2 text-base"><span>{te ? 'చెల్లించాల్సిన మొత్తం' : 'Total to pay'}</span><strong>{money(quote.totalAmountPaisa)}</strong></p><p className="mt-2 text-xs">{quote.deliveryDateIst} · {quote.deliveryWindow} IST</p></div>}
+      {quote && <div className="rounded-xl bg-stone-50 p-3 text-sm dark:bg-stone-900"><ul>{quote.items.map(item => <li key={item.itemId}>{item.itemName} × {item.quantity}</li>)}</ul><p className="flex justify-between"><span>{te ? 'డెలివరీ' : 'Delivery'} ({quote.distanceKm} km)</span><strong>{money(quote.deliveryChargePaisa)}</strong></p><p className="mt-1 flex justify-between border-t pt-2 text-base"><span>{te ? 'చెల్లించాల్సిన మొత్తం' : 'Total to pay'}</span><strong>{money(quote.totalAmountPaisa)}</strong></p><p className="mt-2 text-xs">{quote.deliveryDateIst} · {quote.deliveryWindow} IST</p></div>}
       {error && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950/40 dark:text-red-200">{error}</p>}
       {status && <p role="status" className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-100">{status}</p>}
       {!quote ? <button type="submit" disabled={busy || lines.length === 0} className="min-h-11 w-full rounded-xl bg-[#26543A] px-4 py-3 font-bold text-white disabled:opacity-50">{busy ? <RefreshCw className="mx-auto animate-spin" /> : te ? 'డెలివరీ & మొత్తం చెక్ చేయండి' : 'Check delivery and total'}</button> : <button type="button" onClick={pay} disabled={busy || completed} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#78350F] px-4 py-3 font-bold text-white disabled:opacity-50">{busy ? <RefreshCw className="animate-spin" /> : <Lock size={17} />}{completed ? (te ? 'ఆర్డర్ ఖరారైంది' : 'Order confirmed') : te ? 'Razorpay ద్వారా చెల్లించండి' : `Pay ${money(quote.totalAmountPaisa)} with Razorpay`}</button>}

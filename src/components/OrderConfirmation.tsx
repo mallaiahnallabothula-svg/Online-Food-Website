@@ -167,8 +167,8 @@ export const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ order, onN
             </div>
           </div>
 
-          {/* Complimentary Karams Notice */}
-          <div className="p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60 text-xs text-emerald-900 dark:text-emerald-200">
+          {/* Historical complimentary items only; new menu has none. */}
+          {(karivepakuGrams > 0 || aviseGrams > 0) && <div className="p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800/60 text-xs text-emerald-900 dark:text-emerald-200">
             <span className="font-bold block mb-1">🎁 {isTe ? 'ఉచితంగా అందించిన కారాలు:' : 'Complimentary Karams:'}</span>
             <div className="flex flex-wrap gap-3">
               {karivepakuGrams ? (
@@ -178,7 +178,7 @@ export const OrderConfirmation: React.FC<OrderConfirmationProps> = ({ order, onN
                 <span>✓ {isTe ? 'అవిసె గింజల కారం' : 'Flax Seed Karam'} ({aviseGrams} {t.gramsUnit})</span>
               ) : null}
             </div>
-          </div>
+          </div>}
 
           {/* WhatsApp Direct Notification Ticket */}
           <div className="p-4 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 space-y-3">

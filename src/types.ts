@@ -40,7 +40,7 @@ export interface CustomerDetails {
 
 export interface OrderLine {
   itemId: string; nameEn: string; nameTe: string;
-  quantity: number; saleUnit: 'PLATE' | 'PIECE'; piecesPerUnit: number | null;
+  quantity: number; saleUnit: 'PLATE' | 'PIECE' | 'PACK'; piecesPerUnit: number | null;
   unitPricePaisa: number; lineTotalPaisa: number;
 }
 

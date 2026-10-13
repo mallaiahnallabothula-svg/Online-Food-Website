@@ -78,6 +78,7 @@ export function getNextPreorderDeliverySlot(
 
   for (let dayOffset = 0; dayOffset <= 2; dayOffset++) {
     const dayMs = todayIstMidnightAsUtcMs + dayOffset * DAY_MS;
+    if (new Date(dayMs).getUTCDay() === 3) continue; // Wednesday kitchen holiday
     const startUtcMs = dayMs + openMinute * MINUTE_MS - IST_OFFSET_MS;
     const endUtcMs = dayMs + closeMinute * MINUTE_MS - IST_OFFSET_MS;
     const eligibleUtcMs = Math.max(startUtcMs, earliestUtcMs);

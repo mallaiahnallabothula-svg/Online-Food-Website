@@ -1,3 +1,5 @@
+import { PAPPU_VARIETIES, pappuForDate, type PappuVariety } from '../../shared/pappu';
+import { getNextPreorderDeliverySlot } from '../../shared/preorderScheduling';
 import { useEffect, useRef, useState } from 'react';
 import { Clock3, Coffee, Sun, Moon, UtensilsCrossed, ShoppingBag, ArrowRight } from 'lucide-react';
 import { MENU_CATALOG, NEW_MENU_LAUNCH_ENABLED, NEW_MENU_ORDER_POLICY, type MealPeriod, type MenuItem } from '../../shared/menuCatalog.ts';
@@ -16,8 +18,8 @@ const periods = {
     titleTe: 'ఇంటి రుచితో ఉదయం అల్పాహారం',
   },
   EVENING: {
-    en: 'Evening (4)',
-    te: 'సాయంత్రం (4)',
+    en: 'Evening (6)',
+    te: 'సాయంత్రం (6)',
     hours: '6:00 PM – 8:00 PM',
     titleEn: 'Comforting evening favourites',
     titleTe: 'సాయంత్రం ఇంటి రుచులు',
@@ -25,6 +27,7 @@ const periods = {
 } as const;
 
 function serving(item: MenuItem, telugu: boolean): string {
+  if (item.saleUnit === 'PACK') return '120 g / ' + (telugu ? 'ప్యాక్' : 'pack');
   if (item.saleUnit === 'PIECE') {
     return item.minimumQuantity > 1
       ? (telugu ? 'కనీసం ' : 'Minimum ') + item.minimumQuantity + (telugu ? ' ముక్కలు' : ' pieces')
@@ -36,7 +39,7 @@ function serving(item: MenuItem, telugu: boolean): string {
 }
 
 /**
- * Public catalog and cart for the additive 10-item menu. The production flag
+ * Public catalog and cart for the additive 12-item menu. The production flag
  * selects the verified checkout; the fail-closed default remains preview-only.
  */
 export function UpcomingMenuSection() {
@@ -44,6 +47,22 @@ export function UpcomingMenuSection() {
   const te = language === 'te';
   const [period, setPeriod] = useState<MealPeriod>('MORNING');
   const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [availability, setAvailability] = useState<{ deliveryDateIst: string; pappu: PappuVariety | null; stock: Record<string, number> } | null>(null);
+  const [availabilityError, setAvailabilityError] = useState(false);
+  const [refresh, setRefresh] = useState(0);
+  useEffect(() => {
+    if (!NEW_MENU_LAUNCH_ENABLED) return;
+    let active = true;
+    setAvailability(null); setAvailabilityError(false);
+    fetch('/api/new-menu/menu-status?period=' + period).then(async response => {
+      if (!response.ok) throw new Error('Availability unavailable');
+      const data = await response.json();
+      if (active) setAvailability(data);
+    }).catch(() => { if (active) setAvailabilityError(true); });
+    return () => { active = false; };
+  }, [period, refresh]);
+  const deliveryDate = availability?.deliveryDateIst ?? getNextPreorderDeliverySlot(period, new Date()).deliveryDateIst;
+  const pappu = availability ? availability.pappu : NEW_MENU_LAUNCH_ENABLED ? null : pappuForDate(deliveryDate);
   const checkoutRef = useRef<HTMLDivElement>(null);
   const [checkoutVisible, setCheckoutVisible] = useState(false);
   useEffect(() => {
@@ -56,7 +75,7 @@ export function UpcomingMenuSection() {
     checkoutRef.current?.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
     checkoutRef.current?.focus({ preventScroll: true });
   }
-  const visible = MENU_CATALOG.filter(item => item.mealPeriod === period);
+  const visible = MENU_CATALOG.filter(item => item.mealPeriod === period).map(item => item.id === 'pappu-of-the-day' && pappu ? { ...item, ...PAPPU_VARIETIES[pappu] } : item);
   const selected = visible.filter(item => (quantities[item.id] ?? 0) > 0)
     .map(item => ({ item, quantity: quantities[item.id]! }));
   const subtotalPaisa = selected.reduce((total, line) =>
@@ -65,7 +84,7 @@ export function UpcomingMenuSection() {
   function adjustQuantity(item: MenuItem, adjustment: number) {
     setQuantities(current => {
       const old = current[item.id] ?? 0;
-      const max = item.dailyPlateLimit ?? 500;
+      const max = availability?.stock[item.id] ?? item.dailyPlateLimit ?? 500;
       const next = adjustment > 0
         ? Math.min(max, old === 0 ? item.minimumQuantity : old + 1)
         : old <= item.minimumQuantity ? 0 : old - 1;
@@ -87,7 +106,7 @@ export function UpcomingMenuSection() {
               {NEW_MENU_LAUNCH_ENABLED ? (te ? 'ఆర్డర్లు స్వీకరిస్తున్నాం' : 'Ordering open') : (te ? 'త్వరలో అందుబాటులోకి' : 'Coming Soon')}
             </span>
             <h2 id="upcoming-menu-heading" className="menu-display mt-3 text-2xl font-extrabold text-[#4B2F1D] sm:text-3xl dark:text-amber-100">
-              {te ? 'మన ఇంటి వంట — 10 రకాల మెనూ' : 'Mana Enti Vanta — 10-item menu'}
+              {te ? 'మన ఇంటి వంట — 12 రకాల మెనూ' : 'Mana Enti Vanta — 12-item menu'}
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-stone-600 dark:text-stone-300">
               {te
@@ -101,6 +120,7 @@ export function UpcomingMenuSection() {
           </div>
         </div>
 
+        <p className="mt-3 text-sm">{te ? 'ప్యాకింగ్ ధరలో కలిపి ఉంది. కూరలు ఐచ్ఛికం. ప్రతి ఆర్డర్ ఆహార కనీస మొత్తం ₹100; డెలివరీ అదనం.' : 'Packing included. Curries are optional. ₹100 food minimum per order, excluding delivery.'}</p>
         <div className="mt-6 flex w-full flex-wrap gap-2" role="group" aria-label={te ? 'మెనూ సమయం ఎంచుకోండి' : 'Choose meal period'}>
           {(['MORNING', 'EVENING'] as const).map(key => (
             <button
@@ -110,7 +130,7 @@ export function UpcomingMenuSection() {
               onClick={() => {
                 if (period !== key) {
                   setPeriod(key);
-                  setQuantities({}); // never mix morning and evening checkout slots
+                  // Preserve each session cart; only the active session is checked out.
                 }
               }}
               className={
@@ -126,6 +146,8 @@ export function UpcomingMenuSection() {
           ))}
         </div>
 
+        <p className="mt-4 text-sm">{deliveryDate} · {period === 'EVENING' && pappu ? (te ? PAPPU_VARIETIES[pappu].nameTe : PAPPU_VARIETIES[pappu].nameEn) : ''}</p>
+        {availabilityError && <p role="alert">Menu availability unavailable. <button type="button" onClick={() => setRefresh(value => value + 1)}>Retry</button></p>}
         <div className="mt-6 flex items-center justify-between gap-3">
           <h3 className="flex items-center gap-2 text-base font-bold text-[#36533A] dark:text-emerald-200">
             {period === 'MORNING' ? <Coffee size={19} aria-hidden="true" /> : <UtensilsCrossed size={19} aria-hidden="true" />}
@@ -134,7 +156,7 @@ export function UpcomingMenuSection() {
           <span className="text-xs text-stone-500 dark:text-stone-400">{visible.length} {te ? 'రకాలు' : 'items'}</span>
         </div>
 
-        {selected.length > 0 && <p className="mt-2 text-xs text-stone-600 dark:text-stone-300">{te ? 'మెనూ సమయం మార్చితే కార్ట్ ఖాళీ అవుతుంది.' : 'Switching meal periods clears your cart.'}</p>}
+        {selected.length > 0 && <p className="mt-2 text-xs text-stone-600 dark:text-stone-300">{te ? 'ప్రతి సమయానికి వేరు కార్ట్, ఆర్డర్, పేమెంట్.' : 'Each session has a separate cart, order and payment.'}</p>}
         <div className="mt-4 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_260px]">
         <div className="grid min-w-0 grid-cols-2 gap-3 md:grid-cols-3">
           {visible.map(item => (
@@ -151,7 +173,7 @@ export function UpcomingMenuSection() {
                     <h4 className="text-sm font-extrabold leading-relaxed text-stone-900 dark:text-white">{te ? item.nameTe : item.nameEn}</h4>
                     <p className="mt-0.5 text-xs text-stone-500 dark:text-stone-300">{te ? item.nameEn : item.nameTe}</p>
                   </div>
-                  <p className="shrink-0 text-lg font-extrabold text-[#26543A] dark:text-emerald-300">{money(item.pricePaisa)}<span className="ml-1 text-[11px] font-normal text-stone-500 dark:text-stone-300">/ {item.saleUnit === 'PIECE' ? (te ? 'ముక్క' : 'piece') : (te ? 'ప్లేట్' : 'plate')}</span></p>
+                  <p className="shrink-0 text-lg font-extrabold text-[#26543A] dark:text-emerald-300">{money(item.pricePaisa)}<span className="ml-1 text-[11px] font-normal text-stone-500 dark:text-stone-300">/ {item.saleUnit === 'PACK' ? (te ? 'ప్యాక్' : 'pack') : item.saleUnit === 'PIECE' ? (te ? 'ముక్క' : 'piece') : (te ? 'ప్లేట్' : 'plate')}</span></p>
                 </div>
                 <p className="mb-4 mt-2 text-xs leading-relaxed text-stone-600 dark:text-stone-300">
                   {serving(item, te)}
@@ -164,10 +186,11 @@ export function UpcomingMenuSection() {
                     </span>
                     {(quantities[item.id] ?? 0) === 0 ? (
                       <button type="button"
+                      disabled={NEW_MENU_LAUNCH_ENABLED && (!availability || (availability.stock[item.id] ?? 0) < item.minimumQuantity)}
                       aria-label={'Add ' + item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' to cart' : ' to sample cart')}
                         onClick={() => adjustQuantity(item, 1)}
                         className="min-h-11 rounded-full bg-[#26543A] px-3 py-2 text-xs font-bold text-white hover:bg-[#1E4330]">
-                        {te ? 'జోడించండి +' : 'Add +'}
+                        {availability && (availability.stock[item.id] ?? 0) < item.minimumQuantity ? (te ? 'స్టాక్ లేదు' : 'Sold out') : te ? 'జోడించండి +' : 'Add +'}
                       </button>
                     ) : (
                       <div className="inline-flex items-center gap-0">
@@ -181,7 +204,7 @@ export function UpcomingMenuSection() {
                         </span>
                         <button type="button"
                           aria-label={'Increase ' + item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' quantity' : ' sample quantity')}
-                          disabled={(quantities[item.id] ?? 0) >= (item.dailyPlateLimit ?? 500)}
+                          disabled={(quantities[item.id] ?? 0) >= (availability?.stock[item.id] ?? item.dailyPlateLimit ?? 500)}
                           onClick={() => adjustQuantity(item, 1)}
                           className="flex h-11 w-11 items-center justify-center rounded-lg border border-stone-300 bg-white text-lg font-bold text-emerald-900 disabled:cursor-not-allowed disabled:opacity-40 dark:border-stone-600 dark:bg-stone-900 dark:text-white">+</button>
                       </div>
@@ -202,14 +225,14 @@ export function UpcomingMenuSection() {
           {selected.length === 0 ? <p className="py-8 text-sm leading-relaxed text-stone-500 dark:text-stone-300">{te ? 'మీకు నచ్చిన వంటకాలను పైన జోడించండి.' : 'Add your favourites from the menu to get started.'}</p> : <ul className="my-5 space-y-4">
             {selected.map(({ item, quantity }) => <li key={item.id} className="flex items-center gap-3 text-sm">
               <FoodArtwork itemId={item.id} className="h-12 w-12 shrink-0 rounded-lg" />
-              <span className="min-w-0 flex-1 text-stone-800 dark:text-stone-100">{te ? item.nameTe : item.nameEn}<span className="block text-xs text-stone-500 dark:text-stone-300">× {quantity} {item.saleUnit === 'PIECE' ? (te ? 'ముక్కలు' : 'pieces') : (te ? 'ప్లేట్లు' : 'plates')}</span></span>
+              <span className="min-w-0 flex-1 text-stone-800 dark:text-stone-100">{te ? item.nameTe : item.nameEn}<span className="block text-xs text-stone-500 dark:text-stone-300">× {quantity} {item.saleUnit === 'PACK' ? (te ? 'ప్యాక్' : 'pack') : item.saleUnit === 'PIECE' ? (te ? 'ముక్కలు' : 'pieces') : (te ? 'ప్లేట్లు' : 'plates')}</span></span>
               <strong className="shrink-0">{money(item.pricePaisa * quantity)}</strong>
             </li>)}
           </ul>}
           <div className="flex justify-between gap-3 border-t border-stone-200 pt-4 text-sm dark:border-stone-600"><span>{te ? 'ఆహార మొత్తం' : 'Food subtotal'}</span><strong data-testid="menu-cart-total">{money(subtotalPaisa)}</strong></div>
           <p aria-live="polite" className="mt-3 text-xs leading-relaxed text-stone-600 dark:text-stone-300">{subtotalPaisa < NEW_MENU_ORDER_POLICY.minimumCartPaisa ? (te ? 'కనీస ఆహార ధర ₹100. ఇంకా ' : '₹100 food minimum. Add ') + money(NEW_MENU_ORDER_POLICY.minimumCartPaisa - subtotalPaisa) + (te ? ' జోడించండి.' : ' more.') : (te ? 'కనీస ఆహార ధర పూర్తైంది.' : 'Food minimum met.')}</p>
           <p className="mt-2 text-xs leading-relaxed text-stone-500 dark:text-stone-300">{te ? 'లొకేషన్ తనిఖీ తర్వాత డెలివరీ ఛార్జీ చూపిస్తాం.' : 'Delivery calculated after location check.'}</p>
-          <button type="button" onClick={showCheckout} disabled={!selected.length} className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#26543A] px-3 py-3 text-sm font-bold text-white disabled:opacity-40">{te ? 'డెలివరీ వివరాలకు వెళ్లండి' : 'Continue to delivery'}<ArrowRight size={16} aria-hidden="true" /></button>
+          <button type="button" onClick={showCheckout} disabled={subtotalPaisa < NEW_MENU_ORDER_POLICY.minimumCartPaisa} className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#26543A] px-3 py-3 text-sm font-bold text-white disabled:opacity-40">{te ? 'డెలివరీ వివరాలకు వెళ్లండి' : 'Continue to delivery'}<ArrowRight size={16} aria-hidden="true" /></button>
         </aside>
         </div>
         <p className="mt-4 text-xs text-stone-500 dark:text-stone-300">{te ? 'AI చిత్రాలు సూచనార్థం మాత్రమే. పరిమాణాలకు మెనూ వివరాలు చూడండి.' : 'AI food illustrations. Refer to menu details for serving quantities.'}</p>

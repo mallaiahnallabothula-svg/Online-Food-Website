@@ -37,7 +37,7 @@ describe('inactive new menu checkout foundation',()=>{
     expect(()=>priceNewMenuCheckout(request([{itemId:'idly',quantity:1}]),placedAt)).toThrow('Minimum food cart');
     expect(()=>priceNewMenuCheckout(request([{itemId:'idly',quantity:2},{itemId:'idly',quantity:2}]),placedAt)).toThrow('duplicate');
     expect(()=>priceNewMenuCheckout(request([{itemId:'idly',quantity:31}]),placedAt)).toThrow('quantity');
-    expect(()=>priceNewMenuCheckout(request([{itemId:'chapathi',quantity:4}]),placedAt)).toThrow('quantity');
+    expect(()=>priceNewMenuCheckout(request([{itemId:'chapathi',quantity:2}]),placedAt)).toThrow('quantity');
     expect(()=>priceNewMenuCheckout(request([{itemId:'idly',quantity:4},{itemId:'pulka',quantity:1}]),placedAt)).toThrow('separately');
     expect(()=>priceNewMenuCheckout(request([{itemId:'fake-item',quantity:1}]),placedAt)).toThrow('Unknown item');
   });
@@ -82,14 +82,14 @@ describe('inactive new menu checkout foundation',()=>{
       expect((await db.execute('SELECT COUNT(*) AS n FROM menu_stock_reservations')).rows[0]?.n).toBe(1);
     }finally{db.close();}
   });
-  it('permits uncapped piece-only carts without any inventory reservations',async()=>{
+  it('reserves capped piece-only carts',async()=>{
     const db=await dbFixture();
     try{
       const plan=request([{itemId:'jowar-roti',quantity:5}]);
       const result=await createPendingNewMenuCheckout(db,plan,placedAt);
       expect(result.pricing.period).toBe('EVENING');
       expect(result.pricing.subtotalPaisa).toBe(15000);
-      expect((await db.execute({sql:'SELECT COUNT(*) AS n FROM menu_stock_reservations WHERE order_id=?',args:[result.orderId]})).rows[0]?.n).toBe(0);
+      expect((await db.execute({sql:'SELECT COUNT(*) AS n FROM menu_stock_reservations WHERE order_id=?',args:[result.orderId]})).rows[0]?.n).toBe(1);
     }finally{db.close();}
   });
   it('prevents parallel checkouts from selling more than thirty capped plates',async()=>{

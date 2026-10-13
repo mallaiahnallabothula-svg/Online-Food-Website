@@ -22,11 +22,13 @@ const mealDetails = {
 } as const;
 
 function quantityLabel(item: MenuItem) {
+  if (item.saleUnit === 'PACK') return 'per pack';
   if (item.saleUnit === 'PIECE') return 'each';
   return 'per plate';
 }
 
 function servingLabel(item: MenuItem) {
+  if (item.saleUnit === 'PACK') return '120 g / pack';
   if (item.saleUnit === 'PIECE') return item.minimumQuantity > 1 ? 'Minimum ' + item.minimumQuantity + ' pieces' : 'Sold per piece';
   return item.piecesPerUnit !== null ? item.piecesPerUnit + ' pieces / plate' : 'Per plate';
 }
@@ -65,7 +67,7 @@ function MenuCard({
         <div className="min-h-[55px] space-y-1 text-[12px] text-stone-600">
           <p>{servingLabel(item)} <span className="text-stone-400">· {quantityLabel(item)}</span></p>
           {item.includesChutney && <p className="inline-flex items-center gap-1 font-semibold text-[#42754F]"><Check size={13} aria-hidden="true" /> Chutney included</p>}
-          {item.dailyPlateLimit !== null && <p>Daily limit: {item.dailyPlateLimit} plates <span className="text-stone-400">(availability not checked)</span></p>}
+          {item.dailyPlateLimit !== null && <p>Daily limit: {item.dailyPlateLimit} {item.saleUnit === 'PACK' ? 'packs' : item.saleUnit === 'PIECE' ? 'pieces' : 'plates'} <span className="text-stone-400">(availability not checked)</span></p>}
         </div>
         <div className="mt-4 flex items-center justify-between border-t border-stone-100 pt-4">
           <span className="text-[11px] font-semibold uppercase tracking-[.12em] text-stone-400">Preview selection</span>
@@ -185,7 +187,7 @@ export default function MenuPreview() {
                 <Sun size={18} aria-hidden="true" /> Morning (6)
               </button>
               <button type="button" role="tab" aria-selected={period === 'EVENING'} onClick={() => choosePeriod('EVENING')} className={'flex flex-1 items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition-colors sm:flex-none ' + (period === 'EVENING' ? 'bg-[#28533A] text-white shadow-sm' : 'text-[#425649] hover:bg-white/70')}>
-                <Moon size={18} aria-hidden="true" /> Evening (4)
+                <Moon size={18} aria-hidden="true" /> Evening (6)
               </button>
             </div>
           </div>
@@ -209,8 +211,8 @@ export default function MenuPreview() {
 
           <div className="mt-9 grid gap-5 lg:grid-cols-[1fr_1.1fr]">
             <aside className="rounded-[24px] border border-[#E4D6B7] bg-[#FFF7E5] p-6 sm:p-7">
-              <span className="inline-flex items-center gap-2 rounded-full bg-[#FAEAC3] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#936629]"><Sparkles size={15} aria-hidden="true" /> Coming soon</span>
-              <h3 className="mt-4 text-xl font-extrabold text-[#5B4227]">Complimentary Karam Podi</h3>
+              <span className="inline-flex items-center gap-2 rounded-full bg-[#FAEAC3] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#936629]"><Sparkles size={15} aria-hidden="true" /> Included</span>
+              <h3 className="mt-4 text-xl font-extrabold text-[#5B4227]">Packing included</h3>
               <p className="mt-2 text-sm leading-6 text-[#755B3C]">We are preparing this extra for a future release. Selection is not available in this preview.</p>
               <span className="mt-4 inline-flex cursor-not-allowed items-center gap-2 rounded-xl border border-[#E4D6B7] bg-[#FAEFD6] px-4 py-2.5 text-sm font-semibold text-[#A58A61]" aria-disabled="true">Not available yet</span>
             </aside>

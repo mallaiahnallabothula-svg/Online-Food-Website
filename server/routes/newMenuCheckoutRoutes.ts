@@ -2,6 +2,8 @@
  * production Vercel flag, live Razorpay key, and persistent idempotency key
  * are all configured. Legacy checkout routes are independent.
  */
+import { applyPappuSnapshot, resolvePappu } from '../services/pappuService.ts';
+import { getNextPreorderDeliverySlot } from '../../shared/preorderScheduling.ts';
 import crypto from 'node:crypto';
 import { Router } from 'express';
 import { z } from 'zod';
@@ -30,6 +32,7 @@ const cartSchema = z.strictObject({
     longitude: z.number().finite().min(-180).max(180),
     locationLink: z.string().max(2000).optional(),
   }),
+  expectedPappu: z.string().regex(/^\d{4}-\d{2}-\d{2}:(TOMATO|PALAKURA|THOTAKURA)$/).optional(),
   requestedDeliveryDateIst: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
 const prepareSchema = z.strictObject({ request: cartSchema, requestKey: z.string().uuid() });
@@ -75,6 +78,19 @@ async function orderForToken(orderId: string, token: string) {
 }
 
 export const newMenuCheckoutRouter = Router();
+newMenuCheckoutRouter.get('/menu-status', limiter, async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  if (!NEW_MENU_LAUNCH_ENABLED) return res.status(404).json({ error: 'Menu unavailable' });
+  const period = req.query.period;
+  if (period !== 'MORNING' && period !== 'EVENING') return res.status(400).json({ error: 'Invalid session' });
+  const date = getNextPreorderDeliverySlot(period, new Date()).deliveryDateIst;
+  try {
+    const db = getDb();
+    const pappu = period === 'EVENING' ? await resolvePappu(db, date) : null;
+    const stock = Object.fromEntries(await Promise.all(MENU_CATALOG.filter(item => item.mealPeriod === period).map(async item => [item.id, await getMenuStockRemaining(db, item.id, date)])));
+    return res.json({ deliveryDateIst: date, pappu, stock });
+  } catch { return res.status(503).json({ error: 'Menu availability unavailable. Please retry.' }); }
+});
 newMenuCheckoutRouter.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-store');
   if (!isProductionCheckoutEnabled()) {
@@ -92,6 +108,7 @@ newMenuCheckoutRouter.post('/quote', async (req, res) => {
   try {
     const db = getDb();
     const pricing = priceNewMenuCheckout(parsed.data);
+    const pappu = await applyPappuSnapshot(db, pricing);
     const items = await Promise.all(pricing.items.map(async ({ item, quantity, lineTotalPaisa }) => ({
       itemId: item.id,
       itemName: item.nameEn,
@@ -105,6 +122,7 @@ newMenuCheckoutRouter.post('/quote', async (req, res) => {
     return res.json({
       quote: {
         items,
+        expectedPappu: pappu ? pricing.deliveryDateIst + ':' + pappu : undefined,
         period: pricing.period,
         deliveryDateIst: pricing.deliveryDateIst,
         deliveryWindow: pricing.deliveryWindow,

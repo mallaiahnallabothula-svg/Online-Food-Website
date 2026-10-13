@@ -248,7 +248,7 @@ export const translations: Record<Language, Translations> = {
     // Brand
     brandName: 'మన ఇంటి వంట',
     brandTagline: 'అచ్చమైన పల్లెటూరి రుచులు — స్వచ్ఛమైన ఆరోగ్యం',
-    brandSubtext: 'ఉదయం అల్పాహారం | సాయంత్రం ఇంటివంటలు — 10 రకాల మెనూ',
+    brandSubtext: 'ఉదయం అల్పాహారం | సాయంత్రం ఇంటివంటలు — 12 రకాల మెనూ',
     villageLocation: 'కొల్లూరు గ్రామం',
 
     // Language switcher
@@ -266,7 +266,7 @@ export const translations: Record<Language, Translations> = {
     // Hero Section
     badgeTraditional: 'స్వచ్ఛమైన గ్రామీణ సంప్రదాయ ఆహారం',
     heroDescription: 'ఉదయం ఇడ్లీ, రాగి ఇడ్లీ, ప్లెయిన్/ఉల్లి పెసరట్టు, ప్లెయిన్/ఉల్లి మినప దోసె; సాయంత్రం జొన్న రొట్టె, చపాతీ, పుల్కా, గుంత పొంగనాలు — మొత్తం 10 ఇంటి వంటలు.',
-    featurePriceTitle: '10 రకాల మెనూ',
+    featurePriceTitle: '12 రకాల మెనూ',
     featurePriceSub: 'ఉదయం 6 | సాయంత్రం 4 | ₹20 నుండి',
     featureKaramTitle: 'ఇంటి తోడు రుచులు',
     featureKaramSub: 'వంటకాన్ని బట్టి చట్నీ, తోడు రుచులు',
@@ -467,7 +467,7 @@ export const translations: Record<Language, Translations> = {
     // Android Install Modal & Banner
     pwaInstallBadge: 'ఆండ్రాయిడ్ యాప్',
     pwaBannerHeadline: 'మన ఇంటి వంట - Android యాప్ అందుబాటులో ఉంది!',
-    pwaBannerDesc: 'ఫోన్ హోమ్ స్క్రీన్‌లో ఇన్‌స్టాల్ చేసి 10 రకాల మెనూను చూడండి, ఆర్డర్ చేయండి.',
+    pwaBannerDesc: 'ఫోన్ హోమ్ స్క్రీన్‌లో ఇన్‌స్టాల్ చేసి 12 రకాల మెనూను చూడండి, ఆర్డర్ చేయండి.',
     pwaFreeBadge: '100% ఉచిత డౌన్‌లోడ్',
     installAppBtn: 'యాప్ ఇన్‌స్టాల్',
     noPlayStoreNeeded: 'ప్లేస్టోర్ అవసరం లేదు (Direct)',
@@ -509,7 +509,7 @@ export const translations: Record<Language, Translations> = {
     // Hero Section
     badgeTraditional: '100% Traditional Village Cuisine',
     heroDescription: 'Choose from 10 home-style dishes: idly and ragi idly, plain or onion pesarattu, plain or onion minapa dosa in the morning; jowar roti, chapathi, pulka and guntha ponganaalu in the evening.',
-    featurePriceTitle: '10-item menu',
+    featurePriceTitle: '12-item menu',
     featurePriceSub: '6 morning + 4 evening · from ₹20',
     featureKaramTitle: 'Homemade accompaniments',
     featureKaramSub: 'Side options vary by dish',

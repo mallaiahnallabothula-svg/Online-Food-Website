@@ -97,7 +97,7 @@ function itemizedLines(rows: readonly DataRow[]): OwnerOrderLine[] {
   return rows.map(row => {
     const unit = text(row.sale_unit);
     const period = text(row.meal_period);
-    if (unit !== 'PLATE' && unit !== 'PIECE') throw new Error('Invalid saved sale unit');
+    if (unit !== 'PLATE' && unit !== 'PIECE' && unit !== 'PACK') throw new Error('Invalid saved sale unit');
     if (period !== 'MORNING' && period !== 'EVENING') throw new Error('Invalid saved meal period');
     const qty = positiveQuantity(row.quantity);
     const price = wholePaisa(row.unit_price_paisa, 'unit price');
@@ -222,7 +222,7 @@ export function renderItemizedOwnerTicket(
   result.push('', te ? '*ఆర్డర్ వస్తువులు:*' : '*Order items:*');
   for (const line of order.lines) {
     const name = te ? line.nameTe : line.nameEn;
-    const unit = line.saleUnit === 'PLATE' ? (te ? 'ప్లేట్లు' : 'plates') : (te ? 'ముక్కలు' : 'pieces');
+    const unit = line.saleUnit === 'PACK' ? (te ? 'ప్యాక్స్ (120 గ్రా)' : 'packs (120 g)') : line.saleUnit === 'PLATE' ? (te ? 'ప్లేట్లు' : 'plates') : (te ? 'ముక్కలు' : 'pieces');
     const pieces = line.piecesPerUnit && line.saleUnit === 'PLATE'
       ? ' (' + line.piecesPerUnit + (te ? ' పీసులు/ప్లేట్)' : ' pcs/plate)') : '';
     result.push('• ' + name + ': ' + line.quantity + ' ' + unit + pieces +

@@ -8,7 +8,7 @@ afterEach(cleanup);
 
 describe('inactive menu design preview', () => {
   it('uses the approved catalog with all ten correct item prices and quantities', () => {
-    expect(MENU_CATALOG).toHaveLength(10);
+    expect(MENU_CATALOG).toHaveLength(12);
     expect(NEW_MENU_LAUNCH_ENABLED).toBe(false);
     const { container } = render(<MenuPreview />);
     expect(screen.getAllByTestId('preview-menu-card')).toHaveLength(6);
@@ -18,7 +18,7 @@ describe('inactive menu design preview', () => {
     expect(screen.getAllByText('4 pieces / plate')).toHaveLength(2);
     expect(screen.getAllByText('Daily limit: 30 plates', { exact: false })).toHaveLength(6);
     expect(screen.getByRole('button',{name:'Checkout unavailable in design preview'}).hasAttribute('disabled')).toBe(true);
-    expect(screen.getByText(/Complimentary Karam Podi/)).toBeTruthy();
+    expect(screen.getByText(/Packing included/)).toBeTruthy();
   });
 
   it('updates sample basket, respects ₹100 minimum and never enables checkout', () => {
@@ -39,16 +39,16 @@ describe('inactive menu design preview', () => {
   it('shows four evening items, legacy minimum quantities and clears sample basket on period change', () => {
     const { container } = render(<MenuPreview />);
     fireEvent.click(screen.getByRole('button',{name:'Add Idly'}));
-    fireEvent.click(screen.getByRole('tab',{name:'Evening (4)'}));
-    expect(screen.getAllByTestId('preview-menu-card')).toHaveLength(4);
+    fireEvent.click(screen.getByRole('tab',{name:'Evening (6)'}));
+    expect(screen.getAllByTestId('preview-menu-card')).toHaveLength(6);
     for (const item of MENU_CATALOG.filter(x=>x.mealPeriod==='EVENING')) {
       expect(container.querySelector('[data-item-id="'+item.id+'"]')).toBeTruthy();
     }
     expect(screen.getByTestId('preview-subtotal').textContent).toBe('₹0');
     fireEvent.click(screen.getByRole('button',{name:'Add Chapathi'}));
     const chapathi=container.querySelector('[data-item-id="chapathi"]') as HTMLElement;
-    expect(within(chapathi).getByLabelText('Chapathi quantity').textContent).toBe('5');
-    expect(screen.getByTestId('preview-subtotal').textContent).toBe('₹50');
+    expect(within(chapathi).getByLabelText('Chapathi quantity').textContent).toBe('3');
+    expect(screen.getByTestId('preview-subtotal').textContent).toBe('₹30');
     fireEvent.click(screen.getByRole('button',{name:'Decrease Chapathi'}));
     expect(screen.getByTestId('preview-subtotal').textContent).toBe('₹0');
   });
