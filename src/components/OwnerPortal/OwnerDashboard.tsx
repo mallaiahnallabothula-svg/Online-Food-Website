@@ -20,6 +20,7 @@ import {
   AlertCircle,
   ExternalLink,
   ShieldCheck,
+  ShieldAlert,
   Star,
   MessageSquareHeart,
   Calendar,
@@ -30,6 +31,7 @@ import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { KitchenBoard } from './KitchenBoard';
 import { TomorrowPreordersSummary } from './TomorrowPreordersSummary';
 import { PaidOrderAlerts } from './PaidOrderAlerts';
+import { PaymentReviewQueue } from './PaymentReviewQueue';
 import { DailyBusinessReport } from './DailyBusinessReport';
 import { AuditLogs } from './AuditLogs';
 import { CustomerFeedbackView } from './CustomerFeedbackView';
@@ -50,7 +52,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [feedbacks, setFeedbacks] = useState<OrderFeedback[]>([]);
-  const [activeTab, setActiveTab] = useState<'ORDERS' | 'KITCHEN' | 'DAILY' | 'ANALYTICS' | 'FEEDBACK' | 'AUDIT'>('ORDERS');
+  const [activeTab, setActiveTab] = useState<'ORDERS' | 'KITCHEN' | 'DAILY' | 'ANALYTICS' | 'FEEDBACK' | 'AUDIT' | 'PAYMENT_REVIEW'>('ORDERS');
   const [kitchenInitialDate, setKitchenInitialDate] = useState<string | null>(null);
   
   // Filters
@@ -65,6 +67,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
   // Alert sound toggle is shared with the dedicated payment-verified alert feed.
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [highlightOrderId, setHighlightOrderId] = useState<string | null>(null);
+  const [paymentReviewCount, setPaymentReviewCount] = useState<number | null>(null);
   
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
@@ -331,6 +334,15 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
           setPage(1);
           setActiveTab('ORDERS');
         }} />
+      {role === 'ADMIN' && (paymentReviewCount === null || paymentReviewCount > 0) && (
+        <button type="button" onClick={() => setActiveTab('PAYMENT_REVIEW')}
+          className="flex w-full items-center gap-2 rounded-xl border border-amber-400 bg-amber-50 p-3 text-left text-sm font-bold text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+          <ShieldAlert className="h-5 w-5 shrink-0" aria-hidden="true" />
+          {paymentReviewCount === null
+            ? (isTe ? 'పేమెంట్ రివ్యూ స్థితి చెక్ అవుతోంది / అందుబాటులో లేదు. ఇక్కడ చూడండి.' : 'Payment review status is checking or unavailable. Open review.')
+            : (isTe ? 'మాన్యువల్ పేమెంట్ రివ్యూ అవసరం: ' : 'Payment exceptions needing review: ') + paymentReviewCount}
+        </button>
+      )}
       <TomorrowPreordersSummary onViewTomorrow={date => {
         setKitchenInitialDate(date);
         setActiveTab('KITCHEN');
@@ -396,6 +408,18 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
         </button>
 
         {role === 'ADMIN' && (
+          <button type="button" onClick={() => setActiveTab('PAYMENT_REVIEW')}
+            className={'flex items-center gap-2 whitespace-nowrap border-b-2 px-4 pb-3 text-sm font-bold transition-colors ' +
+              (activeTab === 'PAYMENT_REVIEW'
+                ? 'border-[#78350F] text-[#78350F] dark:border-amber-400 dark:text-amber-400'
+                : 'border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-stone-200')}>
+            <ShieldAlert className="h-4 w-4" />
+            <span>{isTe ? 'పేమెంట్ రివ్యూ' : 'Payment Review'}</span>
+            {paymentReviewCount !== null && paymentReviewCount > 0 &&
+              <span aria-label="Payment review count" className="rounded-full bg-amber-700 px-2 py-0.5 text-xs text-white">{paymentReviewCount}</span>}
+          </button>
+        )}
+        {role === 'ADMIN' && (
           <button
             onClick={() => setActiveTab('AUDIT')}
             className={`pb-3 px-4 text-sm font-bold border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
@@ -409,6 +433,22 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
           </button>
         )}
       </div>
+
+      {role === 'ADMIN' && (
+        <PaymentReviewQueue
+          visible={activeTab === 'PAYMENT_REVIEW'}
+          onCountChange={setPaymentReviewCount}
+          onAccessDenied={onLogout}
+          onViewOrder={id => {
+            setHighlightOrderId(id);
+            setStatusFilter('ALL');
+            setDateFilter('');
+            setSearchQuery(id);
+            setPage(1);
+            setActiveTab('ORDERS');
+          }}
+        />
+      )}
 
       {/* 1. ORDERS TAB */}
       {activeTab === 'ORDERS' && (

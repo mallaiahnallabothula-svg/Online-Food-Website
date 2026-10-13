@@ -116,6 +116,46 @@ adminRouter.get('/paid-order-alerts', requireAuth, async (_req: AuthenticatedReq
   });
 });
 
+/**
+ * Read-only ADMIN payment exception queue. These are captured gateway payments
+ * recorded as REVIEW_REQUIRED, NOT PAID orders or delivery instructions.
+ * Do not return signature, raw_payload, customer phone, or private tokens.
+ */
+adminRouter.get('/payment-reviews', requireAuth, requireRole(['ADMIN']), async (req: AuthenticatedRequest, res: Response) => {
+  const rawPage = req.query.page ?? '1';
+  if (typeof rawPage !== 'string' || !/^[1-9]\d{0,4}$/.test(rawPage)) {
+    return res.status(400).json({ error: { code: 'INVALID_PAGE', message: 'Invalid review page.' } });
+  }
+  const page = Number(rawPage);
+  const limit = 20;
+  const db = getDb();
+  const filter = "FROM payments p JOIN orders o ON o.id = p.order_id WHERE p.provider = 'razorpay' AND p.status = 'REVIEW_REQUIRED' AND p.order_id LIKE 'MENU-%'";
+  // Fixed allowlist projection. Never expose credential-like payment fields.
+  const count = await db.execute({ sql: 'SELECT COUNT(*) AS total ' + filter, args: [] });
+  const result = await db.execute({
+    sql: `SELECT p.id AS review_id, p.order_id, p.provider_payment_id, p.amount_paisa,
+                 p.currency, p.created_at, o.payment_status, o.order_status, o.delivery_date
+          ${filter}
+          ORDER BY p.created_at DESC, p.id DESC LIMIT ? OFFSET ?`,
+    args: [limit, (page - 1) * limit],
+  });
+  res.json({
+    reviews: result.rows.map(row => ({
+      id: String(row.review_id),
+      orderId: String(row.order_id),
+      providerPaymentId: String(row.provider_payment_id),
+      amountPaisa: Number(row.amount_paisa),
+      currency: String(row.currency),
+      createdAt: String(row.created_at),
+      paymentStatus: String(row.payment_status),
+      orderStatus: String(row.order_status),
+      deliveryDate: String(row.delivery_date),
+      status: 'REVIEW_REQUIRED',
+    })),
+    pagination: { page, limit, total: Number(count.rows[0]?.total ?? 0) },
+  });
+});
+
 // Orders List with pagination, search, status, and date filters
 adminRouter.get('/orders', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
   const db = getDb();
