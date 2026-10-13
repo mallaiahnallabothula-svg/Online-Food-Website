@@ -51,7 +51,8 @@ describe('PR17 public coming-soon menu (display only)', () => {
     const rows = screen.getAllByTestId('upcoming-menu-card');
     expect(rows).toHaveLength(6);
     for (const row of rows) {
-      expect(row.querySelector('[aria-hidden="true"].food-artwork')).toBeTruthy();
+      const artwork = row.querySelector('[aria-hidden="true"].food-artwork');
+      expect(artwork?.querySelector('svg[viewBox="0 0 80 80"]')).toBeTruthy();
     }
     expect(container.querySelector('[data-item-id="idly"]')?.textContent).toContain('₹30');
     fireEvent.click(within(menu).getByRole('button', { name: 'Add Idly to sample cart' }));
@@ -61,6 +62,9 @@ describe('PR17 public coming-soon menu (display only)', () => {
     expect(screen.getAllByTestId('upcoming-menu-card')).toHaveLength(6);
     expect(container.querySelector('[data-item-id="pappu-of-the-day"]')?.querySelector('svg')).toBeTruthy();
     expect(container.querySelector('[data-item-id="mixed-veg-kurma"]')?.querySelector('svg')).toBeTruthy();
+    for (const item of MENU_CATALOG.filter(entry => entry.mealPeriod === 'EVENING')) {
+      expect(container.querySelector('[data-item-id="' + item.id + '"]')?.querySelector('svg[viewBox="0 0 80 80"]')).toBeTruthy();
+    }
   });
 
   it('shows four evening items without referring customers to a separate old order form', () => {
