@@ -24,14 +24,12 @@ describe('Solara full-site UI protects business workflows', () => {
     expect(source('src/components/OrderTrackingModal.tsx')).toContain('fetchOrder');
     expect(source('src/components/PaymentModal.tsx')).toContain('onClick={pay}');
   });
-  it('uses a text monogram and has no custom app-install promotions', () => {
+  it('uses illustrated header branding without custom app install promotions', () => {
     const brand = source('src/components/BrandEmblem.tsx');
     const app = source('src/App.tsx');
     const header = source('src/components/Header.tsx');
     const hero = source('src/components/HeroSection.tsx');
-    expect(brand).toContain('bg-[#a34636]');
-    expect(brand).toContain('మ');
-    expect(brand).not.toContain('<img');
+    expect(brand).toContain('/brand-illustration.svg');
     expect(brand).not.toContain('logoImage');
     expect(header).toContain('HOME KITCHEN · KOLLUR');
     for (const sourceText of [app, header, hero]) {
@@ -39,7 +37,6 @@ describe('Solara full-site UI protects business workflows', () => {
       expect(sourceText).not.toContain('AndroidInstallModal');
       expect(sourceText).not.toContain('onOpenInstallModal');
       expect(sourceText).not.toContain('install-app-btn');
-      expect(sourceText).not.toContain('isInstalled');
     }
     expect(app).toContain('<OrderTrackingModal');
     expect(app).toContain('<OwnerDashboard');

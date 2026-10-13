@@ -24,6 +24,8 @@ function startCheckout() {
 }
 
 function choosePin(value: string) {
+  const maps = screen.getByTestId('checkout-maps-alternative') as HTMLDetailsElement;
+  if (!maps.open) fireEvent.click(screen.getByText('Use Google Maps instead'));
   fireEvent.change(screen.getByLabelText('Google Maps location link (instead of GPS)'), { target: { value } });
   fireEvent.click(screen.getByRole('button', { name: 'Use this Maps pin' }));
 }
