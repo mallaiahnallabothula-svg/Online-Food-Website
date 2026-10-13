@@ -6,6 +6,7 @@ import { NEW_MENU_ORDER_POLICY, type MealPeriod, type MenuItem } from '../../sha
 import { getNextPreorderDeliverySlot } from '../../shared/preorderScheduling.ts';
 import { NEW_MENU_LAUNCH_ENABLED } from '../../shared/menuCatalog.ts';
 import { LiveNewMenuCheckout } from './LiveNewMenuCheckout';
+import type { ReorderRequest } from '../utils/reorder';
 
 export interface PreviewCartLine {
   readonly item: MenuItem;
@@ -236,13 +237,14 @@ function PreviewCheckoutOnly({
 
 export function UpcomingCheckoutPreview(props: {
   isolatedCheckout?: { latitude: number; longitude: number; pay: TestPayment };
+  onReorder?: (request: ReorderRequest) => void;
   period: MealPeriod;
   lines: readonly PreviewCartLine[];
   subtotalPaisa: number;
   te: boolean;
 }) {
   if (NEW_MENU_LAUNCH_ENABLED) {
-    return <LiveNewMenuCheckout period={props.period} lines={props.lines} te={props.te} />;
+    return <LiveNewMenuCheckout period={props.period} lines={props.lines} te={props.te} onReorder={props.onReorder} />;
   }
   return <PreviewCheckoutOnly {...props} />;
 }

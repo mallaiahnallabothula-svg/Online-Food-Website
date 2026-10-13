@@ -6,6 +6,7 @@ import { MENU_CATALOG, NEW_MENU_LAUNCH_ENABLED, NEW_MENU_ORDER_POLICY, type Meal
 import { useLanguage } from '../context/LanguageContext';
 import { FoodArtwork } from './FoodArtwork';
 import { UpcomingCheckoutPreview } from './UpcomingCheckoutPreview';
+import { checkReorderStock, type ReorderError, type ReorderRequest } from '../utils/reorder';
 
 const money = (paisa: number) => '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
 
@@ -42,7 +43,7 @@ function serving(item: MenuItem, telugu: boolean): string {
  * Public catalog and cart for the additive 12-item menu. The production flag
  * selects the verified checkout; the fail-closed default remains preview-only.
  */
-export function UpcomingMenuSection() {
+export function UpcomingMenuSection({ reorderRequest, onReorder }: { reorderRequest?: ReorderRequest | null; onReorder?: (request: ReorderRequest) => void } = {}) {
   const { language } = useLanguage();
   const te = language === 'te';
   const [period, setPeriod] = useState<MealPeriod>('MORNING');
@@ -50,6 +51,8 @@ export function UpcomingMenuSection() {
   const [availability, setAvailability] = useState<{ deliveryDateIst: string; pappu: PappuVariety | null; stock: Record<string, number> } | null>(null);
   const [availabilityError, setAvailabilityError] = useState(false);
   const [refresh, setRefresh] = useState(0);
+  const [reorderNotice, setReorderNotice] = useState<'checking' | 'ready' | 'error' | ReorderError | null>(null);
+  const [reorderCheckoutVersion, setReorderCheckoutVersion] = useState(0);
   useEffect(() => {
     if (!NEW_MENU_LAUNCH_ENABLED) return;
     let active = true;
@@ -61,6 +64,44 @@ export function UpcomingMenuSection() {
     }).catch(() => { if (active) setAvailabilityError(true); });
     return () => { active = false; };
   }, [period, refresh]);
+  // This can only refill a fresh cart; new quote/payment is always customer-initiated.
+  useEffect(() => {
+    if (!reorderRequest) return;
+    let active = true;
+    setReorderNotice('checking');
+    setPeriod(reorderRequest.period);
+    document.getElementById('upcoming-menu')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+    if (!NEW_MENU_LAUNCH_ENABLED) {
+      setReorderNotice('unavailable');
+      return;
+    }
+    fetch('/api/new-menu/menu-status?period=' + reorderRequest.period, { cache: 'no-store' })
+      .then(async response => {
+        if (!response.ok) throw new Error('Menu availability unavailable');
+        return response.json();
+      })
+      .then(data => {
+        if (!active) return;
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(data?.deliveryDateIst) ||
+            !data?.stock || typeof data.stock !== 'object') {
+          setReorderNotice('unavailable');
+          return;
+        }
+        const issue = checkReorderStock(reorderRequest, data.stock);
+        if (issue) {
+          setReorderNotice(issue);
+          return;
+        }
+        setAvailability(data);
+        setAvailabilityError(false);
+        // Replace the old cart: do not silently combine it with a prior selection.
+        setQuantities(Object.fromEntries(reorderRequest.lines.map(line => [line.itemId, line.quantity])));
+        setReorderCheckoutVersion(n => n + 1); // Reset old checkout state; review & pay again.
+        setReorderNotice('ready');
+      })
+      .catch(() => { if (active) setReorderNotice('error'); });
+    return () => { active = false; };
+  }, [reorderRequest]);
   const deliveryDate = availability?.deliveryDateIst ?? getNextPreorderDeliverySlot(period, new Date()).deliveryDateIst;
   const pappu = availability ? availability.pappu : NEW_MENU_LAUNCH_ENABLED ? null : pappuForDate(deliveryDate);
   const checkoutRef = useRef<HTMLDivElement>(null);
@@ -82,6 +123,7 @@ export function UpcomingMenuSection() {
     total + line.item.pricePaisa * line.quantity, 0);
 
   function adjustQuantity(item: MenuItem, adjustment: number) {
+    setReorderNotice(null);
     setQuantities(current => {
       const old = current[item.id] ?? 0;
       const max = availability?.stock[item.id] ?? item.dailyPlateLimit ?? 500;
@@ -148,6 +190,23 @@ export function UpcomingMenuSection() {
 
         <p className="mt-4 text-sm">{deliveryDate} · {period === 'EVENING' && pappu ? (te ? PAPPU_VARIETIES[pappu].nameTe : PAPPU_VARIETIES[pappu].nameEn) : ''}</p>
         {availabilityError && <p role="alert">Menu availability unavailable. <button type="button" onClick={() => setRefresh(value => value + 1)}>Retry</button></p>}
+        {reorderNotice && (
+          <p
+            role={['error', 'unavailable', 'stock', 'minimum'].includes(reorderNotice) ? 'alert' : 'status'}
+            aria-live="polite"
+            className={'mt-3 rounded-xl border p-3 text-sm font-semibold ' + (reorderNotice === 'ready' ? 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200' : 'border-amber-200 bg-amber-50 text-amber-900 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200')}
+          >
+            {reorderNotice === 'checking'
+              ? (te ? 'తాజా స్టాక్ చెక్ చేస్తున్నాం…' : 'Checking current stock for your reorder…')
+              : reorderNotice === 'ready'
+                ? (te ? 'మీ పాత ఐటమ్స్ కొత్త కార్ట్‌లో ఉన్నాయి. ధర, పరిమాణం, డెలివరీ వివరాలు సరిచూసుకోండి.' : 'Items added to a fresh cart. Review current prices, quantities and delivery details.')
+                : reorderNotice === 'stock'
+                  ? (te ? 'ఈ ఐటమ్స్ అన్ని ఇప్పుడు స్టాక్‌లో లేవు. దయచేసి కొత్తగా కార్ట్ తయారు చేయండి.' : 'Not enough stock for the same quantities. Please build a new cart.')
+                  : reorderNotice === 'minimum'
+                    ? (te ? 'ఈ ఐటమ్స్‌కు ప్రస్తుతం కనీస పరిమాణం మారింది. దయచేసి కొత్తగా కార్ట్ తయారు చేయండి.' : 'An item minimum has changed. Please build a new cart.')
+                    : (te ? 'ప్రస్తుతం రీఆర్డర్ చేయలేము. కొత్తగా కార్ట్ తయారు చేసి ప్రయత్నించండి.' : 'Reorder unavailable right now. Please select items from the menu.')}
+          </p>
+        )}
         <div className="mt-6 flex items-center justify-between gap-3">
           <h3 className="flex items-center gap-2 text-base font-bold text-[#36533A] dark:text-emerald-200">
             {period === 'MORNING' ? <Coffee size={19} aria-hidden="true" /> : <UtensilsCrossed size={19} aria-hidden="true" />}
@@ -237,7 +296,7 @@ export function UpcomingMenuSection() {
         </div>
         <p className="mt-4 text-xs text-stone-500 dark:text-stone-300">{te ? 'AI చిత్రాలు సూచనార్థం మాత్రమే. పరిమాణాలకు మెనూ వివరాలు చూడండి.' : 'AI food illustrations. Refer to menu details for serving quantities.'}</p>
         <div ref={checkoutRef} id="menu-delivery" tabIndex={-1} className="scroll-mt-40 sm:scroll-mt-24 rounded-2xl focus-visible:outline-2 focus-visible:outline-emerald-700">
-          <UpcomingCheckoutPreview key={period} period={period} lines={selected} subtotalPaisa={subtotalPaisa} te={te} />
+          <UpcomingCheckoutPreview key={period + ':' + reorderCheckoutVersion} period={period} lines={selected} subtotalPaisa={subtotalPaisa} te={te} onReorder={onReorder} />
         </div>
         {selected.length > 0 && !checkoutVisible && <div className="menu-mobile-cart fixed inset-x-3 bottom-3 z-30 flex items-center justify-between gap-3 rounded-2xl bg-[#26543A] p-3 text-white shadow-xl lg:hidden">
           <span className="pl-1 text-sm font-bold">{selected.length} {te ? 'రకాలు' : 'items'} · {money(subtotalPaisa)}<span className="block text-[10px] font-normal text-emerald-100">{te ? 'ఆహార మొత్తం' : 'Food subtotal'}</span></span>

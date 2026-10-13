@@ -7,17 +7,20 @@ import { Order } from '../types';
 import { PostOrderFeedback } from './PostOrderFeedback';
 import { persistCustomerOrder } from '../utils/checkout';
 import { useLanguage } from '../context/LanguageContext';
+import { buildReorderRequest, type ReorderRequest } from '../utils/reorder';
 
 interface OrderTrackingModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialOrderId?: string;
+  onReorder?: (request: ReorderRequest) => void;
 }
 
 export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
   isOpen,
   onClose,
   initialOrderId,
+  onReorder,
 }) => {
   const ui = useUiText();
   const { language, t } = useLanguage();
@@ -246,6 +249,23 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                   <strong className="text-stone-800 dark:text-stone-200">{selectedOrder.deliveryDate}</strong>
                 </div>
               </div>
+
+              {/* Only a finished paid order with current menu items can refill the cart. */}
+              {onReorder && buildReorderRequest(selectedOrder) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const request = buildReorderRequest(selectedOrder);
+                    if (!request) return;
+                    onReorder(request);
+                    onClose();
+                  }}
+                  className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#26543A] px-4 py-3 text-sm font-bold text-white hover:bg-[#1E4330] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+                >
+                  {language === 'te' ? 'ఈ ఐటమ్స్ మళ్లీ ఆర్డర్ చేయండి' : 'Reorder these items'}
+                  <ArrowRight size={16} aria-hidden="true" />
+                </button>
+              )}
 
               {/* Embed PostOrderFeedback for this order */}
               <PostOrderFeedback
