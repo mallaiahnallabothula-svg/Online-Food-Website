@@ -99,13 +99,35 @@ describe('Delivery Location Accuracy V1', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it('does not accept shortened links as a verified delivery location or submit a quote', async () => {
-    const fetchMock = vi.fn();
+  it('resolves a Google Maps short share link to a verifiable delivery pin before checkout', async () => {
+    const fetchMock = vi.fn(async (path: string, init: RequestInit) => {
+      expect(path).toBe('/api/location/resolve');
+      expect(JSON.parse(init.body as string)).toEqual({ url: 'https://maps.app.goo.gl/YYcjfZD3haTFZhdn8' });
+      return { ok: true, json: async () => ({ latitude: 17.44421, longitude: 78.251478 }) } as Response;
+    });
     vi.stubGlobal('fetch', fetchMock);
     startCheckout();
-    choosePin('https://maps.app.goo.gl/abc');
-    expect(screen.getByRole('alert').textContent).toContain('Short maps.app.goo.gl links');
+    choosePin('https://maps.app.goo.gl/YYcjfZD3haTFZhdn8');
+    await screen.findByText('Selected from Google Maps');
+    expect(screen.getByText('17.444210, 78.251478')).toBeTruthy();
+    expect((screen.getByRole('button', { name: 'Check delivery and total' }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Confirm delivery address and map pin' }));
+    expect((screen.getByRole('button', { name: 'Check delivery and total' }) as HTMLButtonElement).disabled).toBe(false);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('fails closed if the provider cannot resolve an exact Google Maps short link', async () => {
+    const fetchMock = vi.fn(async () => ({
+      ok: false, status: 422,
+      json: async () => ({ error: { code: 'UNRESOLVED_LINK', message: 'No precise place pin.' } }),
+    } as Response));
+    vi.stubGlobal('fetch', fetchMock);
+    startCheckout();
+    choosePin('https://maps.app.goo.gl/UnknownValidToken123');
+    expect((await screen.findByRole('alert')).textContent).toContain('Could not resolve the exact pin');
     expect(screen.queryByRole('link', { name: 'Review delivery pin on Maps ↗' })).toBeNull();
+    expect((screen.getByRole('button', { name: 'Check delivery and total' }) as HTMLButtonElement).disabled).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('lets a customer choose home on Maps rather than accidental office GPS', () => {

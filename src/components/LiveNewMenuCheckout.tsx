@@ -5,7 +5,7 @@ import { OrderTrackingModal } from './OrderTrackingModal';
 import { persistCustomerOrder } from '../utils/checkout';
 import type { ReorderRequest } from '../utils/reorder';
 import { parsePreparedPreorderSlot, type ConfirmedPreorderSlot } from '../utils/preorderNotices';
-import { parseGoogleMapsCoordinates, googleMapsPinUrl } from '../utils/location';
+import { parseGoogleMapsCoordinates, googleMapsPinUrl, isGoogleMapsShortLink } from '../utils/location';
 
 type Line = { item: MenuItem; quantity: number };
 type Quote = {
@@ -135,18 +135,44 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
     clearSelectedLocation();
     setError('');
   }
-  function useMapPin() {
-    const parsed = parseGoogleMapsCoordinates(mapLinkDraft);
+  async function useMapPin() {
+    const submitted = mapLinkDraft.trim();
+    const requestId = ++locationRequestId.current;
+    clearSelectedLocation();
+    setError('');
+    let parsed = parseGoogleMapsCoordinates(submitted);
+    if (!parsed && isGoogleMapsShortLink(submitted)) {
+      setLocationBusy(true);
+      try {
+        const response = await fetch('/api/location/resolve', {
+          method: 'POST', cache: 'no-store',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: submitted }),
+        });
+        const data = await response.json().catch(() => null);
+        if (requestId !== locationRequestId.current) return;
+        if (!response.ok) throw new Error(data?.error?.message || 'Could not read the Google Maps pin.');
+        if (typeof data?.latitude !== 'number' || typeof data?.longitude !== 'number') {
+          throw new Error('Google Maps did not return coordinates for this pin.');
+        }
+        // Reuse the existing coordinate validation before accepting a remote result.
+        parsed = parseGoogleMapsCoordinates(googleMapsPinUrl(data.latitude, data.longitude));
+      } catch {
+        if (requestId === locationRequestId.current) setError(te
+          ? 'Short Maps link నుంచి ఖచ్చితమైన pin తీసుకోలేకపోయాం. Google Mapsలో పూర్తి coordinate link share చేయండి లేదా GPS వాడండి.'
+          : 'Could not resolve the exact pin from this short Google Maps link. Share a full coordinates link or use GPS.');
+        return;
+      } finally {
+        if (requestId === locationRequestId.current) setLocationBusy(false);
+      }
+    }
+    if (requestId !== locationRequestId.current) return;
     if (!parsed) {
-      clearSelectedLocation();
       setError(te
-        ? 'Coordinates ఉన్న పూర్తి Google Maps link ఇవ్వండి. Short maps.app.goo.gl links ప్రస్తుతం support కావు.'
-        : 'Paste a full Google Maps URL with coordinates. Short maps.app.goo.gl links are not supported yet.');
+        ? 'Google Maps coordinate link లేదా maps.app.goo.gl short share link ఇవ్వండి.'
+        : 'Enter a Google Maps coordinate link or a maps.app.goo.gl short share link.');
       return;
     }
-    locationRequestId.current += 1;
-    setLocationBusy(false);
-    clearSelectedLocation();
     setCoordinates(parsed);
     setLocationSource('MAPS');
     setError('');
@@ -375,13 +401,13 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
                   <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" className="text-xs font-bold text-emerald-800 underline dark:text-emerald-300">
                     {te ? 'Google Maps తెరవండి' : 'Open Google Maps'}
                   </a>
-                  <button type="button" onClick={useMapPin} disabled={locationBusy || !mapLinkDraft.trim()}
+                  <button type="button" onClick={() => { void useMapPin(); }} disabled={locationBusy || !mapLinkDraft.trim()}
                     className="min-h-10 rounded-lg border border-emerald-700 bg-white px-3 text-xs font-bold text-emerald-800 disabled:opacity-50 dark:bg-stone-900 dark:text-emerald-300">
-                    {te ? 'ఈ Maps pin వాడండి' : 'Use this Maps pin'}
+                    {locationBusy ? (te ? 'Maps pin చెక్ చేస్తున్నాం…' : 'Resolving Maps pin…') : te ? 'ఈ Maps pin వాడండి' : 'Use this Maps pin'}
                   </button>
                 </div>
                 <p className="text-xs text-stone-600 dark:text-stone-300">
-                  {te ? 'Coordinates ఉన్న పూర్తి Maps link మాత్రమే. Short share links support కావు.' : 'Use a full Google Maps link with coordinates, not a shortened share link.'}
+                  {te ? 'Google Mapsలో Copy link ద్వారా పొందిన maps.app.goo.gl short link కూడా వాడవచ్చు. Pin తప్పనిసరిగా confirm చేయండి.' : 'Paste a full Google Maps coordinates URL or a maps.app.goo.gl share link. Always review and confirm the pin.'}
                 </p>
               </div>
               {coordinates && (
