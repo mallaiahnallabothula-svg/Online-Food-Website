@@ -61,7 +61,7 @@ function DishOnPlate({ itemId }: { itemId: string }) {
 
       {pulka && (
         <>
-          {[[30,40],[43,39],[51,48],[28,51],[41,52]].map(([cx,cy], index) => (
+          {([[30,40],[43,39],[51,48],[28,51],[41,52]] as const).map(([cx,cy], index) => (
             <g key={index}>
               <ellipse cx={cx} cy={cy+1} rx="10" ry="6" fill="#b98b61" />
               <ellipse cx={cx} cy={cy} rx="10" ry="5.5" fill="#eacb91" />
