@@ -80,6 +80,23 @@ describe('inactive new-menu payment and stock settlement safety',()=>{
       expect(o?.payment_status).toBe('PENDING');
       expect(o?.ticket_text).toBeNull();
       expect((await db.execute('SELECT status FROM payments')).rows[0]?.status).toBe('REVIEW_REQUIRED');
+      const exceptions = await db.execute({
+        sql: "SELECT p.order_id,p.status,o.payment_status,o.order_status,o.ticket_text FROM payments p JOIN orders o ON o.id=p.order_id WHERE p.status='REVIEW_REQUIRED'",
+        args: [],
+      });
+      expect(exceptions.rows).toHaveLength(1);
+      expect(exceptions.rows[0]).toMatchObject({
+        order_id: created.orderId, status: 'REVIEW_REQUIRED',
+        payment_status: 'PENDING', order_status: 'PENDING', ticket_text: null,
+      });
+      const audit = await db.execute({
+        sql: "SELECT target_id FROM audit_logs WHERE action='NEW_MENU_PAYMENT_REVIEW_REQUIRED'",
+        args: [],
+      });
+      expect(audit.rows).toHaveLength(1);
+      expect(audit.rows[0]?.target_id).toBe(created.orderId);
+      // Retried captured callbacks never add another exception record.
+      expect((await db.execute("SELECT COUNT(*) AS n FROM payments WHERE status='REVIEW_REQUIRED'")).rows[0]?.n).toBe(1);
       expect((await db.execute('SELECT status FROM menu_stock_reservations')).rows[0]?.status).toBe('HELD');
     }finally{db.close();}
   });
