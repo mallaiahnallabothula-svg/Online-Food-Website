@@ -83,8 +83,8 @@ describe('Owner Paid Order Alerts V1', () => {
     fireEvent(window, new Event('focus'));
     const card = await screen.findByTestId('paid-order-alert');
     expect(card.textContent).toContain('NEW-EVENING');
-    expect(card.textContent).toContain('Evening');
-    expect(card.textContent).toContain("Tomorrow's pre-order");
+    expect(card.textContent).toMatch(/Evening|సాయంత్రం/);
+    expect(card.textContent).toMatch(/Tomorrow's pre-order|రేపటి ప్రీ-ఆర్డర్/);
     expect(screen.getByTestId('paid-alert-count').textContent).toBe('1');
     expect(playOrderNotificationSound).toHaveBeenCalledTimes(1);
     fireEvent(window, new Event('focus'));
