@@ -154,7 +154,7 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
         </div>
 
         <p className="mt-3 text-sm">{te ? 'ప్యాకింగ్ ధరలో కలిపి ఉంది. కూరలు ఐచ్ఛికం. ప్రతి ఆర్డర్ ఆహార కనీస మొత్తం ₹100; డెలివరీ అదనం.' : 'Packing included. Curries are optional. ₹100 food minimum per order, excluding delivery.'}</p>
-        <div className="mt-6 flex w-full flex-wrap gap-2" role="group" aria-label={te ? 'మెనూ సమయం ఎంచుకోండి' : 'Choose meal period'}>
+        <div className="solara-menu-tabs relative mt-6 flex w-full max-w-sm gap-2" data-period={period} role="group" aria-label={te ? 'మెనూ సమయం ఎంచుకోండి' : 'Choose meal period'}>
           {(['MORNING', 'EVENING'] as const).map(key => (
             <button
               key={key}
@@ -167,7 +167,7 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
                 }
               }}
               className={
-                'inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:flex-none ' +
+                'solara-menu-tab relative inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border px-2 py-2.5 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:px-4 ' +
                 (period === key
                   ? 'border-[#A44732] bg-[#A44732] text-white'
                   : 'border-[#ded7ce] bg-transparent text-[#756f67] hover:border-[#A44732] dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100')
@@ -208,7 +208,7 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
 
         {selected.length > 0 && <p className="mt-2 text-xs text-stone-600 dark:text-stone-300">{te ? 'ప్రతి సమయానికి వేరు కార్ట్, ఆర్డర్, పేమెంట్.' : 'Each session has a separate cart, order and payment.'}</p>}
         <div className="mt-8">
-          <div className="grid min-w-0 grid-cols-1 gap-x-10 md:grid-cols-2" role="list">
+          <div key={period} className="solara-menu-list grid min-w-0 grid-cols-1 gap-x-10 md:grid-cols-2" role="list">
             {visible.map(item => (
               <article key={item.id} role="listitem" data-testid="upcoming-menu-card" data-item-id={item.id}
                 className="solara-menu-row grid min-w-0 grid-cols-[64px_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2 border-b border-[#ded7ce] py-5 sm:grid-cols-[80px_minmax(0,1fr)_auto] sm:gap-x-4 dark:border-stone-600">
@@ -228,7 +228,7 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
                       {NEW_MENU_LAUNCH_ENABLED && availability && (availability.stock[item.id] ?? 0) < item.minimumQuantity ? (te ? 'స్టాక్ లేదు' : 'Sold out') : (te ? 'జోడించండి +' : 'Add +')}
                     </button>
                   ) : (
-                    <div className="inline-flex h-11 items-center rounded-md border border-[#c7bcb0]">
+                    <div className="solara-quantity-enter inline-flex h-11 items-center rounded-md border border-[#c7bcb0]">
                       <button type="button" aria-label={'Decrease ' + item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' quantity' : ' sample quantity')} onClick={() => adjustQuantity(item, -1)} className="h-11 w-9 rounded-l-md text-base font-bold text-[#A44732]">−</button>
                       <span aria-label={item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' quantity' : ' sample quantity')} className="min-w-5 text-center text-sm font-bold text-[#384B35] dark:text-stone-100">{quantities[item.id]}</span>
                       <button type="button" aria-label={'Increase ' + item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' quantity' : ' sample quantity')} disabled={(quantities[item.id] ?? 0) >= (availability?.stock[item.id] ?? item.dailyPlateLimit ?? 500)} onClick={() => adjustQuantity(item, 1)} className="h-11 w-9 rounded-r-md text-base font-bold text-[#A44732] disabled:opacity-40">+</button>
@@ -240,7 +240,7 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
           </div>
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[#ded7ce] py-4 dark:border-stone-600" aria-label={te ? 'ఆహార మొత్తం మరియు డెలివరీ' : 'Food total and delivery'}>
           <div>
-            <p className="text-sm text-[#5f584f] dark:text-stone-200">{te ? 'ఆహార మొత్తం' : 'Food subtotal'} <strong data-testid="menu-cart-total" className="ml-1 font-bold tabular-nums text-[#A44732]">{money(subtotalPaisa)}</strong></p>
+            <p className="text-sm text-[#5f584f] dark:text-stone-200">{te ? 'ఆహార మొత్తం' : 'Food subtotal'} <strong key={subtotalPaisa} data-testid="menu-cart-total" className="solara-cart-count "ml-1 font-bold tabular-nums text-[#A44732]">{money(subtotalPaisa)}</strong></p>
             <p aria-live="polite" className="mt-1 text-xs text-[#756f67] dark:text-stone-300">
               {subtotalPaisa < NEW_MENU_ORDER_POLICY.minimumCartPaisa
                 ? (te ? 'కనీసం ₹100. ఇంకా ' : '₹100 minimum. Add ') + money(NEW_MENU_ORDER_POLICY.minimumCartPaisa - subtotalPaisa) + (te ? ' జోడించండి.' : ' more.')
@@ -257,7 +257,7 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
         <p className="mt-4 text-xs text-stone-500 dark:text-stone-300">{te ? 'ఆహార పరిమాణాలు, ధరలు, స్టాక్ వివరాలు ఆర్డర్ ముందు సరిచూసుకోండి.' : 'Check portions, prices and availability before ordering.'}</p>
         {selected.length > 0 && (
           <div className="menu-mobile-cart sticky bottom-3 z-30 mt-4 flex items-center justify-between gap-3 rounded-lg bg-[#A44732] p-3 text-white shadow-xl sm:mx-auto sm:w-[430px]">
-            <span className="pl-1 text-sm font-bold">{selectedQuantity} {te ? 'ఐటమ్స్' : 'items'} · {money(subtotalPaisa)}<span className="block text-[10px] font-normal text-emerald-100">{te ? 'ఆహార మొత్తం' : 'Food subtotal'}</span></span>
+            <span key={selectedQuantity} className="solara-cart-count pl-1 text-sm font-bold">{selectedQuantity} {te ? 'ఐటమ్స్' : 'items'} · {money(subtotalPaisa)}<span className="block text-[10px] font-normal text-emerald-100">{te ? 'ఆహార మొత్తం' : 'Food subtotal'}</span></span>
             <button type="button" onClick={showCheckout} disabled={subtotalPaisa < NEW_MENU_ORDER_POLICY.minimumCartPaisa} className="flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 text-sm font-bold text-[#A44732] disabled:cursor-not-allowed disabled:opacity-50">
               {te ? 'డెలివరీకి వెళ్లండి' : 'View cart'}<ArrowRight size={16} aria-hidden="true" />
             </button>

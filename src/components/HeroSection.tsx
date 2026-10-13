@@ -13,16 +13,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder }) => 
   return (
     <section id="home" className="solara-hero relative overflow-hidden border-b border-[#e6dece] bg-[#FAF6ED] px-4 py-14 text-[#384B35] dark:border-stone-700 dark:bg-[#211f1c] dark:text-stone-100 sm:px-6 sm:py-20">
       <div className="solara-orbit pointer-events-none absolute left-1/2 top-1/2 -z-0 hidden h-[570px] w-[570px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#A44732]/10 lg:block" aria-hidden="true" />
-      <div className="solara-hero-inner relative mx-auto grid w-full max-w-7xl items-center gap-10 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)] lg:gap-10 xl:gap-16">
+      <div className="solara-motion-hero solara-hero-inner relative mx-auto grid w-full max-w-7xl items-center gap-10 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)] lg:gap-10 xl:gap-16">
         <div>
-          <p className="mb-5 text-[11px] font-bold uppercase tracking-[0.22em] text-[#A44732] dark:text-[#e3a795]">KOLLUR · HYDERABAD · HOME KITCHEN</p>
-          <h1 className="solara-display solara-hero-title m-0 text-[clamp(3rem,4.85vw,5rem)] leading-[1.09] tracking-[-0.055em]">
+          <p className="solara-hero-eyebrow mb-5 text-[11px] font-bold uppercase tracking-[0.22em] text-[#A44732] dark:text-[#e3a795]">KOLLUR · HYDERABAD · HOME KITCHEN</p>
+          <h1 className="solara-display solara-hero-title solara-hero-heading m-0 text-[clamp(3rem,4.85vw,5rem)] leading-[1.09] tracking-[-0.055em]">
             {te ? <>మన ఇంటి<br /><em className="not-italic text-[#A44732]">వంట.</em></> : <>Everyday food.<br /><em className="not-italic text-[#A44732] lg:whitespace-nowrap">Always familiar.</em></>}
           </h1>
-          <p className="mt-6 max-w-lg text-base leading-relaxed text-[#50584B] dark:text-stone-300">
+          <p className="solara-hero-description mt-6 max-w-lg text-base leading-relaxed text-[#50584B] dark:text-stone-300">
             {te ? 'ఉదయం టిఫిన్లు. సాయంత్రం ఇంటి వంటకాలు. మీకు నచ్చిన రోజు, సమయం కోసం ముందుగా ఎంచుకోండి.' : 'Start with idly or dosa. Come back for rotis, pappu and kurma. Explore everyday Telugu favourites, with clear portions and prices.'}
           </p>
-          <div className="mt-8 flex flex-wrap items-center gap-5 text-xs font-bold tracking-[0.04em]">
+          <div className="solara-hero-actions mt-8 flex flex-wrap items-center gap-5 text-xs font-bold tracking-[0.04em]">
             <button id="hero-order-now-btn" onClick={onScrollToOrder} type="button" className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-[#A44732] px-6 py-3 text-white transition-colors hover:bg-[#8e3928]">
               {te ? 'మెనూ చూడండి' : 'Explore the menu'} <ArrowDown size={17} aria-hidden="true"/>
             </button>
@@ -36,7 +36,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder }) => 
             { key: 'pesarattu', en: 'A familiar flavour', te: 'తెలిసిన ఇంటి రుచి', dark: true },
             { key: 'roti', en: 'Evening comfort', te: 'సాయంత్రం రుచులు', dark: false },
           ] as const).map(item => (
-            <div key={item.key} className={'relative aspect-[2/3] overflow-hidden rounded-2xl ' + (item.dark ? 'bg-[#384B35]' : 'bg-[#e8dec5]')} role="img"
+            <div key={item.key} className={'solara-hero-illustration relative aspect-[2/3] overflow-hidden rounded-2xl ' + (item.dark ? 'bg-[#384B35]' : 'bg-[#e8dec5]')} role="img"
               aria-label={te ? item.te + ' — సూచన చిత్రం' : item.en + ' — illustrative artwork'}>
               <svg className="absolute inset-0 h-full w-full" viewBox="0 0 160 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                 <path d="M68 59 C59 50 66 44 69 39 M87 59 C77 49 87 42 90 36" fill="none" stroke={item.dark ? '#cdaa7e' : '#c7b49b'} strokeWidth="1.6" strokeLinecap="round"/>
