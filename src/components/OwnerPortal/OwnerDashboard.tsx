@@ -30,6 +30,7 @@ import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { KitchenBoard } from './KitchenBoard';
 import { TomorrowPreordersSummary } from './TomorrowPreordersSummary';
 import { PaidOrderAlerts } from './PaidOrderAlerts';
+import { DailyBusinessReport } from './DailyBusinessReport';
 import { AuditLogs } from './AuditLogs';
 import { CustomerFeedbackView } from './CustomerFeedbackView';
 import { useLanguage } from '../../context/LanguageContext';
@@ -49,7 +50,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [feedbacks, setFeedbacks] = useState<OrderFeedback[]>([]);
-  const [activeTab, setActiveTab] = useState<'ORDERS' | 'KITCHEN' | 'ANALYTICS' | 'FEEDBACK' | 'AUDIT'>('ORDERS');
+  const [activeTab, setActiveTab] = useState<'ORDERS' | 'KITCHEN' | 'DAILY' | 'ANALYTICS' | 'FEEDBACK' | 'AUDIT'>('ORDERS');
   const [kitchenInitialDate, setKitchenInitialDate] = useState<string | null>(null);
   
   // Filters
@@ -190,7 +191,8 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
   };
 
   // CSV Export with formula injection protection
-  const handleExportCsv = async () => {
+  const handleExportCsv = async (explicitDate?: string) => {
+    const exportedDate = explicitDate ?? dateFilter;
     setIsExportingCsv(true);
     try {
       const res = await fetch('/api/admin/exports/csv', {
@@ -200,7 +202,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
           'X-Requested-With': 'XMLHttpRequest',
         },
         credentials: 'include',
-        body: JSON.stringify({ date: dateFilter || undefined }),
+        body: JSON.stringify({ date: exportedDate || undefined }),
       });
 
       if (res.ok) {
@@ -208,7 +210,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `mana_enti_vanta_orders_${dateFilter || 'all'}_${Date.now()}.csv`;
+        a.download = `mana_enti_vanta_orders_${exportedDate || 'all'}_${Date.now()}.csv`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -301,7 +303,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
 
           {/* CSV Export Button */}
           <button
-            onClick={handleExportCsv}
+            onClick={() => { void handleExportCsv(); }}
             disabled={isExportingCsv}
             className="p-2 px-3 bg-emerald-50 dark:bg-emerald-950/60 hover:bg-emerald-100 border border-emerald-300 dark:border-emerald-800 rounded-xl text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 cursor-pointer"
           >
@@ -356,6 +358,17 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
         >
           <ChefHat className="h-4 w-4" />
           <span>{isTe ? 'కిచెన్ బోర్డు' : 'Kitchen Board'}</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('DAILY')}
+          className={'flex items-center gap-2 whitespace-nowrap border-b-2 px-4 pb-3 text-sm font-bold transition-colors ' +
+            (activeTab === 'DAILY'
+              ? 'border-[#78350F] text-[#78350F] dark:border-amber-400 dark:text-amber-400'
+              : 'border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-stone-200')}
+        >
+          <Calendar className="h-4 w-4" />
+          <span>{isTe ? 'రోజువారీ రిపోర్ట్' : 'Daily Report'}</span>
         </button>
 
         <button
@@ -664,6 +677,18 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
 
       {/* Kitchen Board uses the existing authenticated paginated orders API and status changes. */}
       {activeTab === 'KITCHEN' && <KitchenBoard key={kitchenInitialDate ?? 'today'} initialDate={kitchenInitialDate ?? undefined} onStatusChange={handleStatusChange} />}
+
+      {/* Daily report: paid totals for the selected delivery date, complete paginated read. */}
+      {activeTab === 'DAILY' && (
+        <DailyBusinessReport
+          isExporting={isExportingCsv}
+          onExportDate={date => { void handleExportCsv(date); }}
+          onViewKitchenDate={date => {
+            setKitchenInitialDate(date);
+            setActiveTab('KITCHEN');
+          }}
+        />
+      )}
 
       {/* 2. ANALYTICS TAB */}
       {activeTab === 'ANALYTICS' && (
