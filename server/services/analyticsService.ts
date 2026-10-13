@@ -89,28 +89,24 @@ export async function getAuthoritativeAnalytics(): Promise<AnalyticsData> {
     ordersByStatus[st] = Number(r.count || 0);
   }
 
-  // 4. Hourly Distribution (from created_at_ist or created_at_utc)
+  // 4. Paid orders by *placement* hour, 00:00–23:59 IST. This is not a delivery-slot chart.
   const allOrdersRes = await db.execute(`
     SELECT created_at_utc FROM orders WHERE payment_status = 'PAID'
   `);
 
   const hourlyMap = new Map<number, number>();
-  for (let h = 10; h <= 20; h++) {
-    hourlyMap.set(h, 0);
-  }
+  for (let h = 0; h < 24; h++) hourlyMap.set(h, 0);
 
   for (const r of allOrdersRes.rows) {
     const utcDate = new Date(String(r.created_at_utc));
-    // Convert to IST hour
+    if (!Number.isFinite(utcDate.getTime())) continue; // Never invent a placement hour.
     const istHour = (utcDate.getUTCHours() + 5 + (utcDate.getUTCMinutes() + 30 >= 60 ? 1 : 0)) % 24;
-    if (hourlyMap.has(istHour)) {
-      hourlyMap.set(istHour, (hourlyMap.get(istHour) || 0) + 1);
-    }
+    hourlyMap.set(istHour, (hourlyMap.get(istHour) || 0) + 1);
   }
 
   const hourlyOrderDistribution: Array<{ hourSlot: string; count: number }> = [];
-  for (let h = 11; h <= 17; h++) {
-    const label = `${h > 12 ? h - 12 : h}:00 ${h >= 12 ? 'PM' : 'AM'}`;
+  for (let h = 0; h < 24; h++) {
+    const label = `${h % 12 || 12}:00 ${h >= 12 ? 'PM' : 'AM'}`;
     hourlyOrderDistribution.push({
       hourSlot: label,
       count: hourlyMap.get(h) || 0,

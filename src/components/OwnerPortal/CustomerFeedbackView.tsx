@@ -1,4 +1,5 @@
 import { useUiText } from '../../context/useUiText';
+import { useLanguage } from '../../context/LanguageContext';
 import React, { useState } from 'react';
 import { Star, MessageSquareHeart, ThumbsUp, Sparkles, Filter, CheckCircle2, User, Phone, Calendar, RefreshCw } from 'lucide-react';
 import { OrderFeedback } from '../../types';
@@ -37,6 +38,7 @@ export const CustomerFeedbackView: React.FC<CustomerFeedbackViewProps> = ({
   isRefreshing = false,
 }) => {
   const ui = useUiText();
+  const { language } = useLanguage();
   const [filterStar, setFilterStar] = useState<number | 'ALL'>('ALL');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
@@ -66,10 +68,12 @@ export const CustomerFeedbackView: React.FC<CustomerFeedbackViewProps> = ({
           </div>
 
           <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-4xl font-extrabold text-stone-900 dark:text-stone-100 font-mono">
-              {averageRating.toFixed(1)}
+            <span className={totalFeedbacks > 0
+              ? 'text-4xl font-extrabold text-stone-900 dark:text-stone-100 font-mono'
+              : 'text-base font-bold text-stone-600 dark:text-stone-300'}>
+              {totalFeedbacks > 0 ? averageRating.toFixed(1) : (language === 'en' ? 'Not rated yet' : 'ఇంకా రేటింగ్ లేదు')}
             </span>
-            <span className="text-stone-400 text-lg">/ 5.0</span>
+            {totalFeedbacks > 0 && <span className="text-stone-400 text-lg">/ 5.0</span>}
           </div>
 
           <div className="mt-2 flex items-center gap-1">
