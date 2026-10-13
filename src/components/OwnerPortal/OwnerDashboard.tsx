@@ -29,6 +29,7 @@ import { Order, FulfillmentStatus, AdminRole, AnalyticsData, AuditLog, OrderFeed
 import { playOrderNotificationSound } from '../../utils/audio';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
 import { KitchenBoard } from './KitchenBoard';
+import { TomorrowPreordersSummary } from './TomorrowPreordersSummary';
 import { AuditLogs } from './AuditLogs';
 import { CustomerFeedbackView } from './CustomerFeedbackView';
 import { useLanguage } from '../../context/LanguageContext';
@@ -49,6 +50,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [feedbacks, setFeedbacks] = useState<OrderFeedback[]>([]);
   const [activeTab, setActiveTab] = useState<'ORDERS' | 'KITCHEN' | 'ANALYTICS' | 'FEEDBACK' | 'AUDIT'>('ORDERS');
+  const [kitchenInitialDate, setKitchenInitialDate] = useState<string | null>(null);
   
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -324,6 +326,11 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
           </button>
         </div>
       </div>
+
+      <TomorrowPreordersSummary onViewTomorrow={date => {
+        setKitchenInitialDate(date);
+        setActiveTab('KITCHEN');
+      }} />
 
       {/* Navigation Tabs */}
       <div className="flex border-b border-stone-200 dark:border-stone-800 gap-2 overflow-x-auto">
@@ -651,7 +658,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
       )}
 
       {/* Kitchen Board uses the existing authenticated paginated orders API and status changes. */}
-      {activeTab === 'KITCHEN' && <KitchenBoard onStatusChange={handleStatusChange} />}
+      {activeTab === 'KITCHEN' && <KitchenBoard key={kitchenInitialDate ?? 'today'} initialDate={kitchenInitialDate ?? undefined} onStatusChange={handleStatusChange} />}
 
       {/* 2. ANALYTICS TAB */}
       {activeTab === 'ANALYTICS' && (

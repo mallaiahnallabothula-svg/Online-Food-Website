@@ -4,6 +4,7 @@ import { type MealPeriod, type MenuItem } from '../../shared/menuCatalog.ts';
 import { OrderTrackingModal } from './OrderTrackingModal';
 import { persistCustomerOrder } from '../utils/checkout';
 import type { ReorderRequest } from '../utils/reorder';
+import { parsePreparedPreorderSlot, type ConfirmedPreorderSlot } from '../utils/preorderNotices';
 
 type Line = { item: MenuItem; quantity: number };
 type Quote = {
@@ -47,6 +48,8 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
   const [trackingToken, setTrackingToken] = useState('');
   const [trackingOpen, setTrackingOpen] = useState(false);
   const [completed, setCompleted] = useState(false);
+  const [confirmedSlot, setConfirmedSlot] = useState<ConfirmedPreorderSlot | null>(null);
+  const preparedSlotRef = useRef<ConfirmedPreorderSlot | null>(null);
   const requestKey = useRef('');
   const lastInputKey = useRef('');
   const paymentProof = useRef<GatewayResult | null>(null);
@@ -71,6 +74,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
       const pending = JSON.parse(sessionStorage.getItem('mana_new_menu_pending_order') || 'null');
       if (typeof pending?.orderId === 'string' && typeof pending?.token === 'string') {
         setTrackingToken(pending.token);
+        preparedSlotRef.current = parsePreparedPreorderSlot(pending, pending.orderId);
         const proof = JSON.parse(sessionStorage.getItem('mana_new_menu_payment_proof') || 'null') as GatewayResult | null;
         if (proof && typeof proof.razorpay_payment_id === 'string' &&
             typeof proof.razorpay_order_id === 'string' && typeof proof.razorpay_signature === 'string') {
@@ -142,6 +146,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
     if (result?.settlement?.status === 'CONFIRMED') {
       paymentProof.current = null;
       setCompleted(true);
+      setConfirmedSlot(preparedSlotRef.current?.orderId === orderId ? preparedSlotRef.current : null);
       try {
         sessionStorage.removeItem('mana_new_menu_request_key');
         sessionStorage.removeItem('mana_new_menu_pending_order');
@@ -171,8 +176,10 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
       const prepared = await post('/prepare', { request, requestKey: requestKey.current });
       const orderId = prepared.checkout.orderId as string;
       const token = prepared.checkout.customerAccessToken as string;
+      const slot = parsePreparedPreorderSlot(prepared.checkout, orderId);
+      preparedSlotRef.current = slot;
       setTrackingToken(token); persistCustomerOrder(orderId, token);
-      try { sessionStorage.setItem('mana_new_menu_pending_order', JSON.stringify({ orderId, token })); } catch { /* Tracking remains available in memory. */ }
+      try { sessionStorage.setItem('mana_new_menu_pending_order', JSON.stringify({ orderId, token, ...(slot ?? {}) })); } catch { /* Tracking remains available in memory. */ }
       const gateway = await post('/gateway', { orderId, customerAccessToken: token });
       await loadRazorpay();
       const checkout = new window.Razorpay!({
@@ -322,6 +329,30 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
 
         {error && <p role="alert" className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950/40 dark:text-red-200">{error}</p>}
         {status && <p role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-100">{status}</p>}
+        {completed && (
+          <div role="region" aria-label="Verified pre-order confirmation" className="rounded-2xl border-2 border-emerald-600 bg-emerald-50 p-4 text-emerald-950 dark:border-emerald-500 dark:bg-emerald-950/40 dark:text-emerald-100">
+            <p className="font-extrabold">{te ? 'ప్రీ-ఆర్డర్ ధృవీకరించబడింది' : 'Pre-order confirmed'}</p>
+            {confirmedSlot ? (
+              <>
+                <p className="mt-2 font-semibold">
+                  {te ? 'డెలివరీ తేదీ' : 'Delivery date'}: {confirmedSlot.deliveryDateIst}
+                </p>
+                <p className="mt-1 font-semibold">
+                  {te ? 'డెలివరీ సమయం' : 'Delivery window'}: {confirmedSlot.deliveryWindow} IST
+                </p>
+                <p className="mt-2 break-all text-xs">{te ? 'ఆర్డర్' : 'Order'}: {confirmedSlot.orderId}</p>
+              </>
+            ) : (
+              <p className="mt-2 text-sm">
+                {te ? 'డెలివరీ తేదీ/సమయం కోసం Track this order తెరవండి.' : 'Open Track this order to see the verified delivery date and time.'}
+              </p>
+            )}
+            <p className="mt-2 text-xs">
+              {te ? 'ఆర్డర్ స్టేటస్ Track Orderలో చూడండి. WhatsApp/SMS ఆటోమేటిక్‌గా పంపబడదు.' :
+                'Track your order for status updates. No automatic WhatsApp/SMS is sent.'}
+            </p>
+          </div>
+        )}
 
         <div className="space-y-3 border-t border-stone-200 pt-5 dark:border-stone-700">
           {!quote ? (
