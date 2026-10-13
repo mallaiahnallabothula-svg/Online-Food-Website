@@ -38,7 +38,7 @@
 }
 
 /* Solara-inspired customer typography and decorative artwork; no business logic */
-:root { --solara-paper:#f7f2e9; --solara-rust:#ab4d3e; --solara-line:#ded7ce; --solara-ink:#26231f; }
+:root { --solara-paper:#FAF6ED; --solara-rust:#A44732; --solara-olive:#384B35; --solara-line:#e6dece; --solara-ink:#384B35; }
 html { scroll-behavior:smooth; scroll-padding-top:110px; }
 .solara-display { font-family:'Noto Serif Telugu',Georgia,'Nirmala UI',serif; }
 .solara-hero, .solara-storefront { font-family: 'Noto Sans Telugu','Segoe UI',system-ui,sans-serif; }
@@ -57,7 +57,7 @@ html { scroll-behavior:smooth; scroll-padding-top:110px; }
 @media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} }
 
 /* Solara full-site design system: scoped, presentation-only. */
-.solara-app { --solara-rust:#ab4d3e; --solara-paper:#f7f2e9; --solara-border:#ded7ce; }
+.solara-app { --solara-rust:#A44732; --solara-paper:#FAF6ED; --solara-olive:#384B35; --solara-border:#e6dece; }
 .solara-app .solara-header a { text-underline-offset:7px; }
 .solara-app .solara-header nav a:hover { color:var(--solara-rust); }
 .solara-app :is(.solara-checkout,.solara-dialog,.solara-owner-login,.solara-owner-dashboard) :is(input,textarea,select):focus-visible { outline:2px solid var(--solara-rust); outline-offset:2px; }
@@ -77,3 +77,52 @@ html { scroll-behavior:smooth; scroll-padding-top:110px; }
  .solara-app .solara-footer-links { width:100%; }
  .solara-app :is(.solara-checkout,.solara-dialog) :is(button,input,select) { min-height:40px; }
 }
+
+/* Approved Cream / Olive / Terracotta system – presentation only. */
+html { background:#FAF6ED; }
+.solara-app { background:#FAF6ED; }
+.solara-app .solara-customer { background:#FAF6ED; }
+.solara-app .solara-header { background-color:rgb(250 246 237 / .96); }
+.solara-app .solara-customer :is(#home,#upcoming-menu,#brand-story,#at-the-table,#faq,#contact-info) { background-color:#FAF6ED; }
+.solara-app .solara-customer #delivery-info { background-color:#e8ebdc; color:#384B35; }
+.solara-app .solara-customer :is(#brand-story,#at-the-table,#faq,#delivery-info,#contact-info) { border-color:#e6dece; }
+.solara-app .solara-customer :is(#brand-story,#at-the-table,#faq,#delivery-info,#contact-info) .solara-display { color:#384B35; }
+.solara-app .solara-customer .solara-hero { isolation:isolate; }
+.solara-app .solara-hero-title { text-wrap:balance; }
+.solara-app .solara-hero-art { width:100%; }
+.solara-app .solara-hero-art > [role="img"] { min-width:0; }
+.solara-app .solara-customer .solara-menu-row { border-color:#e6dece; }
+.solara-app .solara-customer .solara-menu-row button:focus-visible { outline-color:#A44732; }
+.solara-app .solara-footer { background:#384B35; border-color:#2d3b2b; }
+.solara-app .solara-footer-links a { color:#f4eedf; }
+.solara-app .solara-footer-links a:hover { color:#e8b29b; }
+.solara-app .solara-checkout { border-color:#e6dece; }
+.solara-app .solara-checkout :is(input,textarea,select):focus-visible { outline-color:#A44732; }
+.solara-app .solara-owner { background:#FAF6ED; }
+.solara-app .solara-owner-dashboard { max-width:1280px; }
+@media (min-width:1024px) {
+  .solara-app .solara-hero-inner { grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); }
+  .solara-app .solara-hero-title em { white-space:nowrap; }
+}
+@media (max-width:1023px) {
+  .solara-app .solara-hero-inner { max-width:720px; }
+  .solara-app .solara-hero-title { font-size:clamp(2.8rem,7vw,4.75rem); }
+}
+@media (max-width:639px) {
+  .solara-app .solara-hero-title { font-size:clamp(2.7rem,11vw,4rem); }
+  .solara-app .solara-hero-art { gap:.5rem; }
+}
+/* Existing dark mode and semantic payment/error/availability colors are untouched. */
+.dark .solara-app { background:#211f1c; }
+.dark .solara-app .solara-header { background-color:rgb(26 24 22 / .95); }
+.dark .solara-app .solara-customer :is(#home,#upcoming-menu,#brand-story,#at-the-table,#faq,#contact-info) { background-color:#211f1c; }
+.dark .solara-app .solara-customer #delivery-info { background-color:#302b25; color:#f4eedf; }
+.dark .solara-app .solara-customer :is(#brand-story,#at-the-table,#faq,#delivery-info,#contact-info) .solara-display { color:#f4eedf; }
+.dark .solara-app .solara-footer { background-color:#151413; }
+.dark .solara-app .solara-owner { background:#211f1c; }
+
+/* Owner screens share the palette without changing success/error/order states. */
+.solara-app .solara-owner-login :is(h1,h2),
+.solara-app .solara-owner-dashboard :is(h1,h2) { color:#384B35; }
+.dark .solara-app .solara-owner-login :is(h1,h2),
+.dark .solara-app .solara-owner-dashboard :is(h1,h2) { color:#f4eedf; }

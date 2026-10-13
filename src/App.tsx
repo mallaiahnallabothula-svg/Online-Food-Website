@@ -227,8 +227,8 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      {!(currentView === 'CUSTOMER' && checkoutRoute) && <footer className="solara-footer mt-auto border-t border-[#403b35] bg-[#201f1c] py-12 text-[#e8ded2] dark:bg-[#151413]">
-        <div className="mx-auto grid max-w-6xl gap-9 px-5 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.5fr_1fr_1fr] lg:gap-14">
+      {!(currentView === 'CUSTOMER' && checkoutRoute) && <footer className="solara-footer mt-auto border-t border-[#2d3b2b] bg-[#384B35] py-12 text-[#f4eedf] dark:bg-[#151413]">
+        <div className="mx-auto grid max-w-7xl gap-9 px-5 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.5fr_1fr_1fr] lg:gap-14">
           <div className="min-w-0">
             <h4 className="solara-display text-xl font-semibold text-[#f5e7db]">{t.brandName}</h4>
             <p className="mt-2 max-w-sm text-sm leading-relaxed text-[#c8beb2]">{t.brandTagline}</p>
@@ -240,11 +240,11 @@ export default function App() {
           </div>
           <div className="min-w-0 space-y-4">
             <h5 className="text-xs font-bold uppercase tracking-[0.16em] text-[#bba99b]">{language === 'te' ? 'సంప్రదించండి' : 'Contact & hours'}</h5>
-            <a href="tel:+918499865803" className="inline-flex items-center gap-2 text-sm font-semibold text-[#f5e7db] hover:text-[#e4a28c]">
-              <Phone className="h-4 w-4 text-[#e4a28c]" aria-hidden="true" />+91 8499865803
+            <a href="tel:+918499865803" className="inline-flex items-center gap-2 text-sm font-semibold text-[#f5e7db] hover:text-[#e8b29b]">
+              <Phone className="h-4 w-4 text-[#e8b29b]" aria-hidden="true" />+91 8499865803
             </a>
             <p className="flex items-start gap-2 text-xs leading-relaxed text-[#c8beb2]">
-              <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[#e4a28c]" aria-hidden="true" />{t.footerTimings}
+              <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[#e8b29b]" aria-hidden="true" />{t.footerTimings}
             </p>
             <button
               onClick={() => {
