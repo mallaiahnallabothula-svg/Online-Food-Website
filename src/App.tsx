@@ -9,7 +9,6 @@ import { OwnerDashboard } from './components/OwnerPortal/OwnerDashboard';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { OrderTrackingModal } from './components/OrderTrackingModal';
 import type { ReorderRequest } from './utils/reorder';
-import { BrandEmblem } from './components/BrandEmblem';
 import { OrderingHoursStatus, AdminRole } from './types';
 import { getInitialOrderingStatus, normalizeOrderingStatus } from './utils/time';
 import { useLanguage } from './context/LanguageContext';
@@ -197,65 +196,51 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="solara-footer mt-auto border-t border-amber-900/10 dark:border-stone-800 bg-[#201f1c] dark:bg-[#151413] py-8 text-xs font-telugu text-[#e8ded2] dark:text-stone-400">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-7">
-          <div className="flex items-center gap-3 text-center md:text-left">
-            <BrandEmblem size="sm" />
-            <div className="space-y-0.5">
-              <h4 className="font-bold text-sm text-[#f5e7db] dark:text-amber-100">
-                {t.brandName}
-              </h4>
-              <p className="text-xs text-[#c8beb2] dark:text-stone-300">
-                {t.brandTagline}
-              </p>
-              <p className="text-[11px] text-[#c8beb2] dark:text-stone-400">
-                {language === 'te' 
-                  ? 'కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధిలో ఉచిత డెలివరీ | ఆన్‌లైన్ UPI చెల్లింపు'
-                  : 'Free delivery within 5 km radius from Kolluru | Online UPI payment'}
-              </p>
-            </div>
+      <footer className="solara-footer mt-auto border-t border-[#403b35] bg-[#201f1c] py-12 text-[#e8ded2] dark:bg-[#151413]">
+        <div className="mx-auto grid max-w-6xl gap-9 px-5 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.5fr_1fr_1fr] lg:gap-14">
+          <div className="min-w-0">
+            <h4 className="solara-display text-xl font-semibold text-[#f5e7db]">{t.brandName}</h4>
+            <p className="mt-2 max-w-sm text-sm leading-relaxed text-[#c8beb2]">{t.brandTagline}</p>
+            <p className="mt-3 max-w-sm text-xs leading-relaxed text-[#c8beb2]">
+              {language === 'te'
+                ? 'కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధిలో ఉచిత డెలివరీ | ఆన్‌లైన్ UPI చెల్లింపు'
+                : 'Free delivery within 5 km radius from Kolluru | Online UPI payment'}
+            </p>
           </div>
-
-          <div className="flex flex-col sm:flex-row items-center gap-4 text-center md:text-right">
-            {/* Discreet Owner Access Link (Non-public) */}
+          <div className="min-w-0 space-y-4">
+            <h5 className="text-xs font-bold uppercase tracking-[0.16em] text-[#bba99b]">{language === 'te' ? 'సంప్రదించండి' : 'Contact & hours'}</h5>
+            <a href="tel:+918499865803" className="inline-flex items-center gap-2 text-sm font-semibold text-[#f5e7db] hover:text-[#e4a28c]">
+              <Phone className="h-4 w-4 text-[#e4a28c]" aria-hidden="true" />+91 8499865803
+            </a>
+            <p className="flex items-start gap-2 text-xs leading-relaxed text-[#c8beb2]">
+              <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[#e4a28c]" aria-hidden="true" />{t.footerTimings}
+            </p>
             <button
               onClick={() => {
-                if (isAuthenticatedAdmin) {
-                  setCurrentView('OWNER_DASHBOARD');
-                } else {
-                  setCurrentView('OWNER_LOGIN');
-                }
+                if (isAuthenticatedAdmin) setCurrentView('OWNER_DASHBOARD');
+                else setCurrentView('OWNER_LOGIN');
               }}
               id="footer-owner-access-btn"
               title={ui("అధీకృత యజమాని యాక్సెస్ మాత్రమే")}
-              className="inline-flex items-center gap-1 text-[11px] text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors cursor-pointer"
+              className="inline-flex min-h-10 items-center gap-2 text-xs text-[#c8beb2] transition-colors hover:text-white"
             >
-              <Lock className="w-3 h-3 text-stone-400" />
-              <span>{t.ownerPortalLink}</span>
+              <Lock className="h-3.5 w-3.5" aria-hidden="true" />{t.ownerPortalLink}
             </button>
-
-            <a
-              href="tel:+918499865803"
-              className="font-mono font-bold text-[#f5e7db] dark:text-stone-200 hover:text-[#78350F] flex items-center gap-1.5"
-            >
-              <Phone className="w-3.5 h-3.5 text-[#78350F]" />
-              <span>+91 8499865803</span>
-            </a>
-
-            <div className="flex items-center gap-1.5 text-stone-500 text-[11px]">
-              <Clock className="w-3.5 h-3.5" />
-              <span>{t.footerTimings}</span>
-            </div>
           </div>
           {currentView === 'CUSTOMER' && (
-            <nav aria-label="Footer" className="solara-footer-links flex flex-wrap gap-x-5 gap-y-3 text-sm">
-              <a href="#home">Home</a><a href="#upcoming-menu">Menu</a><a href="#brand-story">Our Story</a><a href="#delivery-info">Delivery</a><a href="#faq">FAQs</a><a href="#contact-info">Contact</a>
+            <nav aria-label="Footer" className="solara-footer-links min-w-0">
+              <h5 className="mb-4 text-xs font-bold uppercase tracking-[0.16em] text-[#bba99b]">{language === 'te' ? 'వెబ్‌సైట్' : 'Explore'}</h5>
+              <div className="grid grid-cols-2 gap-x-5 gap-y-3 text-sm">
+                <a href="#home">Home</a><a href="#upcoming-menu">Menu</a>
+                <a href="#brand-story">Our Story</a><a href="#delivery-info">Delivery</a>
+                <a href="#faq">FAQs</a><a href="#contact-info">Contact</a>
+              </div>
             </nav>
           )}
         </div>
       </footer>
 
-      {/* Customer Order Tracking & Feedback Modal */}
+            {/* Customer Order Tracking & Feedback Modal */}
       <OrderTrackingModal
         isOpen={isOrderTrackingOpen}
         onClose={() => setIsOrderTrackingOpen(false)}

@@ -82,7 +82,7 @@ export function calculateDistanceKm(lat1: number, lon1: number, lat2: number, lo
 
 /**
  * Check if given latitude and longitude is within service limit and calculate delivery charge
- * (0–5 km free, >5–7 km ₹30, >7–10 km ₹50, over 10 km unavailable)
+ * (0–5 km free, >5–7 km ₹27, >7–10 km ₹45, over 10 km unavailable)
  */
 export function checkKollurDeliveryEligibility(lat?: number, lng?: number, areaDistanceKm?: number): {
   isEligible: boolean;
@@ -113,8 +113,8 @@ export function checkKollurDeliveryEligibility(lat?: number, lng?: number, areaD
     messageTe = `ఉచిత డెలివరీ అందుబాటులో ఉంది (కొల్లూరు కేంద్రం నుండి దూరం: ${dist} కి.మీ. — 5 కి.మీ. పరిధి లోపల ఉచితం).`;
     messageEn = `Free delivery available (Distance from Kolluru center: ${dist} km — free within 5 km).`;
   } else {
-    messageTe = `కొల్లూరు నుండి దూరం: ${dist} కి.మీ. (5 కి.మీ. పైబడిన దూరం: ${extraKm} కి.మీ.). డెలివరీ ఛార్జీ: ₹${deliveryCharge} (5–7 కి.మీ. ₹30, 7–10 కి.మీ. ₹50).`;
-    messageEn = `Distance from Kolluru: ${dist} km (${extraKm} km above 5 km). Delivery charge: ₹${deliveryCharge} (fixed tier: 5–7 km ₹30, 7–10 km ₹50).`;
+    messageTe = `కొల్లూరు నుండి దూరం: ${dist} కి.మీ. (5 కి.మీ. పైబడిన దూరం: ${extraKm} కి.మీ.). డెలివరీ ఛార్జీ: ₹${deliveryCharge} (5–7 కి.మీ. ₹27, 7–10 కి.మీ. ₹45).`;
+    messageEn = `Distance from Kolluru: ${dist} km (${extraKm} km above 5 km). Delivery charge: ₹${deliveryCharge} (fixed tier: 5–7 km ₹27, 7–10 km ₹45).`;
   }
 
   return {

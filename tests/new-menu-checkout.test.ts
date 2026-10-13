@@ -56,10 +56,10 @@ describe('inactive new menu checkout foundation',()=>{
       longitude: DELIVERY_POLICY.kitchenLongitude,
     } });
     expect(priceNewMenuCheckout(at(3), placedAt).totalAmountPaisa).toBe(14000);
-    expect(priceNewMenuCheckout(at(6), placedAt).deliveryChargePaisa).toBe(3000);
-    expect(priceNewMenuCheckout(at(6), placedAt).totalAmountPaisa).toBe(17000);
-    expect(priceNewMenuCheckout(at(8), placedAt).deliveryChargePaisa).toBe(5000);
-    expect(priceNewMenuCheckout(at(8), placedAt).totalAmountPaisa).toBe(19000);
+    expect(priceNewMenuCheckout(at(6), placedAt).deliveryChargePaisa).toBe(2700);
+    expect(priceNewMenuCheckout(at(6), placedAt).totalAmountPaisa).toBe(16700);
+    expect(priceNewMenuCheckout(at(8), placedAt).deliveryChargePaisa).toBe(4500);
+    expect(priceNewMenuCheckout(at(8), placedAt).totalAmountPaisa).toBe(18500);
     expect(() => priceNewMenuCheckout(at(11), placedAt)).toThrow('outside');
   });
   it('rejects invalid customer coordinates and unsupported delivery area',()=>{

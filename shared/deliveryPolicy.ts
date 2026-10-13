@@ -1,7 +1,7 @@
 /**
  * One shared delivery policy for frontend labels, legacy checkout and new-menu
  * server pricing. Distances use straight-line Haversine km, NOT road distance.
- * Bounds: <=5 free, >5 <=7 ₹30, >7 <=10 ₹50, >10 ineligible.
+ * Bounds: <=5 free, >5 <=7 ₹27, >7 <=10 ₹45, >10 ineligible.
  */
 export const DELIVERY_POLICY = {
   kitchenLatitude: 17.444210,
@@ -9,8 +9,8 @@ export const DELIVERY_POLICY = {
   freeRadiusKm: 5,
   standardRadiusKm: 7,
   maxRadiusKm: 10,
-  standardChargePaisa: 3000,
-  outerChargePaisa: 5000,
+  standardChargePaisa: 2700,
+  outerChargePaisa: 4500,
 } as const;
 
 export function deliveryTierForDistanceKm(distanceKm: number): {

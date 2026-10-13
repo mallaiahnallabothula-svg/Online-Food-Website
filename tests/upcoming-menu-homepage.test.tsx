@@ -113,6 +113,7 @@ describe('menu cart navigation', () => {
       fireEvent.click(screen.getByRole('button', { name: i === 0 ? 'Add Idly to sample cart' : 'Increase Idly sample quantity' }));
     }
     expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹120');
+    expect(screen.queryByRole('complementary', { name: 'Your cart summary' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'View cart' }));
     expect(scroll).toHaveBeenCalledTimes(1);
     expect(document.activeElement).toBe(delivery);
@@ -124,6 +125,7 @@ describe('menu cart navigation', () => {
     expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹90');
     fireEvent.click(screen.getByRole('button', { name: 'Morning (6)' }));
     expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹120');
+    expect(screen.queryByRole('complementary', { name: 'Your cart summary' })).toBeNull();
     expect(fetchSpy).not.toHaveBeenCalled();
     vi.unstubAllGlobals();
   });

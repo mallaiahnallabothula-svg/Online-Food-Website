@@ -30,20 +30,47 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder }) => 
           </div>
           <p className="mt-8 flex items-center gap-2 text-xs tracking-wide text-[#756f67] dark:text-stone-400"><Clock3 size={16} aria-hidden="true"/>{te ? 'ఉదయం 7–11 AM · సాయంత్రం 6–8 PM · బుధవారం సెలవు' : 'Morning 7–11 AM · Evening 6–8 PM · Wednesday closed'}</p>
         </div>
-        <div className="solara-hero-art grid grid-cols-3 gap-2 sm:gap-4" aria-label={te ? 'ఇంటి వంటల భావనను సూచించే చిత్రాలు' : 'Illustrative home-food artwork'}>
-          <div className="solara-poster solara-poster-one relative aspect-[3/4] overflow-hidden rounded-xl bg-[#dec7a7]" role="img" aria-label="Stylised idly illustration">
-            <span className="solara-poster-plate" aria-hidden="true"><i/><i/></span>
-            <span className="absolute bottom-4 left-0 right-0 text-center text-[10px] italic text-[#6d5144]">morning table</span>
-          </div>
-          <div className="solara-poster solara-poster-two relative aspect-[3/4] overflow-hidden rounded-xl bg-[#38261e]" role="img" aria-label="Stylised cooking preparation illustration">
-            <span className="solara-poster-cook" aria-hidden="true"/>
-            <span className="absolute bottom-4 left-0 right-0 text-center text-[10px] italic text-[#eed8c2]">made with care</span>
-          </div>
-          <div className="solara-poster solara-poster-three relative aspect-[3/4] overflow-hidden rounded-xl bg-[#ddd1b7]" role="img" aria-label="Stylised evening meal illustration">
-            <span className="solara-poster-bowl" aria-hidden="true"/>
-            <span className="absolute bottom-4 left-0 right-0 text-center text-[10px] italic text-[#796355]">evening table</span>
-          </div>
-          <p className="col-span-3 text-right text-[11px] italic text-[#756f67] dark:text-stone-300">{te ? 'ఇవి సూచన చిత్రాలు మాత్రమే, నిజమైన వంటకాల ఫోటోలు కావు.' : 'Illustrative artwork only · Not photographs of our kitchen or meals.'}</p>
+        <div className="solara-hero-art grid grid-cols-3 gap-2 sm:gap-4" aria-label={te ? 'ఉదయం, పెసరట్టు, సాయంత్రం వంటకాల సూచన చిత్రాలు' : 'Three home-food editorial illustrations'}>
+          {([
+            { key: 'idly', en: 'Morning favourites', te: 'ఉదయం టిఫిన్లు', dark: false },
+            { key: 'pesarattu', en: 'A familiar flavour', te: 'తెలిసిన ఇంటి రుచి', dark: true },
+            { key: 'roti', en: 'Evening comfort', te: 'సాయంత్రం రుచులు', dark: false },
+          ] as const).map(item => (
+            <div key={item.key} className={'relative aspect-[2/3] overflow-hidden rounded-2xl ' + (item.dark ? 'bg-[#60452e]' : 'bg-[#e8dec5]')} role="img"
+              aria-label={te ? item.te + ' — సూచన చిత్రం' : item.en + ' — illustrative artwork'}>
+              <svg className="absolute inset-0 h-full w-full" viewBox="0 0 160 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M68 59 C59 50 66 44 69 39 M87 59 C77 49 87 42 90 36" fill="none" stroke={item.dark ? '#cdaa7e' : '#c7b49b'} strokeWidth="1.6" strokeLinecap="round"/>
+                <ellipse cx="80" cy="171" rx="76" ry="27" fill="#b58c72"/>
+                <ellipse cx="80" cy="158" rx="76" ry="27" fill={item.dark ? '#d7c6a9' : '#a9a08a'} />
+                <ellipse cx="80" cy="151" rx="70" ry="25" fill="#f7f0db"/>
+                {item.key === 'idly' && (
+                  <>
+                    <ellipse cx="57" cy="136" rx="25" ry="19" fill="#fef9ea"/><ellipse cx="102" cy="136" rx="26" ry="19" fill="#fef9ea"/>
+                    <ellipse cx="57" cy="159" rx="26" ry="19" fill="#fff9e8"/><ellipse cx="102" cy="159" rx="26" ry="19" fill="#fff9e8"/>
+                  </>
+                )}
+                {item.key === 'pesarattu' && (
+                  <>
+                    <path d="M17 168 L89 75 Q105 93 146 166 Q84 189 17 168" fill="#b57b42"/>
+                    <path d="M21 164 L89 79 L130 166 Q78 177 21 164" fill="#d49a53"/>
+                    <path d="M33 159 L88 99 L118 160" fill="none" stroke="#e9b874" strokeWidth="3"/>
+                  </>
+                )}
+                {item.key === 'roti' && (
+                  <>
+                    <ellipse cx="80" cy="160" rx="53" ry="20" fill="#ba8652"/>
+                    <ellipse cx="80" cy="149" rx="53" ry="19" fill="#dbb37c"/>
+                    <ellipse cx="80" cy="143" rx="53" ry="18" fill="#eac68d"/>
+                    <ellipse cx="62" cy="140" rx="7" ry="3" fill="#bb946c"/>
+                    <ellipse cx="98" cy="144" rx="5" ry="3" fill="#bb946c"/>
+                    <ellipse cx="82" cy="151" rx="8" ry="3" fill="#bb946c"/>
+                  </>
+                )}
+              </svg>
+              <span className={'absolute inset-x-1 bottom-5 text-center text-[10px] font-medium sm:text-xs ' + (item.dark ? 'text-[#fff1dc]' : 'text-[#fffaf1]')}>{te ? item.te : item.en}</span>
+            </div>
+          ))}
+          <p className="col-span-3 text-left text-[11px] text-[#756f67] dark:text-stone-300">{te ? 'ఆహార సూచన చిత్రాలు మాత్రమే. పరిమాణాలకు మెనూ చూడండి.' : 'Food illustrations · See the menu for serving sizes.'}</p>
         </div>
       </div>
     </section>

@@ -12,7 +12,7 @@ const lines = [{ item: idly, quantity: 2 }, { item: ragi, quantity: 2 }] as cons
 const quoteResponse = { quote: {
   items: [{ itemId: 'idly', itemName: 'Idly', quantity: 2, lineTotalPaisa: 6000 }],
   deliveryDateIst: '2026-10-14', deliveryWindow: '07:00-11:00',
-  subtotalPaisa: 14000, deliveryChargePaisa: 3000, totalAmountPaisa: 17000,
+  subtotalPaisa: 14000, deliveryChargePaisa: 2700, totalAmountPaisa: 16700,
   distanceKm: 6,
 } };
 
@@ -80,8 +80,8 @@ describe('Delivery Location Accuracy V1', () => {
     expect(posted[0].customer.locationLink).toBe('https://maps.google.com/?q=17.44421,78.251478');
     expect(posted[0].customer.latitude).toBe(17.44421);
     expect(posted[0].customer.longitude).toBe(78.251478);
-    expect(screen.getByText('₹170')).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Pay ₹170 with Razorpay/ })).toBeTruthy();
+    expect(screen.getByText('₹167')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Pay ₹167 with Razorpay/ })).toBeTruthy();
   });
 
   it('editing the address after quoting invalidates consent and prevents stale payment', async () => {
@@ -94,7 +94,7 @@ describe('Delivery Location Accuracy V1', () => {
     await screen.findByText('Review before payment');
     fireEvent.change(screen.getByPlaceholderText('Flat number, building and area'), { target: { value: 'Flat 2, Changed Address' } });
     expect((screen.getByRole('checkbox', { name: 'Confirm delivery address and map pin' }) as HTMLInputElement).checked).toBe(false);
-    expect(screen.queryByRole('button', { name: /Pay ₹170 with Razorpay/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Pay ₹167 with Razorpay/ })).toBeNull();
     expect((screen.getByRole('button', { name: 'Check delivery and total' }) as HTMLButtonElement).disabled).toBe(true);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
