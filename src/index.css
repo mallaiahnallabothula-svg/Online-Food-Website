@@ -15,17 +15,17 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(120, 53, 15, 0.25);
+  background: rgba(31, 94, 54, 0.23);
   border-radius: 9999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(120, 53, 15, 0.45);
+  background: rgba(31, 94, 54, 0.43);
 }
 
 
 /* The menu uses local illustrative artwork; product facts stay in the catalog. */
-.menu-hero { background: #f5eddf; }
-.dark .menu-hero { background: #211e1a; }
+.menu-hero { background: #f7f4ee; }
+.dark .menu-hero { background: #20251f; }
 .menu-display { font-family: 'Noto Sans Telugu', Georgia, serif; }
 .food-artwork { background-repeat: no-repeat; background-color: #eee6d6; }
 .menu-storefront button:focus-visible, .menu-hero button:focus-visible {

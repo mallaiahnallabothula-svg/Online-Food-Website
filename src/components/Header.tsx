@@ -33,8 +33,8 @@ export const Header: React.FC<HeaderProps> = ({
   const { language, setLanguage, t } = useLanguage();
 
   return (
-    <header className="sticky top-0 z-40 w-full backdrop-blur-md transition-colors duration-200 border-b border-amber-900/10 dark:border-stone-800 bg-[#FDFBF7]/95 dark:bg-[#1A1816]/95">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 min-h-20 flex flex-wrap items-center justify-between gap-3 py-3">
+    <header className="sticky top-0 z-40 w-full backdrop-blur-md transition-colors duration-200 border-b border-amber-900/10 dark:border-stone-800 bg-white/95 dark:bg-[#191C19]/95">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 min-h-16 flex flex-wrap items-center justify-between gap-2 py-2.5">
         
         {/* Brand Emblem & Name */}
         <div 
@@ -44,10 +44,10 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <BrandEmblem size="md" />
           <div>
-            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[#451A03] dark:text-amber-100 font-telugu leading-tight">
+            <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[#183E29] dark:text-emerald-100 font-telugu leading-tight">
               {t.brandName}
             </h1>
-            <p className="text-xs text-amber-900/70 dark:text-stone-400 font-medium font-telugu hidden sm:block">
+            <p className="text-xs text-stone-500 dark:text-stone-400 font-medium font-telugu hidden sm:block">
               {t.brandTagline}
             </p>
           </div>
@@ -77,7 +77,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex w-full items-center justify-between gap-1 sm:w-auto sm:justify-end sm:gap-3">
 
           {/* Quick Language Toggle */}
-          <div className="inline-flex items-center bg-amber-100/70 dark:bg-stone-800 p-0.5 rounded-lg border border-amber-900/10 dark:border-stone-700">
+          <div className="inline-flex items-center bg-stone-100 dark:bg-stone-800 p-0.5 rounded-lg border border-stone-200 dark:border-stone-700">
             <button
               type="button"
               onClick={() => setLanguage(language === 'te' ? 'en' : 'te')}
@@ -109,7 +109,7 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               onClick={onOpenOrderTracker}
               id="header-track-order-btn"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg text-[#78350F] dark:text-amber-300 bg-amber-50 hover:bg-amber-100 dark:bg-stone-800 dark:hover:bg-stone-700 border border-amber-300/80 dark:border-stone-700 transition-colors font-telugu cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full text-[#18552C] dark:text-emerald-300 bg-[#F0F4ED] hover:bg-[#E6EFE2] dark:bg-stone-800 dark:hover:bg-stone-700 border border-amber-300/80 dark:border-stone-700 transition-colors font-telugu cursor-pointer"
               title={ui("నా ఆర్డర్లు — ఆర్డర్ స్థితి చూడండి / My Orders — Track your order")}
             >
               <ShoppingBag className="w-3.5 h-3.5 text-amber-700 dark:text-amber-400" />
@@ -122,10 +122,10 @@ export const Header: React.FC<HeaderProps> = ({
           <a
             href="tel:+918499865803"
             id="owner-phone-call-btn"
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg text-amber-950 bg-amber-100/80 hover:bg-amber-200/80 dark:bg-stone-800 dark:text-stone-200 border border-amber-900/15 dark:border-stone-700 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg text-amber-950 bg-[#F8F7F3] hover:bg-[#F0F3ED] dark:bg-stone-800 dark:text-stone-200 border border-stone-200 dark:border-stone-700 transition-colors"
             title={ui("యజమాని సంప్రదించండి")}
           >
-            <Phone className="w-3.5 h-3.5 text-[#78350F] dark:text-amber-400" />
+            <Phone className="w-3.5 h-3.5 text-[#18552C] dark:text-emerald-400" />
             <span className="hidden sm:inline font-mono font-medium">+91 8499865803</span>
             <span className="hidden font-telugu text-xs">{t.callOwnerBtn}</span>
           </a>

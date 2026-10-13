@@ -139,16 +139,16 @@ export function UpcomingMenuSection({ reorderRequest, onReorder }: { reorderRequ
       id="upcoming-menu"
       aria-labelledby="upcoming-menu-heading"
       data-testid="upcoming-menu-section"
-      className="menu-storefront scroll-mt-40 sm:scroll-mt-24 border-y border-amber-900/10 bg-[#FAF7F0] px-4 py-8 sm:px-6 sm:py-10 dark:border-stone-700 dark:bg-[#23211D]"
+      className="menu-storefront scroll-mt-40 sm:scroll-mt-24 border-y border-stone-200 bg-[#FBFAF7] px-4 py-12 sm:px-6 sm:py-14 dark:border-stone-700 dark:bg-[#232820]"
     >
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
           <div>
-            <span className="inline-flex rounded-full border border-amber-300 bg-amber-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-amber-950 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+            <span className="inline-flex rounded-full border border-[#DDDCCF] bg-[#EFEEE6] px-3 py-1 text-xs font-bold uppercase tracking-wide text-[#385440] dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
               {NEW_MENU_LAUNCH_ENABLED ? (te ? 'ఆర్డర్లు స్వీకరిస్తున్నాం' : 'Ordering open') : (te ? 'త్వరలో అందుబాటులోకి' : 'Coming Soon')}
             </span>
-            <h2 id="upcoming-menu-heading" className="menu-display mt-3 text-2xl font-extrabold text-[#4B2F1D] sm:text-3xl dark:text-amber-100">
-              {te ? 'మన ఇంటి వంట — 12 రకాల మెనూ' : 'Mana Enti Vanta — 12-item menu'}
+            <h2 id="upcoming-menu-heading" className="menu-display mt-3 text-3xl font-extrabold text-[#183E29] sm:text-4xl dark:text-amber-100">
+              {te ? 'మన మెనూ — 12 రకాలు' : 'Our Menu — 12 choices'}
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-stone-600 dark:text-stone-300">
               {te
@@ -223,9 +223,9 @@ export function UpcomingMenuSection({ reorderRequest, onReorder }: { reorderRequ
               key={item.id}
               data-testid="upcoming-menu-card"
               data-item-id={item.id}
-              className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-amber-900/10 bg-white shadow-sm transition-shadow hover:shadow-md dark:border-stone-700 dark:bg-stone-800"
+              className="flex min-w-0 flex-col overflow-hidden rounded-[22px] border border-stone-200/80 bg-white shadow-[0_10px_32px_-24px_rgba(28,47,36,0.4)] transition-shadow hover:shadow-md dark:border-stone-700 dark:bg-stone-800"
             >
-              <FoodArtwork itemId={item.id} className="aspect-square w-full" />
+              <FoodArtwork itemId={item.id} className="aspect-[5/4] w-full" />
               <div className="flex flex-1 flex-col p-3 sm:p-4">
                 <div className="flex flex-col items-start gap-2">
                   <div className="min-w-0">
@@ -279,7 +279,7 @@ export function UpcomingMenuSection({ reorderRequest, onReorder }: { reorderRequ
             </article>
           ))}
         </div>
-        <aside aria-label={te ? 'మీ కార్ట్ సారాంశం' : 'Your cart summary'} className="rounded-2xl border border-amber-900/10 bg-white p-5 shadow-sm lg:sticky lg:top-24 dark:border-stone-700 dark:bg-stone-800">
+        <aside aria-label={te ? 'మీ కార్ట్ సారాంశం' : 'Your cart summary'} className="rounded-[22px] border border-stone-200 bg-white p-5 shadow-sm lg:sticky lg:top-24 dark:border-stone-700 dark:bg-stone-800">
           <h3 className="menu-display flex items-center justify-between gap-2 text-xl font-bold text-[#4B2F1D] dark:text-amber-100">{te ? 'మీ కార్ట్' : 'Your cart'}<ShoppingBag size={21} aria-hidden="true" /></h3>
           {selected.length === 0 ? <p className="py-8 text-sm leading-relaxed text-stone-500 dark:text-stone-300">{te ? 'మీకు నచ్చిన వంటకాలను పైన జోడించండి.' : 'Add your favourites from the menu to get started.'}</p> : <ul className="my-5 space-y-4">
             {selected.map(({ item, quantity }) => <li key={item.id} className="flex items-center gap-3 text-sm">
