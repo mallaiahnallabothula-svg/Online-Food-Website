@@ -1,6 +1,6 @@
 import { useUiText } from '../context/useUiText';
 import React from 'react';
-import { Phone, Moon, Sun, ShoppingBag, Smartphone, MessageSquareHeart, Languages } from 'lucide-react';
+import { Phone, Moon, Sun, ShoppingBag, MessageSquareHeart, Languages } from 'lucide-react';
 import { OrderingHoursStatus } from '../types';
 import { NEW_MENU_LAUNCH_ENABLED } from '../../shared/menuCatalog.ts';
 import { BrandEmblem } from './BrandEmblem';
@@ -13,9 +13,7 @@ interface HeaderProps {
   onOpenOwnerPortal: () => void;
   isOwnerView: boolean;
   onBackToCustomerView: () => void;
-  onOpenInstallModal?: () => void;
   onOpenOrderTracker?: () => void;
-  isInstalled?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -25,9 +23,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenOwnerPortal,
   isOwnerView,
   onBackToCustomerView,
-  onOpenInstallModal,
   onOpenOrderTracker,
-  isInstalled = false,
 }) => {
   const ui = useUiText();
   const { language, setLanguage, t } = useLanguage();
@@ -47,9 +43,7 @@ export const Header: React.FC<HeaderProps> = ({
             <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[#26231f] dark:text-amber-100 font-telugu leading-tight">
               {t.brandName}
             </h1>
-            <p className="text-xs text-[#756f67] dark:text-stone-400 font-medium font-telugu hidden sm:block">
-              {t.brandTagline}
-            </p>
+            <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.2em] text-[#756f67] dark:text-stone-400 sm:text-[10px]">HOME KITCHEN · KOLLUR</p>
           </div>
         </div>
 
@@ -96,20 +90,6 @@ export const Header: React.FC<HeaderProps> = ({
               <span>{language === 'te' ? 'English' : 'తెలుగు'}</span>
             </button>
           </div>
-
-          {/* Download / Install Android App Button */}
-          {!isInstalled && onOpenInstallModal && (
-            <button
-              onClick={onOpenInstallModal}
-              id="header-install-app-btn"
-              className="hidden min-h-11 items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg sm:flex bg-[#ab4d3e] hover:bg-[#934034] text-white shadow-xs transition-all font-telugu cursor-pointer"
-              title={ui("Android యాప్ డౌన్‌లోడ్ / Install App")}
-            >
-              <Smartphone className="w-3.5 h-3.5 text-emerald-200" />
-              <span className="hidden sm:inline">{t.androidAppBtn}</span>
-              <span className="sm:hidden">App</span>
-            </button>
-          )}
 
           {/* Track Order & Feedback button */}
           {!isOwnerView && onOpenOrderTracker && (

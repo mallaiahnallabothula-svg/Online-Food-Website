@@ -6,17 +6,14 @@ import { SolaraEditorialContent } from './components/SolaraEditorialContent';
 import { UpcomingMenuSection } from './components/UpcomingMenuSection';
 import { AdminLogin } from './components/OwnerPortal/AdminLogin';
 import { OwnerDashboard } from './components/OwnerPortal/OwnerDashboard';
-import { AndroidInstallBanner } from './components/AndroidInstallBanner';
-import { AndroidInstallModal } from './components/AndroidInstallModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { OrderTrackingModal } from './components/OrderTrackingModal';
 import type { ReorderRequest } from './utils/reorder';
 import { BrandEmblem } from './components/BrandEmblem';
-import { usePWAInstall } from './hooks/usePWAInstall';
 import { OrderingHoursStatus, AdminRole } from './types';
 import { getInitialOrderingStatus, normalizeOrderingStatus } from './utils/time';
 import { useLanguage } from './context/LanguageContext';
-import { Phone, Clock, Lock, Smartphone } from 'lucide-react';
+import { Phone, Clock, Lock } from 'lucide-react';
 
 export default function App() {
   const ui = useUiText();
@@ -39,10 +36,6 @@ export default function App() {
   const [isOrderTrackingOpen, setIsOrderTrackingOpen] = useState<boolean>(false);
   const [trackingOrderId, setTrackingOrderId] = useState<string>('');
   const [reorderRequest, setReorderRequest] = useState<ReorderRequest | null>(null);
-
-  // PWA Install state
-  const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
-  const [isInstallModalOpen, setIsInstallModalOpen] = useState<boolean>(false);
 
   // Check initial admin session status from server cookie
   useEffect(() => {
@@ -153,12 +146,6 @@ export default function App() {
   return (
     <div className="solara-app min-h-screen flex flex-col bg-[#f7f2e9] dark:bg-[#1A1816] text-[#26231f] dark:text-[#E7E5E4] transition-colors duration-200">
       
-      {/* Android Install Announcement Banner */}
-      <AndroidInstallBanner
-        isInstalled={isInstalled}
-        onOpenModal={() => setIsInstallModalOpen(true)}
-      />
-
       {/* Header */}
       <Header
         hoursStatus={hoursStatus}
@@ -173,9 +160,7 @@ export default function App() {
         }}
         isOwnerView={currentView !== 'CUSTOMER'}
         onBackToCustomerView={() => setCurrentView('CUSTOMER')}
-        onOpenInstallModal={() => setIsInstallModalOpen(true)}
         onOpenOrderTracker={() => setIsOrderTrackingOpen(true)}
-        isInstalled={isInstalled}
       />
 
       {/* MAIN VIEWPORT */}
@@ -187,8 +172,6 @@ export default function App() {
               <HeroSection
                 onScrollToOrder={handleScrollToOrder}
                 isOpen={hoursStatus.isOpen}
-                onOpenInstallModal={() => setIsInstallModalOpen(true)}
-                isInstalled={isInstalled}
               />
               <UpcomingMenuSection reorderRequest={reorderRequest} onReorder={setReorderRequest} />
               <SolaraEditorialContent />
@@ -251,18 +234,6 @@ export default function App() {
               <span>{t.ownerPortalLink}</span>
             </button>
 
-            {/* Android App Install CTA in Footer */}
-            {!isInstalled && (
-              <button
-                onClick={() => setIsInstallModalOpen(true)}
-                id="footer-install-app-btn"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-bold transition-colors cursor-pointer shadow-xs"
-              >
-                <Smartphone className="w-3.5 h-3.5 text-emerald-200" />
-                <span>{t.androidAppBtn}</span>
-              </button>
-            )}
-
             <a
               href="tel:+918499865803"
               className="font-mono font-bold text-[#f5e7db] dark:text-stone-200 hover:text-[#78350F] flex items-center gap-1.5"
@@ -283,15 +254,6 @@ export default function App() {
           )}
         </div>
       </footer>
-
-      {/* Android PWA Install Modal */}
-      <AndroidInstallModal
-        isOpen={isInstallModalOpen}
-        onClose={() => setIsInstallModalOpen(false)}
-        isInstallable={isInstallable}
-        onInstall={install}
-        isIOS={isIOS}
-      />
 
       {/* Customer Order Tracking & Feedback Modal */}
       <OrderTrackingModal
