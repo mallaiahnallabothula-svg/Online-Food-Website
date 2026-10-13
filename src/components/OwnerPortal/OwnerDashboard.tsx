@@ -28,6 +28,7 @@ import {
 import { Order, FulfillmentStatus, AdminRole, AnalyticsData, AuditLog, OrderFeedback } from '../../types';
 import { playOrderNotificationSound } from '../../utils/audio';
 import { AnalyticsDashboard } from './AnalyticsDashboard';
+import { KitchenBoard } from './KitchenBoard';
 import { AuditLogs } from './AuditLogs';
 import { CustomerFeedbackView } from './CustomerFeedbackView';
 import { useLanguage } from '../../context/LanguageContext';
@@ -47,7 +48,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [feedbacks, setFeedbacks] = useState<OrderFeedback[]>([]);
-  const [activeTab, setActiveTab] = useState<'ORDERS' | 'ANALYTICS' | 'FEEDBACK' | 'AUDIT'>('ORDERS');
+  const [activeTab, setActiveTab] = useState<'ORDERS' | 'KITCHEN' | 'ANALYTICS' | 'FEEDBACK' | 'AUDIT'>('ORDERS');
   
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
@@ -179,12 +180,15 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
       if (res.ok) {
         setOrders(prev => prev.map(o => o.id === orderId ? { ...o, fulfillmentStatus: newStatus } : o));
         fetchDashboardData(false);
+        return true;
       } else {
         const data = await res.json().catch(() => ({}));
         setErrorMessage(data.error?.message || 'Unable to update this order. Please refresh and retry.');
+        return false;
       }
     } catch (err) {
       setErrorMessage('Unable to update this order. Check your connection and retry.');
+      return false;
     } finally {
       setUpdatingOrderId(null);
     }
@@ -332,6 +336,17 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
           }`}
         >
           {isTe ? 'ఆర్డర్లు' : 'Orders'} ({pagination.total})
+        </button>
+
+        <button
+          onClick={() => setActiveTab('KITCHEN')}
+          className={'flex items-center gap-2 whitespace-nowrap border-b-2 px-4 pb-3 text-sm font-bold transition-colors ' +
+            (activeTab === 'KITCHEN'
+              ? 'border-[#78350F] text-[#78350F] dark:border-amber-400 dark:text-amber-400'
+              : 'border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-stone-200')}
+        >
+          <ChefHat className="h-4 w-4" />
+          <span>{isTe ? 'కిచెన్ బోర్డు' : 'Kitchen Board'}</span>
         </button>
 
         <button
@@ -634,6 +649,9 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
           )}
         </div>
       )}
+
+      {/* Kitchen Board uses the existing authenticated paginated orders API and status changes. */}
+      {activeTab === 'KITCHEN' && <KitchenBoard onStatusChange={handleStatusChange} />}
 
       {/* 2. ANALYTICS TAB */}
       {activeTab === 'ANALYTICS' && (
