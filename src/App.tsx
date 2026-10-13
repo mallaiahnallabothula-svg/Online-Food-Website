@@ -9,6 +9,7 @@ import { AndroidInstallBanner } from './components/AndroidInstallBanner';
 import { AndroidInstallModal } from './components/AndroidInstallModal';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { OrderTrackingModal } from './components/OrderTrackingModal';
+import type { ReorderRequest } from './utils/reorder';
 import { BrandEmblem } from './components/BrandEmblem';
 import { usePWAInstall } from './hooks/usePWAInstall';
 import { OrderingHoursStatus, AdminRole } from './types';
@@ -36,6 +37,7 @@ export default function App() {
   // Customer Order Tracking & Post-Order Feedback Modal
   const [isOrderTrackingOpen, setIsOrderTrackingOpen] = useState<boolean>(false);
   const [trackingOrderId, setTrackingOrderId] = useState<string>('');
+  const [reorderRequest, setReorderRequest] = useState<ReorderRequest | null>(null);
 
   // PWA Install state
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
@@ -187,7 +189,7 @@ export default function App() {
                 onOpenInstallModal={() => setIsInstallModalOpen(true)}
                 isInstalled={isInstalled}
               />
-              <UpcomingMenuSection />
+              <UpcomingMenuSection reorderRequest={reorderRequest} onReorder={setReorderRequest} />
             </>
           </div>
         )}
@@ -289,6 +291,10 @@ export default function App() {
         isOpen={isOrderTrackingOpen}
         onClose={() => setIsOrderTrackingOpen(false)}
         initialOrderId={trackingOrderId}
+        onReorder={request => {
+          setIsOrderTrackingOpen(false);
+          setReorderRequest(request);
+        }}
       />
 
       {/* Offline Status Toast Indicator */}

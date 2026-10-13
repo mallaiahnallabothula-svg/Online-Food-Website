@@ -3,6 +3,7 @@ import { ArrowRight, LocateFixed, Lock, MapPin, RefreshCw, ShieldCheck, Shopping
 import { type MealPeriod, type MenuItem } from '../../shared/menuCatalog.ts';
 import { OrderTrackingModal } from './OrderTrackingModal';
 import { persistCustomerOrder } from '../utils/checkout';
+import type { ReorderRequest } from '../utils/reorder';
 
 type Line = { item: MenuItem; quantity: number };
 type Quote = {
@@ -32,7 +33,7 @@ async function loadRazorpay() {
 
 const money = (paisa: number) => '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
 
-export function LiveNewMenuCheckout({ period, lines, te }: { period: MealPeriod; lines: readonly Line[]; te: boolean }) {
+export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: MealPeriod; lines: readonly Line[]; te: boolean; onReorder?: (request: ReorderRequest) => void }) {
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
   const [address, setAddress] = useState('');
@@ -349,7 +350,7 @@ export function LiveNewMenuCheckout({ period, lines, te }: { period: MealPeriod;
           </p>
         </div>
       </form>
-      <OrderTrackingModal isOpen={trackingOpen} onClose={() => setTrackingOpen(false)} initialOrderId={trackingToken} />
+      <OrderTrackingModal isOpen={trackingOpen} onClose={() => setTrackingOpen(false)} initialOrderId={trackingToken} onReorder={onReorder} />
     </div>
   );
 }
