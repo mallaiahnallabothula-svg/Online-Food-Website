@@ -1,4 +1,5 @@
 import { useUiText } from '../../context/useUiText';
+import { useLanguage } from '../../context/LanguageContext';
 import React from 'react';
 import { Package, Gift, BarChart3, PieChart, Star } from 'lucide-react';
 import { AnalyticsData } from '../../types';
@@ -9,6 +10,7 @@ interface AnalyticsDashboardProps {
 
 export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytics }) => {
   const ui = useUiText();
+  const { language } = useLanguage();
   if (!analytics) {
     return (
       <div className="p-8 text-center text-stone-500 font-telugu">{" "}{ui("విశ్లేషణ డేటాను లోడ్ చేస్తోంది...")}{" "}</div>
@@ -84,7 +86,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
             </span>
           </div>
           <div className="text-xl sm:text-2xl font-extrabold text-[#78350F] dark:text-amber-400 font-mono flex items-baseline gap-1">
-            {totalReviews > 0 ? avgRating.toFixed(1) : ui("ఇంకా రేటింగ్ లేదు (Not rated yet)")}
+            {totalReviews > 0 ? avgRating.toFixed(1) : (language === 'en' ? 'Not rated yet' : 'ఇంకా రేటింగ్ లేదు')}
             {totalReviews > 0 && <span className="text-xs text-stone-400 font-normal">/ 5.0</span>}
           </div>
           <div className="text-[11px] text-stone-500 mt-1">
@@ -129,9 +131,9 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
             <div>
               <h3 className="text-base font-bold text-stone-900 dark:text-stone-100 flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-[#78350F] dark:text-amber-400" />
-                <span>{ui("చెల్లించిన ఆర్డర్ల సమయాలు (Paid order placement, IST)")}</span>
+                <span>{language === 'en' ? 'Paid order placement by hour (IST)' : 'చెల్లించిన ఆర్డర్లు పెట్టిన గంట (IST)'}</span>
               </h3>
-              <p className="text-xs text-stone-500">{ui("24 గంటలు · ఆర్డర్ చేసిన సమయం; డెలివరీ సమయం కాదు (24-hour placement time, not delivery)")}</p>
+              <p className="text-xs text-stone-500">{language === 'en' ? '24-hour placement time (IST, not delivery time)' : '24 గంటల్లో ఆర్డర్ చేసిన సమయం (డెలివరీ సమయం కాదు)'}</p>
             </div>
           </div>
 
@@ -204,7 +206,7 @@ export const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ analytic
           </div>
 
           <div className="mt-6 pt-4 border-t border-stone-100 dark:border-stone-800 text-center">
-            <span className="text-xs text-stone-500">{" "}{ui("డెలివరీ సమయాలు:")}{" "}<strong>{ui("ఉదయం 7–11 · సాయంత్రం 6–8 (Morning 7–11 AM; Evening 6–8 PM, when offered)")}</strong>
+            <span className="text-xs text-stone-500">{" "}{language === 'en' ? 'Delivery times:' : 'డెలివరీ సమయాలు:'}{" "}<strong>{language === 'en' ? 'Morning 7–11 AM; Evening 6–8 PM (when offered)' : 'ఉదయం 7–11 · సాయంత్రం 6–8 (అందుబాటులో ఉన్నప్పుడు)'}</strong>
             </span>
           </div>
         </div>

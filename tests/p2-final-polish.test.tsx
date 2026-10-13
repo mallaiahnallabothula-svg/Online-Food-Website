@@ -126,7 +126,9 @@ describe('P2 final polish — accurate copy and incomplete network data', () => 
     vi.stubGlobal('fetch', fetcher);
     render(<LanguageProvider><OwnerDashboard role="ADMIN" onLogout={() => {}} /></LanguageProvider>);
     await waitFor(() => expect(analyticsCalls).toBe(1));
-    fireEvent.click(screen.getByRole('button', { name: /Refresh|రిఫ్రెష్/ }));
+    // The first request has not finished and its Refresh button is disabled.
+    // Changing the search starts a newer request that invalidates that old result.
+    fireEvent.change(screen.getByPlaceholderText('Search by ID, name, or phone...'), { target: { value: 'fixture' } });
     fireEvent.click(screen.getByRole('button', { name: /Analytics/ }));
     expect(await screen.findByText('₹750')).toBeTruthy();
     finishOld(ok(analytics));
