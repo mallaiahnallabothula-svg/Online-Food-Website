@@ -15,7 +15,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (saved === 'te' || saved === 'en') {
       return saved;
     }
-    return 'te'; // Telugu by default
+    return 'en'; // English first; preserve the visitor's saved preference
   });
 
   const setLanguage = (lang: Language) => {

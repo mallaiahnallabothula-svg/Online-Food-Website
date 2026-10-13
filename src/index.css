@@ -36,3 +36,44 @@
 @media (prefers-reduced-motion: reduce) {
   .menu-storefront *, .menu-hero * { transition: none !important; animation: none !important; }
 }
+
+/* Solara-inspired customer typography and decorative artwork; no business logic */
+:root { --solara-paper:#f7f2e9; --solara-rust:#ab4d3e; --solara-line:#ded7ce; --solara-ink:#26231f; }
+html { scroll-behavior:smooth; scroll-padding-top:110px; }
+.solara-display { font-family:'Noto Serif Telugu',Georgia,'Nirmala UI',serif; }
+.solara-hero, .solara-storefront { font-family: 'Noto Sans Telugu','Segoe UI',system-ui,sans-serif; }
+.solara-poster { box-shadow: 0 8px 26px rgba(61,43,28,.075); }
+.solara-poster-one { background:linear-gradient(180deg,#c48e55 0%,#bd8f79 55%,#48342b 56%,#221d1b 100%); }
+.solara-poster-two { background:radial-gradient(circle at 50% 38%,#9f7448,#493024 48%,#261d19 90%); }
+.solara-poster-three { background:linear-gradient(140deg,#e9dfc8,#d6c4a3); }
+.solara-poster-plate { position:absolute;top:47%;left:20%;width:60%;height:25%;border-radius:50%;background:#ded1bd;box-shadow:0 14px 0 #7d7166; }
+.solara-poster-plate i { position:absolute;top:-45%;height:90%;width:46%;border-radius:50%;background:#faf5e9; }
+.solara-poster-plate i:first-child { left:3%; }.solara-poster-plate i:last-child { right:3%; }
+.solara-poster-cook { position:absolute;left:26%;top:30%;width:48%;height:65%;border-radius:45% 45% 8px 8px;background:#f6eee1; }
+.solara-poster-cook:before { content:'';position:absolute;left:18%;top:-16%;width:64%;aspect-ratio:1;border-radius:50%;background:#d7aa78; }
+.solara-poster-bowl {position:absolute;left:32%;top:27%;width:38%;height:43%;background:#9b5545;border-radius:25% 25% 48% 48%;box-shadow:0 10px 0 -2px #b58b74}
+.solara-menu-row button:focus-visible, .solara-hero button:focus-visible { outline:2px solid var(--solara-rust); outline-offset:3px; }
+.solara-menu-row button:disabled {cursor:not-allowed;}
+@media (prefers-reduced-motion:reduce){ html{scroll-behavior:auto} }
+
+/* Solara full-site design system: scoped, presentation-only. */
+.solara-app { --solara-rust:#ab4d3e; --solara-paper:#f7f2e9; --solara-border:#ded7ce; }
+.solara-app .solara-header a { text-underline-offset:7px; }
+.solara-app .solara-header nav a:hover { color:var(--solara-rust); }
+.solara-app :is(.solara-checkout,.solara-dialog,.solara-owner-login,.solara-owner-dashboard) :is(input,textarea,select):focus-visible { outline:2px solid var(--solara-rust); outline-offset:2px; }
+.solara-app .solara-checkout :is(input,textarea,select) { border-radius:6px; }
+.solara-app :is(.solara-checkout,.solara-dialog,.solara-owner-login,.solara-owner-dashboard) :is(h2,h3) { letter-spacing:-.015em; }
+.solara-app .solara-owner { min-width:0; background:#f7f2e9; color:#26231f; }
+.solara-app .solara-owner :is(input,select,textarea) { max-width:100%; }
+.solara-app .solara-owner-dashboard button:focus-visible { outline:2px solid var(--solara-rust); outline-offset:2px; }
+.solara-app .solara-footer { border-color:#484039; }
+.solara-app .solara-footer-links { max-width:560px; }
+.solara-app .solara-footer-links a { color:#e7d7c5; }
+.solara-app .solara-footer-links a:hover { color:#e8ad99; }
+.solara-app :is(.solara-checkout,.solara-dialog) button:focus-visible { outline:2px solid var(--solara-rust); outline-offset:2px; }
+.solara-app :is(.solara-checkout,.solara-owner-dashboard,.solara-owner-login) button:disabled { cursor:not-allowed; }
+.dark .solara-app .solara-owner { background:#211f1c; color:#ede8e2; }
+@media (max-width:767px) {
+ .solara-app .solara-footer-links { width:100%; }
+ .solara-app :is(.solara-checkout,.solara-dialog) :is(button,input,select) { min-height:40px; }
+}

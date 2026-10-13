@@ -25,7 +25,7 @@ export const AndroidInstallBanner: React.FC<AndroidInstallBannerProps> = ({
   return (
     <div 
       id="android-install-banner"
-      className="sticky top-0 z-40 bg-gradient-to-r from-[#451A03] via-[#78350F] to-[#8C4A26] text-white px-3 sm:px-6 py-2 shadow-md border-b border-amber-600/30 font-telugu"
+      className="sticky top-0 z-40 bg-[#302c28] text-white px-3 sm:px-6 py-2 shadow-md border-b border-[#5b4f46] font-telugu"
     >
       <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">

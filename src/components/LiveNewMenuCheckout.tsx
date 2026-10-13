@@ -300,15 +300,15 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
 
   return (
     <div
-      className="mt-7 overflow-hidden rounded-[28px] border border-emerald-900/15 bg-white text-stone-900 shadow-[0_14px_42px_-30px_rgba(25,61,42,0.55)] dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
+      className="solara-checkout mt-8 overflow-hidden rounded-xl border border-[#ded7ce] bg-white text-stone-900 shadow-sm dark:border-stone-700 dark:bg-stone-800 dark:text-stone-100"
       data-testid="live-new-menu-checkout"
     >
-      <div className="border-b border-emerald-900/10 bg-gradient-to-r from-[#EDF4EC] via-[#F6F2E7] to-[#FAF7F0] px-4 py-5 dark:border-stone-700 dark:from-emerald-950/60 dark:via-stone-800 dark:to-stone-800 sm:px-7 sm:py-6">
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-800/15 bg-white/75 px-3 py-1 text-[11px] font-bold tracking-wide text-[#26543A] dark:border-emerald-400/30 dark:bg-stone-900/60 dark:text-emerald-200">
+      <div className="border-b border-[#ded7ce] bg-[#f7f2e9] px-4 py-5 dark:border-stone-700 dark:from-emerald-950/60 dark:via-stone-800 dark:to-stone-800 sm:px-7 sm:py-6">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-800/15 bg-white/75 px-3 py-1 text-[11px] font-bold tracking-wide text-[#ab4d3e] dark:border-emerald-400/30 dark:bg-stone-900/60 dark:text-emerald-200">
           <ShieldCheck size={13} aria-hidden="true" />
           {te ? 'సురక్షితమైన చెకౌట్' : 'Secure checkout'}
         </span>
-        <h3 className="mt-3 text-xl font-extrabold tracking-tight text-[#213E30] dark:text-emerald-100 sm:text-2xl">
+        <h3 className="mt-3 text-xl font-extrabold tracking-tight text-[#26231f] dark:text-emerald-100 sm:text-2xl">
           {te ? 'ఆర్డర్ & డెలివరీ వివరాలు' : 'Order and delivery details'}
         </h3>
         <p className="mt-1 max-w-2xl text-sm leading-relaxed text-stone-600 dark:text-stone-300">
@@ -317,13 +317,13 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
       </div>
 
       <form noValidate autoComplete="on" onSubmit={checkQuote} className="space-y-6 px-4 py-5 sm:px-7 sm:py-7">
-        <div className="rounded-2xl border border-[#DEE9DB] bg-[#F7FAF5] p-4 dark:border-stone-600 dark:bg-stone-900/70 sm:p-5" aria-label={te ? 'ఆర్డర్ సారాంశం' : 'Order summary'}>
-          <div className="flex items-center gap-2 text-sm font-bold text-[#26543A] dark:text-emerald-200">
+        <div className="rounded-2xl border border-[#ded7ce] bg-[#fcf9f3] p-4 dark:border-stone-600 dark:bg-stone-900/70 sm:p-5" aria-label={te ? 'ఆర్డర్ సారాంశం' : 'Order summary'}>
+          <div className="flex items-center gap-2 text-sm font-bold text-[#ab4d3e] dark:text-emerald-200">
             <ShoppingBag size={17} aria-hidden="true" />
             <span>{te ? 'మీ ఆర్డర్' : 'Your order'}</span>
           </div>
           {lines.length > 0 ? (
-            <ul className="mt-3 space-y-2 border-b border-emerald-900/10 pb-3 text-sm dark:border-stone-700">
+            <ul className="mt-3 space-y-2 border-b border-[#ded7ce] pb-3 text-sm dark:border-stone-700">
               {lines.map(({ item, quantity }) => (
                 <li key={item.id} className="flex items-start justify-between gap-4 text-stone-700 dark:text-stone-200">
                   <span className="min-w-0">{te ? item.nameTe : item.nameEn} × {quantity}</span>
@@ -336,9 +336,9 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
               {te ? 'పైన మీకు నచ్చిన వంటకాలను కార్ట్‌లో జోడించండి.' : 'Add food from the menu above to see your total.'}
             </p>
           )}
-          <div className="mt-3 flex items-center justify-between gap-3 border-t border-emerald-900/10 pt-3 dark:border-stone-700">
+          <div className="mt-3 flex items-center justify-between gap-3 border-t border-[#ded7ce] pt-3 dark:border-stone-700">
             <span className="text-sm font-bold text-stone-700 dark:text-stone-200">{te ? 'ఆహార మొత్తం' : 'Food subtotal'}</span>
-            <strong className="text-2xl font-extrabold tabular-nums text-[#26543A] dark:text-emerald-200">{money(selected)}</strong>
+            <strong className="text-2xl font-extrabold tabular-nums text-[#ab4d3e] dark:text-emerald-200">{money(selected)}</strong>
           </div>
           <p className="mt-1 text-right text-[11px] text-stone-500 dark:text-stone-400">
             {te ? 'డెలివరీ ఛార్జీ తర్వాత చూపబడుతుంది' : 'Delivery charge calculated after location check'}
@@ -346,38 +346,38 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
         </div>
 
         <section aria-labelledby="checkout-customer-heading">
-          <h4 id="checkout-customer-heading" className="flex items-center gap-2 text-sm font-extrabold text-[#254733] dark:text-emerald-200">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-200"><UserRound size={17} aria-hidden="true" /></span>
+          <h4 id="checkout-customer-heading" className="flex items-center gap-2 text-sm font-extrabold text-[#ab4d3e] dark:text-emerald-200">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f7f2e9] text-[#ab4d3e] dark:bg-emerald-950/70 dark:text-emerald-200"><UserRound size={17} aria-hidden="true" /></span>
             {te ? 'కస్టమర్ వివరాలు' : 'Customer details'}
           </h4>
           <div className="mt-3 grid gap-4 sm:grid-cols-2">
             <label className="block text-sm font-semibold text-stone-700 dark:text-stone-200">
               {te ? 'పేరు' : 'Name'}
-              <input required autoComplete="name" maxLength={100} value={name} onChange={e => change(setName, e.target.value)} placeholder={te ? 'మీ పూర్తి పేరు' : 'Your full name'} className="mt-1.5 block min-h-12 w-full min-w-0 rounded-xl border border-stone-300 bg-white px-4 py-3 text-base font-normal text-stone-900 placeholder:text-stone-400 focus-visible:border-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-emerald-700 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100" />
+              <input required autoComplete="name" maxLength={100} value={name} onChange={e => change(setName, e.target.value)} placeholder={te ? 'మీ పూర్తి పేరు' : 'Your full name'} className="mt-1.5 block min-h-12 w-full min-w-0 rounded-xl border border-stone-300 bg-white px-4 py-3 text-base font-normal text-stone-900 placeholder:text-stone-400 focus-visible:border-[#ab4d3e] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#ab4d3e] dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100" />
             </label>
             <label className="block text-sm font-semibold text-stone-700 dark:text-stone-200">
               {te ? 'మొబైల్' : 'Mobile'}
-              <input required autoComplete="tel-national" type="tel" inputMode="numeric" maxLength={10} value={mobile} onChange={e => change(setMobile, e.target.value)} placeholder={te ? '10 అంకెల మొబైల్ నంబర్' : '10-digit mobile number'} className="mt-1.5 block min-h-12 w-full min-w-0 rounded-xl border border-stone-300 bg-white px-4 py-3 text-base font-normal text-stone-900 placeholder:text-stone-400 focus-visible:border-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-emerald-700 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100" />
+              <input required autoComplete="tel-national" type="tel" inputMode="numeric" maxLength={10} value={mobile} onChange={e => change(setMobile, e.target.value)} placeholder={te ? '10 అంకెల మొబైల్ నంబర్' : '10-digit mobile number'} className="mt-1.5 block min-h-12 w-full min-w-0 rounded-xl border border-stone-300 bg-white px-4 py-3 text-base font-normal text-stone-900 placeholder:text-stone-400 focus-visible:border-[#ab4d3e] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#ab4d3e] dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100" />
             </label>
           </div>
         </section>
 
         <section aria-labelledby="checkout-delivery-heading">
-          <h4 id="checkout-delivery-heading" className="flex items-center gap-2 text-sm font-extrabold text-[#254733] dark:text-emerald-200">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-200"><MapPin size={17} aria-hidden="true" /></span>
+          <h4 id="checkout-delivery-heading" className="flex items-center gap-2 text-sm font-extrabold text-[#ab4d3e] dark:text-emerald-200">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f7f2e9] text-[#ab4d3e] dark:bg-emerald-950/70 dark:text-emerald-200"><MapPin size={17} aria-hidden="true" /></span>
             {te ? 'డెలివరీ చిరునామా' : 'Delivery address'}
           </h4>
           <div className="mt-3 space-y-4">
             <label className="block text-sm font-semibold text-stone-700 dark:text-stone-200">
               {te ? 'పూర్తి చిరునామా' : 'Full address'}
-              <textarea required autoComplete="street-address" rows={3} maxLength={500} value={address} onChange={e => change(setAddress, e.target.value)} placeholder={te ? 'ఫ్లాట్ నంబర్, బిల్డింగ్, ఏరియా' : 'Flat number, building and area'} className="mt-1.5 block min-h-24 w-full min-w-0 resize-y rounded-xl border border-stone-300 bg-white px-4 py-3 text-base font-normal text-stone-900 placeholder:text-stone-400 focus-visible:border-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-emerald-700 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100" />
+              <textarea required autoComplete="street-address" rows={3} maxLength={500} value={address} onChange={e => change(setAddress, e.target.value)} placeholder={te ? 'ఫ్లాట్ నంబర్, బిల్డింగ్, ఏరియా' : 'Flat number, building and area'} className="mt-1.5 block min-h-24 w-full min-w-0 resize-y rounded-xl border border-stone-300 bg-white px-4 py-3 text-base font-normal text-stone-900 placeholder:text-stone-400 focus-visible:border-[#ab4d3e] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#ab4d3e] dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100" />
             </label>
             <label className="block text-sm font-semibold text-stone-700 dark:text-stone-200">
               {te ? 'ల్యాండ్‌మార్క్ (ఐచ్ఛికం)' : 'Landmark (optional)'}
-              <input maxLength={200} value={landmark} onChange={e => change(setLandmark, e.target.value)} placeholder={te ? 'దగ్గరలో గుర్తించగల స్థలం' : 'Nearby landmark'} className="mt-1.5 block min-h-12 w-full min-w-0 rounded-xl border border-stone-300 bg-white px-4 py-3 text-base font-normal text-stone-900 placeholder:text-stone-400 focus-visible:border-emerald-700 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-emerald-700 dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100" />
+              <input maxLength={200} value={landmark} onChange={e => change(setLandmark, e.target.value)} placeholder={te ? 'దగ్గరలో గుర్తించగల స్థలం' : 'Nearby landmark'} className="mt-1.5 block min-h-12 w-full min-w-0 rounded-xl border border-stone-300 bg-white px-4 py-3 text-base font-normal text-stone-900 placeholder:text-stone-400 focus-visible:border-[#ab4d3e] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#ab4d3e] dark:border-stone-600 dark:bg-stone-900 dark:text-stone-100" />
             </label>
             <div className="rounded-2xl border border-dashed border-emerald-800/30 bg-emerald-50/40 p-3 dark:border-emerald-400/30 dark:bg-emerald-950/20">
-              <button type="button" onClick={getLocation} disabled={locationBusy} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-emerald-700 bg-white px-4 py-3 text-sm font-bold text-[#26543A] transition-colors hover:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:cursor-wait disabled:opacity-60 dark:border-emerald-400/60 dark:bg-stone-800 dark:text-emerald-200 dark:hover:bg-stone-700">
+              <button type="button" onClick={getLocation} disabled={locationBusy} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-emerald-700 bg-white px-4 py-3 text-sm font-bold text-[#ab4d3e] transition-colors hover:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ab4d3e] disabled:cursor-wait disabled:opacity-60 dark:border-emerald-400/60 dark:bg-stone-800 dark:text-emerald-200 dark:hover:bg-stone-700">
                 {locationBusy ? <RefreshCw size={18} className="animate-spin" aria-hidden="true" /> : <LocateFixed size={18} aria-hidden="true" />}
                 {locationBusy ? (te ? 'లొకేషన్ తీసుకుంటోంది…' : 'Getting location…') : coordinates ? (te ? 'లొకేషన్ తీసుకుంది ✓' : 'Location captured ✓') : (te ? 'డెలివరీ లొకేషన్ ఎంచుకోండి' : 'Use delivery location')}
               </button>
@@ -444,7 +444,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
 
         {quote && (
           <div className="rounded-2xl border border-emerald-300/60 bg-emerald-50/60 p-4 text-sm dark:border-emerald-800 dark:bg-emerald-950/30 sm:p-5">
-            <h4 className="font-extrabold text-[#254733] dark:text-emerald-200">{te ? 'చెల్లింపు ముందు సారాంశం' : 'Review before payment'}</h4>
+            <h4 className="font-extrabold text-[#ab4d3e] dark:text-emerald-200">{te ? 'చెల్లింపు ముందు సారాంశం' : 'Review before payment'}</h4>
             <ul className="mt-3 space-y-1.5 text-stone-700 dark:text-stone-200">
               {quote.items.map(item => <li key={item.itemId}>{item.itemName} × {item.quantity}</li>)}
             </ul>
@@ -453,7 +453,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
             </p>
             <p className="mt-3 flex items-center justify-between gap-3 border-t border-emerald-800/15 pt-3 text-base dark:border-emerald-400/20">
               <span className="font-bold">{te ? 'చెల్లించాల్సిన మొత్తం' : 'Total to pay'}</span>
-              <strong className="text-xl font-extrabold tabular-nums text-[#26543A] dark:text-emerald-200">{money(quote.totalAmountPaisa)}</strong>
+              <strong className="text-xl font-extrabold tabular-nums text-[#ab4d3e] dark:text-emerald-200">{money(quote.totalAmountPaisa)}</strong>
             </p>
             <p className="mt-2 text-xs text-stone-600 dark:text-stone-300">{quote.deliveryDateIst} · {quote.deliveryWindow} IST</p>
           </div>
@@ -488,7 +488,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
 
         <div className="space-y-3 border-t border-stone-200 pt-5 dark:border-stone-700">
           {!quote ? (
-            <button type="submit" disabled={busy || lines.length === 0 || !locationConfirmed} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#26543A] px-4 py-3.5 text-base font-extrabold text-white shadow-sm transition-colors hover:bg-[#1A402B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:cursor-not-allowed disabled:bg-[#92A99B] disabled:text-white disabled:shadow-none">
+            <button type="submit" disabled={busy || lines.length === 0 || !locationConfirmed} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#26543A] px-4 py-3.5 text-base font-extrabold text-white shadow-sm transition-colors hover:bg-[#1A402B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ab4d3e] disabled:cursor-not-allowed disabled:bg-[#92A99B] disabled:text-white disabled:shadow-none">
               {busy ? <RefreshCw size={20} className="animate-spin" aria-hidden="true" /> : <ArrowRight size={19} aria-hidden="true" />}
               {busy ? (te ? 'దయచేసి వేచి ఉండండి…' : 'Checking…') : te ? 'డెలివరీ & మొత్తం చెక్ చేయండి' : 'Check delivery and total'}
             </button>
@@ -500,7 +500,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
           )}
           {lines.length === 0 && <p className="text-center text-xs text-stone-500 dark:text-stone-300">{te ? 'కొనసాగించడానికి పైన కార్ట్‌లో ఐటమ్స్ జోడించండి.' : 'Add items to the cart above to continue.'}</p>}
           {trackingToken && (
-            <button type="button" onClick={() => setTrackingOpen(true)} className="min-h-11 w-full rounded-xl border border-emerald-700/40 bg-white px-4 py-2.5 text-sm font-bold text-[#26543A] transition-colors hover:bg-emerald-50 dark:border-emerald-400/40 dark:bg-stone-900 dark:text-emerald-200">
+            <button type="button" onClick={() => setTrackingOpen(true)} className="min-h-11 w-full rounded-xl border border-emerald-700/40 bg-white px-4 py-2.5 text-sm font-bold text-[#ab4d3e] transition-colors hover:bg-emerald-50 dark:border-emerald-400/40 dark:bg-stone-900 dark:text-emerald-200">
               {te ? 'నా ఆర్డర్ ట్రాక్ చేయండి' : 'Track this order'}
             </button>
           )}

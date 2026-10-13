@@ -47,7 +47,7 @@ describe('PR17 public coming-soon menu (display only)', () => {
 
   it('shows four evening items without referring customers to a separate old order form', () => {
     const { container } = mount();
-    fireEvent.click(screen.getByRole('button', { name: /సాయంత్రం \(6\)/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Evening (6)' }));
     expect(screen.getAllByTestId('upcoming-menu-card')).toHaveLength(6);
     const menu = screen.getByTestId('upcoming-menu-section');
     expect(menu.textContent).toContain('6:00 PM – 8:00 PM');

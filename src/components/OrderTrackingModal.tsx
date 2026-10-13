@@ -133,16 +133,16 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-950/60 backdrop-blur-xs overflow-y-auto font-telugu">
-      <div className="relative w-full max-w-2xl bg-white dark:bg-[#211E1A] rounded-2xl shadow-2xl border border-stone-200 dark:border-stone-800 my-8 overflow-hidden">
+      <div className="solara-dialog relative w-full max-w-2xl bg-white dark:bg-[#211E1A] rounded-xl shadow-2xl border border-[#ded7ce] dark:border-stone-800 my-8 overflow-hidden">
         
         {/* Modal Header */}
-        <div className="bg-[#FAF4EA] dark:bg-stone-900 px-6 py-4 border-b border-amber-900/10 dark:border-stone-800 flex items-center justify-between">
+        <div className="bg-[#f7f2e9] dark:bg-stone-900 px-6 py-4 border-b border-amber-900/10 dark:border-stone-800 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-amber-100 dark:bg-stone-800 text-[#78350F] dark:text-amber-400">
+            <div className="p-2 rounded-xl bg-amber-100 dark:bg-stone-800 text-[#ab4d3e] dark:text-amber-400">
               <MessageSquareHeart className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-[#451A03] dark:text-amber-100">
+              <h2 className="text-lg font-bold text-[#26231f] dark:text-amber-100">
                 {t.trackFeedbackBtn}
               </h2>
               <p className="text-xs text-stone-500 dark:text-stone-400">
@@ -178,7 +178,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                   value={searchId}
                   onChange={(e) => setSearchId(e.target.value)}
                   placeholder={ui("ఆర్డర్ కన్ఫర్మేషన్‌లో ఇచ్చిన కీ / Tracking key")}
-                  className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 text-xs sm:text-sm font-mono focus:ring-2 focus:ring-amber-500 outline-hidden"
+                  className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 text-xs sm:text-sm font-mono focus:ring-2 focus:ring-[#ab4d3e] outline-hidden"
                 />
                 <Search className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
               </div>
@@ -186,7 +186,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                 type="submit"
                 disabled={loading || !searchId.trim()}
                 id="search-order-btn"
-                className="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-[#78350F] hover:bg-[#92400E] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                className="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm text-white bg-[#ab4d3e] hover:bg-[#934034] transition-colors disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
               >
                 <span>{loading ? ui("వెతుకుతోంది...") : ui("వెతకండి")}</span>
               </button>
@@ -210,7 +210,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                     }}
                     className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all flex items-center gap-1.5 cursor-pointer ${
                       selectedOrder?.id === rec.id
-                        ? 'bg-amber-100 dark:bg-stone-800 text-[#78350F] dark:text-amber-400 border-amber-400'
+                        ? 'bg-amber-100 dark:bg-stone-800 text-[#ab4d3e] dark:text-amber-400 border-amber-400'
                         : 'bg-stone-50 dark:bg-stone-900 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-800 hover:border-amber-300'
                     }`}
                   >
@@ -234,7 +234,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
             <div className="space-y-5 pt-2 border-t border-stone-200 dark:border-stone-800">
               
               {/* Order Info Card */}
-              <div className="p-4 rounded-xl bg-[#FAF4EA] dark:bg-stone-900 border border-amber-900/10 dark:border-stone-800 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+              <div className="p-4 rounded-xl bg-[#f7f2e9] dark:bg-stone-900 border border-amber-900/10 dark:border-stone-800 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
                 <div>
                   <span className="text-stone-500 block">{ui("కస్టమర్ పేరు:")}</span>
                   <strong className="text-stone-900 dark:text-stone-100">{selectedOrder.customer?.name || selectedOrder.customerName || ui("కస్టమర్")}</strong>
@@ -242,7 +242,7 @@ export const OrderTrackingModal: React.FC<OrderTrackingModalProps> = ({
                 <div>
                   <span className="text-stone-500 block">{ui("రొట్టెల పరిమాణం:")}</span>
                   {selectedOrder.items?.length ? <OrderItemLines items={selectedOrder.items} /> : null}
-                  <strong className="text-[#78350F] dark:text-amber-400 font-mono text-sm">{selectedOrder.totalItems || selectedOrder.quantity || 0}{" "}{ui("వస్తువులు (₹")}{selectedOrder.totalAmount || selectedOrder.totalPaid || 0})</strong>
+                  <strong className="text-[#ab4d3e] dark:text-amber-400 font-mono text-sm">{selectedOrder.totalItems || selectedOrder.quantity || 0}{" "}{ui("వస్తువులు (₹")}{selectedOrder.totalAmount || selectedOrder.totalPaid || 0})</strong>
                 </div>
                 <div>
                   <span className="text-stone-500 block">{ui("డెలివరీ తేదీ:")}</span>

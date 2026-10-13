@@ -304,15 +304,15 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6 font-telugu">
+    <div className="solara-owner-dashboard max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6 font-telugu">
       {errorMessage && <div role="alert" className="p-4 rounded-xl bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300 text-sm">{uiError(errorMessage, language)}</div>}
       
       {role === 'ADMIN' && <PappuSettings />}
       {/* Top Header Bar */}
-      <div className="bg-white dark:bg-[#211E1A] p-4 sm:p-6 rounded-2xl border border-stone-200 dark:border-stone-800 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+      <div className="bg-white dark:bg-[#211E1A] p-4 sm:p-6 rounded-xl border border-[#ded7ce] dark:border-stone-800 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-xl sm:text-2xl font-extrabold text-[#451A03] dark:text-amber-100">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-[#26231f] dark:text-amber-100">
               {isTe ? 'మన ఇంటి వంట — యజమాని పోర్టల్' : 'Mana Enti Vanta — Owner Portal'}
             </h2>
             <span className="px-2.5 py-0.5 rounded-md text-xs font-bold bg-amber-100 dark:bg-amber-950 text-[#78350F] dark:text-amber-400 font-mono">
@@ -398,7 +398,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
           onClick={() => setActiveTab('ORDERS')}
           className={`pb-3 px-4 text-sm font-bold border-b-2 transition-colors cursor-pointer whitespace-nowrap ${
             activeTab === 'ORDERS'
-              ? 'border-[#78350F] text-[#78350F] dark:border-amber-400 dark:text-amber-400'
+              ? 'border-[#ab4d3e] text-[#ab4d3e] dark:border-amber-400 dark:text-amber-400'
               : 'border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
           }`}
         >
@@ -409,7 +409,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
           onClick={() => setActiveTab('KITCHEN')}
           className={'flex items-center gap-2 whitespace-nowrap border-b-2 px-4 pb-3 text-sm font-bold transition-colors ' +
             (activeTab === 'KITCHEN'
-              ? 'border-[#78350F] text-[#78350F] dark:border-amber-400 dark:text-amber-400'
+              ? 'border-[#ab4d3e] text-[#ab4d3e] dark:border-amber-400 dark:text-amber-400'
               : 'border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-stone-200')}
         >
           <ChefHat className="h-4 w-4" />
@@ -420,7 +420,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
           onClick={() => setActiveTab('DAILY')}
           className={'flex items-center gap-2 whitespace-nowrap border-b-2 px-4 pb-3 text-sm font-bold transition-colors ' +
             (activeTab === 'DAILY'
-              ? 'border-[#78350F] text-[#78350F] dark:border-amber-400 dark:text-amber-400'
+              ? 'border-[#ab4d3e] text-[#ab4d3e] dark:border-amber-400 dark:text-amber-400'
               : 'border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-stone-200')}
         >
           <Calendar className="h-4 w-4" />
@@ -431,7 +431,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
           onClick={() => setActiveTab('ANALYTICS')}
           className={`pb-3 px-4 text-sm font-bold border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
             activeTab === 'ANALYTICS'
-              ? 'border-[#78350F] text-[#78350F] dark:border-amber-400 dark:text-amber-400'
+              ? 'border-[#ab4d3e] text-[#ab4d3e] dark:border-amber-400 dark:text-amber-400'
               : 'border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
           }`}
         >
@@ -443,7 +443,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
           onClick={() => setActiveTab('FEEDBACK')}
           className={`pb-3 px-4 text-sm font-bold border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
             activeTab === 'FEEDBACK'
-              ? 'border-[#78350F] text-[#78350F] dark:border-amber-400 dark:text-amber-400'
+              ? 'border-[#ab4d3e] text-[#ab4d3e] dark:border-amber-400 dark:text-amber-400'
               : 'border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
           }`}
         >
@@ -455,7 +455,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
           <button type="button" onClick={() => setActiveTab('PAYMENT_REVIEW')}
             className={'flex items-center gap-2 whitespace-nowrap border-b-2 px-4 pb-3 text-sm font-bold transition-colors ' +
               (activeTab === 'PAYMENT_REVIEW'
-                ? 'border-[#78350F] text-[#78350F] dark:border-amber-400 dark:text-amber-400'
+                ? 'border-[#ab4d3e] text-[#ab4d3e] dark:border-amber-400 dark:text-amber-400'
                 : 'border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-stone-200')}>
             <ShieldAlert className="h-4 w-4" />
             <span>{isTe ? 'పేమెంట్ రివ్యూ' : 'Payment Review'}</span>
@@ -468,7 +468,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
             onClick={() => setActiveTab('AUDIT')}
             className={`pb-3 px-4 text-sm font-bold border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
               activeTab === 'AUDIT'
-                ? 'border-[#78350F] text-[#78350F] dark:border-amber-400 dark:text-amber-400'
+                ? 'border-[#ab4d3e] text-[#ab4d3e] dark:border-amber-400 dark:text-amber-400'
                 : 'border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
             }`}
           >
@@ -592,7 +592,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
                     <div className="flex flex-wrap items-start justify-between gap-3 border-b border-stone-100 dark:border-stone-800 pb-3">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-extrabold text-sm sm:text-base text-[#451A03] dark:text-amber-100">
+                          <span className="font-mono font-extrabold text-sm sm:text-base text-[#26231f] dark:text-amber-100">
                             {order.id}
                           </span>
                           {getStatusBadge(order.fulfillmentStatus)}
