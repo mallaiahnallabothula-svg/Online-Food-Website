@@ -1,10 +1,10 @@
 import { PAPPU_VARIETIES, pappuForDate, type PappuVariety } from '../../shared/pappu';
 import { getNextPreorderDeliverySlot } from '../../shared/preorderScheduling';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Clock3, Coffee, Sun, Moon, UtensilsCrossed, ArrowRight } from 'lucide-react';
 import { MENU_CATALOG, NEW_MENU_LAUNCH_ENABLED, NEW_MENU_ORDER_POLICY, type MealPeriod, type MenuItem } from '../../shared/menuCatalog.ts';
 import { useLanguage } from '../context/LanguageContext';
-import { UpcomingCheckoutPreview } from './UpcomingCheckoutPreview';
+import type { CheckoutSelection } from '../utils/checkoutSelection';
 import { checkReorderStock, type ReorderError, type ReorderRequest } from '../utils/reorder';
 import { FoodArtwork } from './FoodArtwork';
 
@@ -43,16 +43,15 @@ function serving(item: MenuItem, telugu: boolean): string {
  * Public catalog and cart for the additive 12-item menu. The production flag
  * selects the verified checkout; the fail-closed default remains preview-only.
  */
-export function UpcomingMenuSection({ reorderRequest, onReorder }: { reorderRequest?: ReorderRequest | null; onReorder?: (request: ReorderRequest) => void } = {}) {
+export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckoutSelection }: { reorderRequest?: ReorderRequest | null; onCheckout?: (selection: CheckoutSelection) => void; initialCheckoutSelection?: CheckoutSelection | null } = {}) {
   const { language } = useLanguage();
   const te = language === 'te';
-  const [period, setPeriod] = useState<MealPeriod>('MORNING');
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [period, setPeriod] = useState<MealPeriod>(initialCheckoutSelection?.period ?? 'MORNING');
+  const [quantities, setQuantities] = useState<Record<string, number>>(() => Object.fromEntries((initialCheckoutSelection?.lines ?? []).map(line => [line.item.id, line.quantity])));
   const [availability, setAvailability] = useState<{ deliveryDateIst: string; pappu: PappuVariety | null; stock: Record<string, number> } | null>(null);
   const [availabilityError, setAvailabilityError] = useState(false);
   const [refresh, setRefresh] = useState(0);
   const [reorderNotice, setReorderNotice] = useState<'checking' | 'ready' | 'error' | ReorderError | null>(null);
-  const [reorderCheckoutVersion, setReorderCheckoutVersion] = useState(0);
   useEffect(() => {
     if (!NEW_MENU_LAUNCH_ENABLED) return;
     let active = true;
@@ -96,7 +95,6 @@ export function UpcomingMenuSection({ reorderRequest, onReorder }: { reorderRequ
         setAvailabilityError(false);
         // Replace the old cart: do not silently combine it with a prior selection.
         setQuantities(Object.fromEntries(reorderRequest.lines.map(line => [line.itemId, line.quantity])));
-        setReorderCheckoutVersion(n => n + 1); // Reset old checkout state; review & pay again.
         setReorderNotice('ready');
       })
       .catch(() => { if (active) setReorderNotice('error'); });
@@ -104,17 +102,9 @@ export function UpcomingMenuSection({ reorderRequest, onReorder }: { reorderRequ
   }, [reorderRequest]);
   const deliveryDate = availability?.deliveryDateIst ?? getNextPreorderDeliverySlot(period, new Date()).deliveryDateIst;
   const pappu = availability ? availability.pappu : NEW_MENU_LAUNCH_ENABLED ? null : pappuForDate(deliveryDate);
-  const checkoutRef = useRef<HTMLDivElement>(null);
-  const [checkoutVisible, setCheckoutVisible] = useState(false);
-  useEffect(() => {
-    if (!checkoutRef.current || typeof IntersectionObserver === 'undefined') return;
-    const observer = new IntersectionObserver(([entry]) => setCheckoutVisible(entry?.isIntersecting ?? false), { threshold: 0.05 });
-    observer.observe(checkoutRef.current);
-    return () => observer.disconnect();
-  }, []);
   function showCheckout() {
-    checkoutRef.current?.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
-    checkoutRef.current?.focus({ preventScroll: true });
+    if (subtotalPaisa < NEW_MENU_ORDER_POLICY.minimumCartPaisa || selected.length === 0) return;
+    onCheckout?.({ period, lines: selected, subtotalPaisa });
   }
   const visible = MENU_CATALOG.filter(item => item.mealPeriod === period).map(item => item.id === 'pappu-of-the-day' && pappu ? { ...item, ...PAPPU_VARIETIES[pappu] } : item);
   const selected = visible.filter(item => (quantities[item.id] ?? 0) > 0)
@@ -265,13 +255,14 @@ export function UpcomingMenuSection({ reorderRequest, onReorder }: { reorderRequ
         </div>
         </div>
         <p className="mt-4 text-xs text-stone-500 dark:text-stone-300">{te ? 'ఆహార పరిమాణాలు, ధరలు, స్టాక్ వివరాలు ఆర్డర్ ముందు సరిచూసుకోండి.' : 'Check portions, prices and availability before ordering.'}</p>
-        <div ref={checkoutRef} id="menu-delivery" tabIndex={-1} className="scroll-mt-40 sm:scroll-mt-24 rounded-2xl focus-visible:outline-2 focus-visible:outline-emerald-700">
-          <UpcomingCheckoutPreview key={period + ':' + reorderCheckoutVersion} period={period} lines={selected} subtotalPaisa={subtotalPaisa} te={te} onReorder={onReorder} />
-        </div>
-        {selected.length > 0 && !checkoutVisible && <div className="menu-mobile-cart fixed inset-x-3 bottom-3 z-30 flex items-center justify-between gap-3 rounded-lg bg-[#ab4d3e] p-3 text-white shadow-xl sm:left-1/2 sm:right-auto sm:w-[430px] sm:-translate-x-1/2">
-          <span className="pl-1 text-sm font-bold">{selectedQuantity} {te ? 'ఐటమ్స్' : 'items'} · {money(subtotalPaisa)}<span className="block text-[10px] font-normal text-emerald-100">{te ? 'ఆహార మొత్తం' : 'Food subtotal'}</span></span>
-          <button type="button" onClick={showCheckout} className="flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 text-sm font-bold text-[#ab4d3e]">{te ? 'డెలివరీకి వెళ్లండి' : 'View cart'}<ArrowRight size={16} aria-hidden="true" /></button>
-        </div>}
+        {selected.length > 0 && (
+          <div className="menu-mobile-cart sticky bottom-3 z-30 mt-4 flex items-center justify-between gap-3 rounded-lg bg-[#ab4d3e] p-3 text-white shadow-xl sm:mx-auto sm:w-[430px]">
+            <span className="pl-1 text-sm font-bold">{selectedQuantity} {te ? 'ఐటమ్స్' : 'items'} · {money(subtotalPaisa)}<span className="block text-[10px] font-normal text-emerald-100">{te ? 'ఆహార మొత్తం' : 'Food subtotal'}</span></span>
+            <button type="button" onClick={showCheckout} disabled={subtotalPaisa < NEW_MENU_ORDER_POLICY.minimumCartPaisa} className="flex min-h-11 items-center gap-2 rounded-xl bg-white px-4 text-sm font-bold text-[#ab4d3e] disabled:cursor-not-allowed disabled:opacity-50">
+              {te ? 'డెలివరీకి వెళ్లండి' : 'View cart'}<ArrowRight size={16} aria-hidden="true" />
+            </button>
+          </div>
+        )}
         <p className="mt-6 text-center text-xs leading-relaxed text-stone-500 dark:text-stone-400">
           {te
             ? (NEW_MENU_LAUNCH_ENABLED ? 'ఆర్డర్‌కు ముందు ధర, డెలివరీ ప్రాంతం, స్టాక్ సర్వర్‌లో మళ్లీ ధృవీకరించబడతాయి.' : 'ఇక్కడి ధరలు ప్రివ్యూ మాత్రమే. కొత్త మెనూ ఆర్డర్లు ఇంకా ప్రారంభం కాలేదు.')
