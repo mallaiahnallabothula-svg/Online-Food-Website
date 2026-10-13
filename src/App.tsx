@@ -2,6 +2,7 @@ import { useUiText } from './context/useUiText';
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
+import { SolaraEditorialContent } from './components/SolaraEditorialContent';
 import { UpcomingMenuSection } from './components/UpcomingMenuSection';
 import { AdminLogin } from './components/OwnerPortal/AdminLogin';
 import { OwnerDashboard } from './components/OwnerPortal/OwnerDashboard';
@@ -150,7 +151,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#FDFBF7] dark:bg-[#1A1816] text-[#292524] dark:text-[#E7E5E4] transition-colors duration-200">
+    <div className="min-h-screen flex flex-col bg-[#f7f2e9] dark:bg-[#1A1816] text-[#26231f] dark:text-[#E7E5E4] transition-colors duration-200">
       
       {/* Android Install Announcement Banner */}
       <AndroidInstallBanner
@@ -190,6 +191,7 @@ export default function App() {
                 isInstalled={isInstalled}
               />
               <UpcomingMenuSection reorderRequest={reorderRequest} onReorder={setReorderRequest} />
+              <SolaraEditorialContent />
             </>
           </div>
         )}
@@ -212,18 +214,18 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-amber-900/10 dark:border-stone-800 bg-[#FAF4EA] dark:bg-[#151413] py-8 text-xs font-telugu text-stone-600 dark:text-stone-400">
+      <footer className="mt-auto border-t border-amber-900/10 dark:border-stone-800 bg-[#201f1c] dark:bg-[#151413] py-8 text-xs font-telugu text-[#e8ded2] dark:text-stone-400">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3 text-center md:text-left">
             <BrandEmblem size="sm" />
             <div className="space-y-0.5">
-              <h4 className="font-bold text-sm text-[#451A03] dark:text-amber-100">
+              <h4 className="font-bold text-sm text-[#f5e7db] dark:text-amber-100">
                 {t.brandName}
               </h4>
-              <p className="text-xs text-stone-600 dark:text-stone-300">
+              <p className="text-xs text-[#c8beb2] dark:text-stone-300">
                 {t.brandTagline}
               </p>
-              <p className="text-[11px] text-stone-500 dark:text-stone-400">
+              <p className="text-[11px] text-[#c8beb2] dark:text-stone-400">
                 {language === 'te' 
                   ? 'కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధిలో ఉచిత డెలివరీ | ఆన్‌లైన్ UPI చెల్లింపు'
                   : 'Free delivery within 5 km radius from Kolluru | Online UPI payment'}
@@ -263,7 +265,7 @@ export default function App() {
 
             <a
               href="tel:+918499865803"
-              className="font-mono font-bold text-stone-800 dark:text-stone-200 hover:text-[#78350F] flex items-center gap-1.5"
+              className="font-mono font-bold text-[#f5e7db] dark:text-stone-200 hover:text-[#78350F] flex items-center gap-1.5"
             >
               <Phone className="w-3.5 h-3.5 text-[#78350F]" />
               <span>+91 8499865803</span>
