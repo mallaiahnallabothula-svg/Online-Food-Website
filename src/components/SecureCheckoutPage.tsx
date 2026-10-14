@@ -14,16 +14,16 @@ export function SecureCheckoutPage({ selection, onBack, onReorder }: {
   const te = language === 'te';
   return (
     <div data-testid="secure-checkout-page" className="solara-checkout-page-enter min-h-[80vh] bg-[#FAF6ED] px-4 pb-14 pt-7 dark:bg-[#211f1c] sm:px-6 sm:pt-12">
-      <div className="mx-auto max-w-3xl">
-        <div className="mb-7 flex flex-wrap items-center justify-between gap-4 border-b border-[#ded7ce] pb-5 dark:border-stone-700">
-          <div className="flex items-center gap-3">
+      <div className="mx-auto w-full max-w-3xl min-w-0">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-[#ded7ce] pb-4 dark:border-stone-700 sm:mb-7 sm:gap-4 sm:pb-5">
+          <div className="flex min-w-0 items-center gap-3">
             <BrandEmblem size="sm" />
             <div>
               <p className="text-base font-bold text-[#384B35] dark:text-stone-100">Mana Enti Vanta</p>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-[#756f67] dark:text-stone-400">HOME KITCHEN · KOLLUR</p>
             </div>
           </div>
-          <button type="button" onClick={onBack} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[#ded7ce] px-4 text-sm font-semibold text-[#A44732] hover:bg-[#f0e7db] dark:border-stone-600 dark:text-[#e8ad99] dark:hover:bg-stone-800">
+          <button type="button" onClick={onBack} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-[#ded7ce] px-4 sm:w-auto text-sm font-semibold text-[#A44732] hover:bg-[#f0e7db] dark:border-stone-600 dark:text-[#e8ad99] dark:hover:bg-stone-800">
             <ArrowLeft size={16} aria-hidden="true" /> {te ? 'మెనూకి తిరిగి' : 'Back to menu'}
           </button>
         </div>

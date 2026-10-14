@@ -87,7 +87,7 @@ function PreviewCheckoutOnly({
   return (
     <div
       data-testid="upcoming-checkout-preview"
-      className="solara-checkout mt-8 overflow-hidden rounded-xl border border-[#ded7ce] bg-white shadow-sm dark:border-stone-700 dark:bg-stone-800"
+      className="solara-checkout mt-5 min-w-0 overflow-hidden rounded-xl border border-[#ded7ce] sm:mt-6 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-800"
     >
       <div className="border-b border-stone-200 bg-[#FAF6ED] px-4 py-5 dark:border-stone-700 dark:bg-emerald-950/40 sm:px-6">
         <div className="flex flex-wrap items-center gap-2">
@@ -106,7 +106,7 @@ function PreviewCheckoutOnly({
         </p>
       </div>
 
-      <div className="grid gap-6 px-4 py-5 sm:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+      <div className="grid min-w-0 gap-5 px-4 py-4 sm:gap-6 sm:px-6 sm:py-5">
         <div>
           <h4 className="text-sm font-bold text-stone-800 dark:text-stone-100">
             {te ? 'మీ ఎంపికలు' : 'Your sample selections'}
