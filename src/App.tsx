@@ -190,7 +190,7 @@ export default function App() {
       />}
 
       {/* MAIN VIEWPORT */}
-      <main className="flex-1">
+      <main className="min-w-0 flex-1">
         {/* CUSTOMER VIEW */}
         {currentView === 'CUSTOMER' && (
           <div className="solara-customer" hidden={checkoutRoute}>
@@ -228,7 +228,7 @@ export default function App() {
 
       {/* Footer */}
       {!(currentView === 'CUSTOMER' && checkoutRoute) && <footer className="solara-footer mt-auto border-t border-[#2d3b2b] bg-[#384B35] py-12 text-[#f4eedf] dark:bg-[#151413]">
-        <div className="mx-auto grid max-w-7xl gap-9 px-5 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.5fr_1fr_1fr] lg:gap-14">
+        <div className="mx-auto grid w-full max-w-7xl items-start gap-x-9 gap-y-8 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.5fr_1fr_1fr] lg:gap-14">
           <div className="min-w-0">
             <h4 className="solara-display text-xl font-semibold text-[#f5e7db]">{t.brandName}</h4>
             <p className="mt-2 max-w-sm text-sm leading-relaxed text-[#c8beb2]">{t.brandTagline}</p>
