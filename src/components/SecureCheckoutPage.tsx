@@ -19,8 +19,8 @@ export function SecureCheckoutPage({ selection, onBack, onReorder }: {
           <div className="flex min-w-0 items-center gap-3">
             <BrandEmblem size="sm" />
             <div>
-              <p className="text-base font-bold text-[#384B35] dark:text-stone-100">Mana Enti Vanta</p>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-[#756f67] dark:text-stone-400">HOME KITCHEN · KOLLUR</p>
+              <p className="text-base font-bold text-[#384B35] dark:text-stone-100">Mannu’s Cloud Kitchen</p>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-[#756f67] dark:text-stone-400">CLOUD KITCHEN · KOLLUR</p>
             </div>
           </div>
           <button type="button" onClick={onBack} className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-[#ded7ce] px-4 sm:w-auto text-sm font-semibold text-[#A44732] hover:bg-[#f0e7db] dark:border-stone-600 dark:text-[#e8ad99] dark:hover:bg-stone-800">

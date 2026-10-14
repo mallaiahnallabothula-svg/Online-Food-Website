@@ -1,6 +1,6 @@
 /**
  * Server-Side Ticket Generation Service
- * Generates official Mana Enti Vanta WhatsApp Order Ticket
+ * Generates official Mannu’s Cloud Kitchen WhatsApp Order Ticket
  * Authoritative generation triggers immediately upon payment confirmation.
  */
 
@@ -91,7 +91,7 @@ export function generateServerOrderTicket(order: OrderForTicket, lang: 'te' | 'e
 
   if (lang === 'en') {
     const parts: string[] = [
-      '🧾 *MANA ENTI VANTA (మన ఇంటి వంట)*',
+      '🧾 *MANNU’S CLOUD KITCHEN*',
       'Authentic Village Jowar Rotis & Chapathis • Kolluru Village',
       'WhatsApp Order Ticket to: +91 8499865803',
       '================================',
@@ -138,7 +138,7 @@ export function generateServerOrderTicket(order: OrderForTicket, lang: 'te' | 'e
 
   // Telugu format
   const parts: string[] = [
-    '🧾 *మన ఇంటి వంట (Mana Enti Vanta)*',
+    '🧾 *Mannu’s Cloud Kitchen*',
     'అచ్చమైన పల్లెటూరి జొన్న రొట్టెలు & చపాతీలు • కొల్లూరు గ్రామం',
     'యజమానికి వాట్సాప్ ఆర్డర్ టికెట్: +91 8499865803',
     '================================',

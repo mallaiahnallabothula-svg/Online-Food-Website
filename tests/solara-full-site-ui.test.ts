@@ -32,7 +32,7 @@ describe('Solara full-site UI protects business workflows', () => {
     const hero = source('src/components/HeroSection.tsx');
     expect(brand).toContain('/brand-illustration.svg');
     expect(brand).not.toContain('logoImage');
-    expect(header).toContain('HOME KITCHEN · KOLLUR');
+    expect(header).toContain('CLOUD KITCHEN · KOLLUR');
     for (const sourceText of [app, header, hero]) {
       expect(sourceText).not.toContain('AndroidInstallBanner');
       expect(sourceText).not.toContain('AndroidInstallModal');

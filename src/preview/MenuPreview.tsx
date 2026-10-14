@@ -137,8 +137,8 @@ export default function MenuPreview() {
           <div className="flex items-center gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#28533A] text-[#F6EED7]"><Leaf size={25} strokeWidth={1.6} aria-hidden="true" /></span>
             <div>
-              <p className="text-lg font-extrabold leading-tight tracking-tight text-[#23432D]">మన ఇంటి వంట</p>
-              <p className="text-[10px] font-semibold uppercase tracking-[.13em] text-stone-500">Mana Enti Vanta</p>
+              <p className="text-lg font-extrabold leading-tight tracking-tight text-[#23432D]">Mannu’s</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[.13em] text-stone-500">Cloud Kitchen</p>
             </div>
           </div>
           <div className="hidden items-center gap-2 text-sm font-semibold text-stone-600 sm:flex"><MapPin size={16} aria-hidden="true" /> Kollur, Hyderabad</div>
@@ -246,7 +246,7 @@ export default function MenuPreview() {
         </section>
       </main>
       <footer className="border-t border-[#E7E2D5] bg-[#F0EEE5] px-5 py-7 text-center text-xs text-stone-600">
-        <p className="font-bold text-[#2D543A]">మన ఇంటి వంట · Mana Enti Vanta</p>
+        <p className="font-bold text-[#2D543A]">Mannu’s Cloud Kitchen</p>
         <p className="mt-1">Made for Kollur · Food menu design preview</p>
       </footer>
     </div>

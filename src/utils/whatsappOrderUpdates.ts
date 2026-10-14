@@ -57,8 +57,8 @@ export function createWhatsAppOrderUpdate(order: Order, language: string): Whats
     ? 'నమస్కారం' + (name ? ' ' + name + ' గారు' : '') + ','
     : 'Hello' + (name ? ' ' + name : '') + ',';
   const subject = te
-    ? 'మీ మన ఇంటి వంట ఆర్డర్ (' + id + ')'
-    : 'Your Mana Enti Vanta order (' + id + ')';
+    ? 'మీ Mannu’s Cloud Kitchen ఆర్డర్ (' + id + ')'
+    : 'Your Mannu’s Cloud Kitchen order (' + id + ')';
   const updates = {
     RECEIVED: te ? 'ధృవీకరించబడింది.' : 'is confirmed.',
     PREPARING: te ? 'ఇప్పుడు తయారవుతోంది.' : 'is being prepared.',

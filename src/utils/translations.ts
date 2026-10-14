@@ -246,7 +246,7 @@ export interface Translations {
 export const translations: Record<Language, Translations> = {
   te: {
     // Brand
-    brandName: 'మన ఇంటి వంట',
+    brandName: 'Mannu’s Cloud Kitchen',
     brandTagline: 'అచ్చమైన పల్లెటూరి రుచులు — స్వచ్ఛమైన ఆరోగ్యం',
     brandSubtext: 'ఉదయం అల్పాహారం | సాయంత్రం ఇంటివంటలు — 12 రకాల మెనూ',
     villageLocation: 'కొల్లూరు గ్రామం',
@@ -278,7 +278,7 @@ export const translations: Record<Language, Translations> = {
     securePaymentNote: 'ఆన్‌లైన్ UPI చెల్లింపు మాత్రమే (No Cash on Delivery). చెల్లింపు తర్వాత మాత్రమే ఆర్డర్ నమోదవుతుంది.',
 
     // Menu Highlights
-    highlightsTitle: 'మన ఇంటి వంట విశిష్టతలు',
+    highlightsTitle: 'Mannu’s Cloud Kitchen విశిష్టతలు',
     highlightsSubtitle: 'ఉదయం 6 రకాల అల్పాహారం, సాయంత్రం 4 రకాల ఇంటివంటలు',
     pureIngredientsTitle: 'ఉదయం అల్పాహారం',
     pureIngredientsDesc: 'ఇడ్లీ, రాగి ఇడ్లీ, పెసరట్టు మరియు మినప దోసె రకాలు.',
@@ -287,7 +287,7 @@ export const translations: Record<Language, Translations> = {
     healthyNutritiousTitle: 'మీకు నచ్చినవి ఎంచుకోండి',
     healthyNutritiousDesc: 'మెనూ నుంచి వంటకాలు, పరిమాణాలు ఎంచుకుని ఆర్డర్ వివరాలు చూడండి.',
     hygienicKitchenTitle: 'ఇంటి వంట',
-    hygienicKitchenDesc: 'మన ఇంటి వంటలో ఉదయం, సాయంత్రం వంటకాల ఎంపికలు ఉన్నాయి.',
+    hygienicKitchenDesc: 'Mannu’s Cloud Kitchen‌లో ఉదయం, సాయంత్రం వంటకాల ఎంపికలు ఉన్నాయి.',
     freshBatchBadge: 'నేటి తాజా బ్యాచ్',
     villageCraftBadge: '100% పల్లెటూరి సంప్రదాయం',
 
@@ -466,7 +466,7 @@ export const translations: Record<Language, Translations> = {
 
     // Android Install Modal & Banner
     pwaInstallBadge: 'ఆండ్రాయిడ్ యాప్',
-    pwaBannerHeadline: 'మన ఇంటి వంట - Android యాప్ అందుబాటులో ఉంది!',
+    pwaBannerHeadline: 'Mannu’s Cloud Kitchen - Android యాప్ అందుబాటులో ఉంది!',
     pwaBannerDesc: 'ఫోన్ హోమ్ స్క్రీన్‌లో ఇన్‌స్టాల్ చేసి 12 రకాల మెనూను చూడండి, ఆర్డర్ చేయండి.',
     pwaFreeBadge: '100% ఉచిత డౌన్‌లోడ్',
     installAppBtn: 'యాప్ ఇన్‌స్టాల్',
@@ -481,7 +481,7 @@ export const translations: Record<Language, Translations> = {
     openInChromeBtn: 'Chrome బ్రౌజర్‌లో తెరవండి',
 
     // Footer
-    footerRights: 'మన ఇంటి వంట — అన్ని హక్కులు ప్రత్యేకించబడ్డాయి.',
+    footerRights: 'Mannu’s Cloud Kitchen — అన్ని హక్కులు ప్రత్యేకించబడ్డాయి.',
     footerFreeDelivery: 'కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధిలో ఉచిత డెలివరీ.',
     ownerPortalLink: 'యజమాని పోర్టల్',
     footerTimings: 'కొత్త మెనూ: ఉదయం 7:00 – 11:00 | సాయంత్రం 6:00 – 8:00 IST',
@@ -489,7 +489,7 @@ export const translations: Record<Language, Translations> = {
 
   en: {
     // Brand
-    brandName: 'Mana Enti Vanta',
+    brandName: 'Mannu’s Cloud Kitchen',
     brandTagline: 'Authentic Homemade Village Flavors — Pure & Healthy',
     brandSubtext: 'Fresh breakfast & homestyle evening meals — 10 dishes',
     villageLocation: 'Kolluru Village',
@@ -521,7 +521,7 @@ export const translations: Record<Language, Translations> = {
     securePaymentNote: 'Online UPI payment only (No Cash on Delivery). Order placed only after payment.',
 
     // Menu Highlights
-    highlightsTitle: 'Why Choose Mana Enti Vanta?',
+    highlightsTitle: 'Why Choose Mannu’s Cloud Kitchen?',
     highlightsSubtitle: 'Choose from 6 morning and 4 evening dishes.',
     pureIngredientsTitle: 'Morning breakfast',
     pureIngredientsDesc: 'Idly, ragi idly, plain and onion pesarattu, plain and onion minapa dosa.',
@@ -530,7 +530,7 @@ export const translations: Record<Language, Translations> = {
     healthyNutritiousTitle: 'Choose what you like',
     healthyNutritiousDesc: 'Pick dishes and quantities from the menu, then review your order details.',
     hygienicKitchenTitle: 'Homestyle menu',
-    hygienicKitchenDesc: 'Explore 6 morning and 4 evening options from Mana Enti Vanta.',
+    hygienicKitchenDesc: 'Explore 6 morning and 4 evening options from Mannu’s Cloud Kitchen.',
     freshBatchBadge: "Today's Fresh Batch",
     villageCraftBadge: '100% Traditional Village Craft',
 
@@ -709,7 +709,7 @@ export const translations: Record<Language, Translations> = {
 
     // Android Install Modal & Banner
     pwaInstallBadge: 'Android App',
-    pwaBannerHeadline: 'Mana Enti Vanta - Android App Available!',
+    pwaBannerHeadline: 'Mannu’s Cloud Kitchen - Android App Available!',
     pwaBannerDesc: 'Install the menu on your phone home screen and browse all 10 dishes.',
     pwaFreeBadge: '100% Free Download',
     installAppBtn: 'Install App',
@@ -724,7 +724,7 @@ export const translations: Record<Language, Translations> = {
     openInChromeBtn: 'Open in Chrome Browser',
 
     // Footer
-    footerRights: 'Mana Enti Vanta — All rights reserved.',
+    footerRights: 'Mannu’s Cloud Kitchen — All rights reserved.',
     footerFreeDelivery: 'Free delivery within 5 km of Kolluru village.',
     ownerPortalLink: 'Owner Portal',
     footerTimings: 'New menu: 7:00–11:00 AM and 6:00–8:00 PM IST',

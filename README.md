@@ -1,4 +1,4 @@
-# Mana Enti Vanta
+# Mannu’s Cloud Kitchen
 
 Recovered Google AI Studio source: https://ai.studio/apps/5303fe9c-153c-43c5-8a8e-396d32d5f626
 

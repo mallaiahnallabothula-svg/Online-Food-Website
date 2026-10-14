@@ -15,9 +15,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder }) => 
       <div className="solara-orbit pointer-events-none absolute left-1/2 top-1/2 -z-0 hidden h-[570px] w-[570px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#A44732]/10 lg:block" aria-hidden="true" />
       <div className="solara-motion-hero solara-hero-inner relative mx-auto grid w-full max-w-7xl items-center gap-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)] lg:gap-10 xl:gap-16">
         <div className="min-w-0">
-          <p className="solara-hero-eyebrow mb-5 text-[11px] font-bold uppercase tracking-[0.22em] text-[#A44732] dark:text-[#e3a795]">KOLLUR · HYDERABAD · HOME KITCHEN</p>
+          <p className="solara-hero-eyebrow mb-5 text-[11px] font-bold uppercase tracking-[0.22em] text-[#A44732] dark:text-[#e3a795]">KOLLUR · HYDERABAD · CLOUD KITCHEN</p>
           <h1 className="solara-display solara-hero-title solara-hero-heading m-0 text-[clamp(3rem,4.85vw,5rem)] leading-[1.09] tracking-[-0.055em]">
-            {te ? <>మన ఇంటి<br /><em className="not-italic text-[#A44732]">వంట.</em></> : <>Everyday food.<br /><em className="not-italic text-[#A44732] lg:whitespace-nowrap">Always familiar.</em></>}
+            {te ? <>ఇంటి రుచులు.<br /><em className="not-italic text-[#A44732]">మీ ఇంటికి.</em></> : <>Everyday food.<br /><em className="not-italic text-[#A44732] lg:whitespace-nowrap">Always familiar.</em></>}
           </h1>
           <p className="solara-hero-description mt-6 max-w-lg text-base leading-relaxed text-[#50584B] dark:text-stone-300">
             {te ? 'ఉదయం టిఫిన్లు. సాయంత్రం ఇంటి వంటకాలు. మీకు నచ్చిన రోజు, సమయం కోసం ముందుగా ఎంచుకోండి.' : 'Start with idly or dosa. Come back for rotis, pappu and kurma. Explore everyday Telugu favourites, with clear portions and prices.'}

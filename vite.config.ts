@@ -92,9 +92,9 @@ export default defineConfig(() => {
         includeAssets: ['favicon.ico', 'favicon.png', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-maskable-512x512.png'],
         manifest: {
           id: '/',
-          name: 'మన ఇంటి వంట',
-          short_name: 'మన ఇంటి వంట',
-          description: 'కొల్లూరు ప్రాంతంలో మన ఇంటి వంట ఉదయం అల్పాహారం, సాయంత్రం వంటకాల ఆన్‌లైన్ ఆర్డరింగ్ అప్లికేషన్',
+          name: 'Mannu’s Cloud Kitchen',
+          short_name: 'Mannu’s',
+          description: 'కొల్లూరు ప్రాంతంలో Mannu’s Cloud Kitchen ఉదయం అల్పాహారం, సాయంత్రం వంటకాల ఆన్‌లైన్ ఆర్డరింగ్ అప్లికేషన్',
           theme_color: '#78350F',
           background_color: '#FDFBF7',
           display: 'standalone',

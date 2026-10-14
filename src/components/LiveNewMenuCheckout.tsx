@@ -269,7 +269,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
         order_id: gateway.gateway.providerOrderId,
         amount: gateway.gateway.amountPaisa,
         currency: 'INR',
-        name: 'Mana Enti Vanta',
+        name: 'Mannu’s Cloud Kitchen',
         description: `Order ${orderId}`,
         prefill: { name: name.trim(), contact: mobile },
         theme: { color: '#78350F' },

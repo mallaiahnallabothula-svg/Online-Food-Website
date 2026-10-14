@@ -1,5 +1,5 @@
 /**
- * CSV and PDF Export Utilities for Mana Enti Vanta
+ * CSV and PDF Export Utilities for Mannu’s Cloud Kitchen
  */
 import jsPDF from 'jspdf';
 import { Order } from '../types';
@@ -91,7 +91,7 @@ export function exportOrdersToPDF(orders: Order[], filenamePrefix: string = 'MEV
   // Brand Header
   doc.setFontSize(16);
   doc.setTextColor(120, 53, 15); // #78350F
-  doc.text('Mana Enti Vanta (మన ఇంటి వంట) - Orders & Fulfillment Report', 14, 15);
+  doc.text('Mannu’s Cloud Kitchen (Mannu’s Cloud Kitchen) - Orders & Fulfillment Report', 14, 15);
 
   doc.setFontSize(10);
   doc.setTextColor(80, 80, 80);
