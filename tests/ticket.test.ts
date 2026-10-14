@@ -28,7 +28,7 @@ describe('Server WhatsApp Ticket Generation', () => {
   it('generates a Telugu order ticket with correct customer details and prices', () => {
     const ticket = generateServerOrderTicket(sampleOrder, 'te');
 
-    expect(ticket).toContain('మన ఇంటి వంట');
+    expect(ticket).toContain('Mannu’s Cloud Kitchen');
     expect(ticket).toContain('MEV-2026-0001');
     expect(ticket).toContain('Anand Rao');
     expect(ticket).toContain('9848022338');
@@ -45,7 +45,7 @@ describe('Server WhatsApp Ticket Generation', () => {
   it('generates an English order ticket when requested', () => {
     const ticket = generateServerOrderTicket(sampleOrder, 'en');
 
-    expect(ticket).toContain('MANA ENTI VANTA');
+    expect(ticket).toContain('MANNU’S CLOUD KITCHEN');
     expect(ticket).toContain('MEV-2026-0001');
     expect(ticket).toContain('Anand Rao');
     expect(ticket).toContain('4 rotis');
