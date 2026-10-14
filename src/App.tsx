@@ -264,7 +264,7 @@ export default function App() {
               <div className="grid grid-cols-2 gap-x-5 gap-y-3 text-sm">
                 <a href="#home">Home</a><a href="#upcoming-menu">Menu</a>
                 <a href="#brand-story">Our Story</a><a href="#delivery-info">Delivery</a>
-                <a href="#faq">FAQs</a><a href="#contact-info">Contact</a>
+                <a href="#contact-info">Contact</a>
               </div>
             </nav>
           )}

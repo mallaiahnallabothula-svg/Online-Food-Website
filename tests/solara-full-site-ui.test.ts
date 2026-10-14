@@ -42,11 +42,15 @@ describe('Solara full-site UI protects business workflows', () => {
     expect(app).toContain('<OrderTrackingModal');
     expect(app).toContain('<OwnerDashboard');
   });
-  it('retains all approved content-rich pages and FAQ', () => {
+  it('retains approved content sections but removes the FAQ section', () => {
     const editorial=source('src/components/SolaraEditorialContent.tsx');
     expect(editorial).not.toContain('QUESTIONS, ANSWERED');
-    for(const id of ['brand-story','at-the-table','delivery-info','faq','contact-info'])expect(editorial).toContain('id="'+id+'"');
-    expect(editorial).toContain('Are these pictures from your kitchen?');
+    for(const id of ['brand-story','at-the-table','delivery-info','contact-info'])expect(editorial).toContain('id="'+id+'"');
+    expect(editorial).not.toContain('id="faq"');
+    expect(editorial).not.toContain('Good to know.');
+    expect(editorial).toContain('ORDERING & DELIVERY');
+    expect(editorial).toContain('QUESTIONS? GET IN TOUCH.');
+    expect(source('src/App.tsx')).not.toContain('href="#faq"');
     expect(editorial).not.toContain('id="details"');
     expect(editorial).not.toContain('id="how-it-works"');
     expect(source('src/App.tsx')).not.toContain('<BrandEmblem');
