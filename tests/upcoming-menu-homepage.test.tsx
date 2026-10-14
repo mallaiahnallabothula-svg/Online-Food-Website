@@ -64,6 +64,9 @@ describe('PR17 public coming-soon menu (display only)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Evening (6)' }));
     expect(screen.getAllByTestId('upcoming-menu-card')).toHaveLength(6);
     expect(container.querySelector('[data-item-id="chapathi"]')?.querySelector('[data-exact-artwork="chapathi"]')).toBeTruthy();
+    const pulkaArt = container.querySelector('[data-item-id="pulka"]')?.querySelector('[data-exact-artwork="pulka"]') as HTMLElement | null;
+    expect(pulkaArt).toBeTruthy();
+    expect(pulkaArt?.style.backgroundImage).toContain('mannus-punugulu-pulka-text-free.webp');
     expect(container.querySelector('[data-item-id="pappu-of-the-day"]')?.querySelector('[data-exact-artwork="pappu-of-the-day"]')).toBeTruthy();
     expect(container.querySelector('[data-item-id="mixed-veg-kurma"]')?.querySelector('[data-exact-artwork="mixed-veg-kurma"]')).toBeTruthy();
     expect(container.querySelector('[data-item-id="guntha-ponganaalu"]')?.querySelector('img[data-guntha-artwork="true"]')).toBeTruthy();
