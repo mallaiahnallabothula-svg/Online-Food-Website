@@ -62,7 +62,7 @@ export const SolaraEditorialContent: React.FC = () => {
           </div>
         </div>
       </section>
-      <section id="faq" className="bg-[#FAF6ED] px-4 py-16 sm:py-20 dark:bg-[#211f1c] sm:px-6"><div className="mx-auto max-w-4xl"><p className="text-xs font-bold uppercase tracking-[0.22em] text-[#A44732]">QUESTIONS, ANSWERED</p><h2 className="solara-display mt-3 text-4xl sm:text-5xl">{te?'తెలుసుకోవాల్సినవి.':'Good to know.'}</h2>
+      <section id="faq" className="bg-[#FAF6ED] px-4 py-16 sm:py-20 dark:bg-[#211f1c] sm:px-6"><div className="mx-auto max-w-4xl"><h2 className="solara-display mt-3 text-4xl sm:text-5xl">{te?'తెలుసుకోవాల్సినవి.':'Good to know.'}</h2>
         <p className="mt-3 text-sm leading-loose text-[#605b53] dark:text-stone-300">{te?'ఆర్డర్ ముందు ఈ వివరాలు చదవండి.':'A few helpful details before your next meal. No surprises about portions or delivery.'}</p>
         <div className="mt-8 border-t border-[#ded7ce]">{faq.map((row,i)=><div key={row[0]} className="border-b border-[#ded7ce]">
           <button id={'faq-question-' + i} type="button" aria-expanded={open===i} aria-controls={'faq-answer-' + i} onClick={()=>setOpen(current=>current===i?null:i)} className="flex min-h-14 w-full items-center justify-between gap-4 py-4 text-left font-semibold">

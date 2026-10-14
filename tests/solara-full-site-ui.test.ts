@@ -44,6 +44,7 @@ describe('Solara full-site UI protects business workflows', () => {
   });
   it('retains all approved content-rich pages and FAQ', () => {
     const editorial=source('src/components/SolaraEditorialContent.tsx');
+    expect(editorial).not.toContain('QUESTIONS, ANSWERED');
     for(const id of ['brand-story','at-the-table','delivery-info','faq','contact-info'])expect(editorial).toContain('id="'+id+'"');
     expect(editorial).toContain('Are these pictures from your kitchen?');
     expect(editorial).not.toContain('id="details"');
