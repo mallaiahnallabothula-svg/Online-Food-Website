@@ -15,12 +15,27 @@ const ADDITIONAL_PANELS: Record<string,string> = {
   'plain-minapa-dosa': '66.667% 0%',
   'jowar-roti': '100% 0%',
   'pulka': '0% 100%',
-  'guntha-ponganaalu': '33.333% 100%',
   'pappu-of-the-day': '66.667% 100%',
   'mixed-veg-kurma': '100% 100%',
 };
 
 export function FoodArtwork({ itemId, className = '' }:{itemId:string;className?:string}) {
+  if (itemId === 'guntha-ponganaalu') {
+    return (
+      <span aria-hidden="true" className={'food-artwork flex shrink-0 items-center justify-center overflow-hidden bg-[#fff6e6] ' + className}>
+        <img
+          data-guntha-artwork="true"
+          src="/images/mannus-guntha-ponganaalu.webp"
+          alt=""
+          loading="lazy"
+          decoding="async"
+          width={800}
+          height={600}
+          className="h-full w-full object-contain"
+        />
+      </span>
+    );
+  }
   const exactPanel = EXACT_REFERENCE_PANELS[itemId];
   const additionalPanel = ADDITIONAL_PANELS[itemId];
   const backgroundImage = exactPanel ? EXACT_REFERENCE_IMAGE : additionalPanel ? ADDITIONAL_IMAGE : null;
