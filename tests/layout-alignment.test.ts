@@ -15,7 +15,7 @@ describe('Layout alignment polish stays presentation-only', () => {
       expect(src).toContain('sm:px-6');
     }
     expect(read('src/App.tsx')).toContain('<main className="min-w-0 flex-1">');
-    expect(read('src/App.tsx')).toContain('items-start gap-x-9 gap-y-8 px-4');
+    expect(read('src/App.tsx')).toContain('items-start gap-x-9 gap-y-6 px-4');
     expect(read('src/components/Header.tsx')).toContain('min-w-0 flex-wrap items-center justify-center');
   });
 

@@ -159,7 +159,7 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
       id="upcoming-menu"
       aria-labelledby="upcoming-menu-heading"
       data-testid="upcoming-menu-section"
-      className="menu-storefront solara-storefront scroll-mt-40 sm:scroll-mt-24 border-y border-[#e6dece] bg-[#FAF6ED] px-4 py-16 sm:px-6 sm:py-20 dark:border-stone-700 dark:bg-[#25221f]"
+      className="menu-storefront solara-storefront scroll-mt-40 sm:scroll-mt-24 border-y border-[#e6dece] bg-[#FAF6ED] px-4 py-10 sm:px-6 sm:py-12 lg:py-14 dark:border-stone-700 dark:bg-[#25221f]"
     >
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
@@ -227,7 +227,7 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
                     : (te ? 'ప్రస్తుతం రీఆర్డర్ చేయలేము. కొత్తగా కార్ట్ తయారు చేసి ప్రయత్నించండి.' : 'Reorder unavailable right now. Please select items from the menu.')}
           </p>
         )}
-        <div className="mt-6 flex items-center justify-between gap-3">
+        <div className="mt-5 flex items-center justify-between gap-3">
           <h3 className="flex items-center gap-2 text-2xl font-medium text-[#384B35] dark:text-stone-100">
             {period === 'MORNING' ? <Coffee size={19} aria-hidden="true" /> : <UtensilsCrossed size={19} aria-hidden="true" />}
             {te ? periods[period].titleTe : periods[period].titleEn}
@@ -236,11 +236,11 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
         </div>
 
         {selected.length > 0 && <p className="mt-2 text-xs text-stone-600 dark:text-stone-300">{te ? 'ప్రతి సమయానికి వేరు కార్ట్, ఆర్డర్, పేమెంట్.' : 'Each session has a separate cart, order and payment.'}</p>}
-        <div className="mt-8">
+        <div className="mt-6">
           <div key={period} className="solara-menu-list grid min-w-0 grid-cols-1 gap-x-10 md:auto-rows-fr md:grid-cols-2" role="list">
             {visible.map(item => (
               <article key={item.id} role="listitem" data-testid="upcoming-menu-card" data-item-id={item.id}
-                className="solara-menu-row grid h-full min-w-0 grid-cols-[64px_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2 border-b border-[#ded7ce] py-5 sm:grid-cols-[80px_minmax(0,1fr)_auto] sm:gap-x-4 dark:border-stone-600">
+                className="solara-menu-row grid h-full min-w-0 grid-cols-[64px_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2 border-b border-[#ded7ce] py-4 sm:py-5 sm:grid-cols-[80px_minmax(0,1fr)_auto] sm:gap-x-4 dark:border-stone-600">
                 <button type="button" aria-label={'View artwork details for ' + item.nameEn} onClick={() => setDetailId(item.id)} className="shrink-0 rounded-lg text-left focus-visible:outline-2 focus-visible:outline-[#A44732]">
                   <FoodArtwork itemId={item.id} className="h-16 w-16 rounded-lg sm:h-20 sm:w-20" />
                 </button>
@@ -297,7 +297,7 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
             </button>
           </div>
         )}
-        <p className="mt-6 text-center text-xs leading-relaxed text-stone-500 dark:text-stone-400">
+        <p className="mt-4 text-center text-xs leading-relaxed text-stone-500 dark:text-stone-400">
           {te
             ? (NEW_MENU_LAUNCH_ENABLED ? 'ఆర్డర్‌కు ముందు ధర, డెలివరీ ప్రాంతం, స్టాక్ సర్వర్‌లో మళ్లీ ధృవీకరించబడతాయి.' : 'ఇక్కడి ధరలు ప్రివ్యూ మాత్రమే. కొత్త మెనూ ఆర్డర్లు ఇంకా ప్రారంభం కాలేదు.')
             : (NEW_MENU_LAUNCH_ENABLED ? 'Price, delivery area and stock are rechecked on the server before payment.' : 'These are preview prices. New-menu ordering is not open yet.')}
