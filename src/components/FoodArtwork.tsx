@@ -3,7 +3,7 @@
 // Remaining eight: matching bright illustrations in a local optimized 4x2 sprite.
 const EXACT_REFERENCE_IMAGE = '/images/mannus-food-illustration-grid.webp';
 const ADDITIONAL_IMAGE = '/images/mannus-eight-additional-illustrations.webp';
-// Text-free two-panel illustration: left is reserved Punugulu; right is current Pulka.
+// Text-free Punugulu/Pulka artwork; only Pulka is on the current menu.
 const TEXT_FREE_IMAGE = '/images/mannus-punugulu-pulka-text-free.webp';
 const TEXT_FREE_PANELS: Record<string,string> = {
   'punugulu': '0% 50%',
@@ -20,12 +20,27 @@ const ADDITIONAL_PANELS: Record<string,string> = {
   'plain-pesarattu': '33.333% 0%',
   'plain-minapa-dosa': '66.667% 0%',
   'jowar-roti': '100% 0%',
-  'guntha-ponganaalu': '33.333% 100%',
   'pappu-of-the-day': '66.667% 100%',
   'mixed-veg-kurma': '100% 100%',
 };
 
 export function FoodArtwork({ itemId, className = '' }:{itemId:string;className?:string}) {
+  if (itemId === 'guntha-ponganaalu') {
+    return (
+      <span aria-hidden="true" className={'food-artwork flex shrink-0 items-center justify-center overflow-hidden bg-[#fff6e6] ' + className}>
+        <img
+          data-guntha-artwork="true"
+          src="/images/mannus-guntha-ponganaalu.webp"
+          alt=""
+          loading="lazy"
+          decoding="async"
+          width={800}
+          height={600}
+          className="h-full w-full object-contain"
+        />
+      </span>
+    );
+  }
   const textFreePanel = TEXT_FREE_PANELS[itemId];
   const exactPanel = EXACT_REFERENCE_PANELS[itemId];
   const additionalPanel = ADDITIONAL_PANELS[itemId];
