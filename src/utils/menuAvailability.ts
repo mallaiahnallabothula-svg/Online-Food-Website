@@ -44,7 +44,7 @@ export function availabilityForItem(item: MenuItem, launchEnabled: boolean,
     now.getTime() < snapshot.checkedAt) return 'checking';
   if (!snapshot.orderingEnabled) return 'unavailable';
   const remaining = snapshot.stock[item.id];
-  if (!Number.isSafeInteger(remaining) || remaining < 0) return 'error';
+  if (typeof remaining !== 'number' || !Number.isSafeInteger(remaining) || remaining < 0) return 'error';
   if (remaining < item.minimumQuantity) return 'sold-out';
   const istToday = new Date(now.getTime() + 330*60_000).toISOString().slice(0,10);
   return snapshot.deliveryDateIst > istToday ? 'preorder' : 'available';
