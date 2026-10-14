@@ -29,11 +29,12 @@ describe('Approved full-site Cream + Olive + Terracotta UI', () => {
     expect(hero).toContain('Explore the menu');
   });
 
-  it('preserves all content sections and separate secure checkout navigation', () => {
+  it('preserves remaining content sections and separate secure checkout navigation', () => {
     const app = read('src/App.tsx');
     const editorial = read('src/components/SolaraEditorialContent.tsx');
     const menu = read('src/components/UpcomingMenuSection.tsx');
-    for (const id of ['brand-story','at-the-table','delivery-info','faq','contact-info']) expect(editorial).toContain('id="' + id + '"');
+    for (const id of ['brand-story','at-the-table','delivery-info','contact-info']) expect(editorial).toContain('id="' + id + '"');
+    expect(editorial).not.toContain('id="faq"');
     expect(app).toContain('<SecureCheckoutPage');
     expect(app).toContain('hidden={checkoutRoute}');
     expect(menu).toContain('onCheckout?.({ period, lines: selected, subtotalPaisa })');
