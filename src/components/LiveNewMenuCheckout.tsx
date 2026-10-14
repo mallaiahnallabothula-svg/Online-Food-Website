@@ -89,7 +89,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
             typeof proof.razorpay_order_id === 'string' && typeof proof.razorpay_signature === 'string') {
           setBusy(true);
           void confirmPayment(proof, pending.orderId, pending.token).catch(() => {
-            setError(te ? 'పేమెంట్ ధృవీకరణ కొనసాగుతోంది. మళ్లీ చెల్లించవద్దు; ఆర్డర్ ట్రాక్ చేయండి.' : 'Payment verification is still pending. Do not pay again; track this order.');
+            setError(te ? 'పేమెంట్ ధృవీకరణ కొనసాగుతోంది. మళ్లీ చెల్లించవద్దు. సందేహం ఉంటే కిచెన్‌ను సంప్రదించండి.' : 'Payment verification is still pending. Do not pay again. Contact the kitchen if the status does not update.');
             setBusy(false);
           });
         }
@@ -224,6 +224,8 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
     });
     if (result?.settlement?.status === 'CONFIRMED') {
       paymentProof.current = null;
+      // Only a server-confirmed captured payment may publish a customer tracking entry.
+      persistCustomerOrder(orderId, token);
       setCompleted(true);
       setConfirmedSlot(preparedSlotRef.current?.orderId === orderId ? preparedSlotRef.current : null);
       try {
@@ -235,7 +237,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
       setStatus(te ? 'చెల్లింపు ధృవీకరించబడింది. మీ ఆర్డర్ ఖరారైంది.' : 'Payment verified. Your order is confirmed.');
       setError(''); setBusy(false);
     } else {
-      setStatus(te ? 'చెల్లింపు సమీక్షలో ఉంది. మళ్లీ చెల్లించవద్దు; ఆర్డర్ ట్రాక్ చేయండి.' : 'Payment needs review. Do not pay again; track your order.');
+      setStatus(te ? 'చెల్లింపు సమీక్షలో ఉంది. మళ్లీ చెల్లించవద్దు. కిచెన్‌ను సంప్రదించండి.' : 'Payment needs review. Do not pay again. Contact the kitchen for assistance.');
       setBusy(false);
     }
   }
@@ -258,7 +260,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
       const token = prepared.checkout.customerAccessToken as string;
       const slot = parsePreparedPreorderSlot(prepared.checkout, orderId);
       preparedSlotRef.current = slot;
-      setTrackingToken(token); persistCustomerOrder(orderId, token);
+      setTrackingToken(token); // Internal pending-payment recovery only; do not publish as a trackable order.
       try { sessionStorage.setItem('mana_new_menu_pending_order', JSON.stringify({ orderId, token, ...(slot ?? {}) })); } catch { /* Tracking remains available in memory. */ }
       const gateway = await post('/gateway', { orderId, customerAccessToken: token });
       await loadRazorpay();
@@ -279,11 +281,11 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
           paymentProof.current = proof;
           try { sessionStorage.setItem('mana_new_menu_payment_proof', JSON.stringify(proof)); } catch { /* Keep proof in memory. */ }
           try { await confirmPayment(proof, orderId, token); }
-          catch { setError(te ? 'పేమెంట్ వచ్చిందో లేదో సర్వర్ ధృవీకరిస్తోంది. మళ్లీ చెల్లించవద్దు.' : 'Payment verification is pending. Do not pay again; track this order.'); setBusy(false); }
+          catch { setError(te ? 'పేమెంట్ వచ్చిందో లేదో సర్వర్ ధృవీకరిస్తోంది. మళ్లీ చెల్లించవద్దు.' : 'Payment verification is pending. Do not pay again. Contact the kitchen if needed.'); setBusy(false); }
         },
       });
       checkout.on('payment.failed', (result: any) => {
-        setError(result?.error?.description || (te ? 'పేమెంట్ విఫలమైంది. ఆర్డర్ ట్రాక్ చేసి స్థితి చూడండి.' : 'Payment failed. Check order status before retrying.'));
+        setError(result?.error?.description || (te ? 'పేమెంట్ విఫలమైంది. మళ్లీ ప్రయత్నించే ముందు పేమెంట్ స్థితి సరిచూసుకోండి.' : 'Payment failed. Please check payment status before retrying.'));
         setBusy(false);
       });
       checkout.open();
@@ -515,7 +517,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
             </button>
           )}
           {lines.length === 0 && <p className="text-center text-xs text-stone-500 dark:text-stone-300">{te ? 'కొనసాగించడానికి పైన కార్ట్‌లో ఐటమ్స్ జోడించండి.' : 'Add items to the cart above to continue.'}</p>}
-          {trackingToken && (
+          {completed && trackingToken && (
             <button type="button" onClick={() => setTrackingOpen(true)} className="min-h-11 w-full rounded-xl border border-emerald-700/40 bg-white px-4 py-2.5 text-sm font-bold text-[#A44732] transition-colors hover:bg-emerald-50 dark:border-emerald-400/40 dark:bg-stone-900 dark:text-emerald-200">
               {te ? 'నా ఆర్డర్ ట్రాక్ చేయండి' : 'Track this order'}
             </button>
@@ -529,7 +531,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
           </p>
         </div>
       </form>
-      <OrderTrackingModal isOpen={trackingOpen} onClose={() => setTrackingOpen(false)} initialOrderId={trackingToken} onReorder={onReorder} />
+      <OrderTrackingModal isOpen={completed && trackingOpen} onClose={() => setTrackingOpen(false)} initialOrderId={completed ? trackingToken : undefined} onReorder={onReorder} />
     </div>
   );
 }
