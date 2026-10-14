@@ -30,7 +30,7 @@ describe('Signature bilingual local brand story',()=>{
     const {container}=mountStory();
     expect(container.querySelectorAll('#brand-story')).toHaveLength(1);
     const section=container.querySelector('#brand-story')!;
-    expect(section.className).toContain('md:grid-cols-');
+    expect(section.firstElementChild?.className).toContain('md:grid-cols-');
     expect(section.textContent).toContain('From Our Kitchen');
     expect(section.textContent).toContain('Kollur');
     expect(section.textContent).toContain('12 MENU ITEMS');
