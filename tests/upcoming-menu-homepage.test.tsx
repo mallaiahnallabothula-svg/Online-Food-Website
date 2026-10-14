@@ -66,8 +66,9 @@ describe('PR17 public coming-soon menu (display only)', () => {
     expect(container.querySelector('[data-item-id="chapathi"]')?.querySelector('[data-exact-artwork="chapathi"]')).toBeTruthy();
     expect(container.querySelector('[data-item-id="pappu-of-the-day"]')?.querySelector('[data-exact-artwork="pappu-of-the-day"]')).toBeTruthy();
     expect(container.querySelector('[data-item-id="mixed-veg-kurma"]')?.querySelector('[data-exact-artwork="mixed-veg-kurma"]')).toBeTruthy();
+    expect(container.querySelector('[data-item-id="guntha-ponganaalu"]')?.querySelector('img[data-guntha-artwork="true"]')).toBeTruthy();
     for (const item of MENU_CATALOG.filter(entry => entry.mealPeriod === 'EVENING')) {
-      expect(container.querySelector('[data-item-id="' + item.id + '"]')?.querySelector('[data-exact-artwork]')).toBeTruthy();
+      expect(container.querySelector('[data-item-id="' + item.id + '"]')?.querySelector(item.id === 'guntha-ponganaalu' ? 'img[data-guntha-artwork="true"]' : '[data-exact-artwork]')).toBeTruthy();
     }
   });
 
