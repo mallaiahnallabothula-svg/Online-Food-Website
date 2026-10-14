@@ -183,3 +183,11 @@ html { background:#FAF6ED; }
     .solara-footer-links a,.solara-hero-actions a) { transition:none !important; }
   .solara-app .solara-menu-row:hover,.solara-app .solara-menu-row button:active { transform:none !important; }
 }
+
+/* Layout-only constraints: keep the established colors, fonts and motion untouched. */
+.solara-app main,
+.solara-app .solara-customer,
+.solara-app .solara-checkout,
+.solara-app .solara-menu-list { min-width:0; }
+.solara-app .solara-checkout { max-width:100%; }
+.solara-app .solara-menu-row :is(h4,p) { overflow-wrap:break-word; }

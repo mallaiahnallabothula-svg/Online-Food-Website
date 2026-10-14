@@ -30,12 +30,12 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="solara-header sticky top-0 z-40 w-full backdrop-blur-md transition-colors duration-200 border-b border-[#e6dece] dark:border-stone-800 bg-[#FAF6ED]/95 dark:bg-[#1A1816]/95">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 min-h-18 flex flex-wrap items-center justify-between gap-3 py-2.5">
+      <div className="mx-auto flex min-h-18 w-full max-w-7xl flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-2.5 sm:gap-y-3 sm:px-6">
         
         {/* Brand Emblem & Name */}
         <div 
           onClick={onBackToCustomerView}
-          className="flex items-center gap-3 cursor-pointer group"
+          className="group flex min-w-0 items-center gap-3 cursor-pointer"
           id="brand-header-link"
         >
           <BrandEmblem size="md" />
@@ -75,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Right Actions */}
-        <div className="flex w-full flex-wrap items-center justify-between gap-2 sm:w-auto sm:justify-end sm:gap-3">
+        <div className="flex w-full min-w-0 flex-wrap items-center justify-center gap-2 sm:w-auto sm:justify-end sm:gap-3">
 
           {/* Quick Language Toggle */}
           <div className="inline-flex items-center bg-[#f0ebdf] dark:bg-stone-800 p-0.5 rounded-lg border border-amber-900/10 dark:border-stone-700">
