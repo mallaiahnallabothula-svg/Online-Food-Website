@@ -209,7 +209,7 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
         </div>
 
         <p className="mt-4 text-sm">{deliveryDate} · {period === 'EVENING' && pappu ? (te ? PAPPU_VARIETIES[pappu].nameTe : PAPPU_VARIETIES[pappu].nameEn) : ''}</p>
-        {availabilityError && <p role="alert" className="mt-2 text-sm text-amber-900 dark:text-amber-200">{te ? 'స్టాక్ వివరాలు ధృవీకరించలేకపోయాం.' : 'Unable to verify stock.'} <button type="button" className="font-semibold underline" onClick={() => setRefresh(value => value + 1)}>{te ? 'మళ్లీ ప్రయత్నించండి' : 'Retry'}</button></p>
+        {availabilityError && <p role="alert" className="mt-2 text-sm text-amber-900 dark:text-amber-200">{te ? 'స్టాక్ వివరాలు ధృవీకరించలేకపోయాం.' : 'Unable to verify stock.'} <button type="button" className="font-semibold underline" onClick={() => setRefresh(value => value + 1)}>{te ? 'మళ్లీ ప్రయత్నించండి' : 'Retry'}</button></p>}
         {reorderNotice && (
           <p
             role={['error', 'unavailable', 'stock', 'minimum'].includes(reorderNotice) ? 'alert' : 'status'}
