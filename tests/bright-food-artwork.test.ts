@@ -16,7 +16,7 @@ describe('Bright menu food illustration presentation',()=>{
     const art=source('src/components/FoodArtwork.tsx');
     expect(art).toContain('/images/mannus-food-illustration-grid.webp');
     for(const [id,pos] of [['idly','0% 0%'],['onion-minapa-dosa','100% 0%'],['onion-pesarattu','0% 100%'],['chapathi','100% 100%']]) {
-      expect(art).toContain(\"'\"+id+\"': '\"+pos+\"'\");
+      expect(art).toContain(`'${id}': '${pos}'`);
     }
     expect(art).toContain("backgroundSize: '200% 200%'");
     expect(art).toContain('aspect-[3/2]');
