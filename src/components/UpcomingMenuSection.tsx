@@ -240,7 +240,7 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
           </div>
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-[#ded7ce] py-4 dark:border-stone-600" aria-label={te ? 'ఆహార మొత్తం మరియు డెలివరీ' : 'Food total and delivery'}>
           <div>
-            <p className="text-sm text-[#5f584f] dark:text-stone-200">{te ? 'ఆహార మొత్తం' : 'Food subtotal'} <strong key={subtotalPaisa} data-testid="menu-cart-total" className="solara-cart-count "ml-1 font-bold tabular-nums text-[#A44732]">{money(subtotalPaisa)}</strong></p>
+            <p className="text-sm text-[#5f584f] dark:text-stone-200">{te ? 'ఆహార మొత్తం' : 'Food subtotal'} <strong key={subtotalPaisa} data-testid="menu-cart-total" className="solara-cart-count ml-1 font-bold tabular-nums text-[#A44732]">{money(subtotalPaisa)}</strong></p>
             <p aria-live="polite" className="mt-1 text-xs text-[#756f67] dark:text-stone-300">
               {subtotalPaisa < NEW_MENU_ORDER_POLICY.minimumCartPaisa
                 ? (te ? 'కనీసం ₹100. ఇంకా ' : '₹100 minimum. Add ') + money(NEW_MENU_ORDER_POLICY.minimumCartPaisa - subtotalPaisa) + (te ? ' జోడించండి.' : ' more.')
