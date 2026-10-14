@@ -1,0 +1,60 @@
+import { getNextPreorderDeliverySlot } from '../../shared/preorderScheduling.ts';
+import { MENU_CATALOG, type MealPeriod, type MenuItem } from '../../shared/menuCatalog.ts';
+import { PAPPU_VARIETIES, type PappuVariety } from '../../shared/pappu.ts';
+
+export type MenuStatus = 'available' | 'sold-out' | 'preorder' | 'unavailable' | 'checking' | 'error';
+export interface VerifiedMenuStatus {
+  readonly period: MealPeriod;
+  readonly deliveryDateIst: string;
+  readonly pappu: PappuVariety | null;
+  readonly stock: Record<string, number>;
+  readonly orderingEnabled: boolean;
+  readonly checkedAt: number;
+}
+export const STATUS_RECHECK_MS = 120_000;
+
+/** Fail closed: never show a stock claim from malformed, out-of-period, or stale API data. */
+export function validateMenuStatus(data: unknown, period: MealPeriod, now: Date): VerifiedMenuStatus | null {
+  if (!data || typeof data !== 'object') return null;
+  const d = data as Record<string, unknown>;
+  if (typeof d.orderingEnabled !== 'boolean' ||
+    d.deliveryDateIst !== getNextPreorderDeliverySlot(period, now).deliveryDateIst ||
+    !d.stock || typeof d.stock !== 'object' || Array.isArray(d.stock)) return null;
+  if (d.pappu !== null && !(typeof d.pappu === 'string' && Object.prototype.hasOwnProperty.call(PAPPU_VARIETIES, d.pappu))) return null;
+  const stock = d.stock as Record<string, unknown>;
+  for (const item of MENU_CATALOG.filter(x => x.mealPeriod === period)) {
+    const amount = stock[item.id];
+    if (!Number.isSafeInteger(amount) || (amount as number) < 0 ||
+      item.dailyPlateLimit === null || (amount as number) > item.dailyPlateLimit) return null;
+  }
+  return { period, deliveryDateIst:d.deliveryDateIst as string,
+    pappu:d.pappu as PappuVariety | null,
+    stock:stock as Record<string,number>, orderingEnabled:d.orderingEnabled,
+    checkedAt:now.getTime() };
+}
+
+/** Closed legacy kitchen hours never override the valid future preorder window. */
+export function availabilityForItem(item: MenuItem, launchEnabled: boolean,
+  snapshot: VerifiedMenuStatus | null, hasError: boolean, now: Date): MenuStatus {
+  if (!launchEnabled) return 'unavailable';
+  if (hasError) return 'error';
+  if (!snapshot || snapshot.period !== item.mealPeriod ||
+    snapshot.deliveryDateIst !== getNextPreorderDeliverySlot(item.mealPeriod, now).deliveryDateIst ||
+    now.getTime() - snapshot.checkedAt >= STATUS_RECHECK_MS ||
+    now.getTime() < snapshot.checkedAt) return 'checking';
+  if (!snapshot.orderingEnabled) return 'unavailable';
+  const remaining = snapshot.stock[item.id];
+  if (!Number.isSafeInteger(remaining) || remaining < 0) return 'error';
+  if (remaining < item.minimumQuantity) return 'sold-out';
+  const istToday = new Date(now.getTime() + 330*60_000).toISOString().slice(0,10);
+  return snapshot.deliveryDateIst > istToday ? 'preorder' : 'available';
+}
+
+export const statusLabels: Record<MenuStatus, { en:string; te:string }> = {
+  available:{en:'Available',te:'అందుబాటులో ఉంది'},
+  'sold-out':{en:'Sold Out',te:'స్టాక్ అయిపోయింది'},
+  preorder:{en:'Pre-order Available',te:'ముందస్తు ఆర్డర్ అందుబాటులో ఉంది'},
+  unavailable:{en:'Ordering Unavailable',te:'ఆర్డర్లు అందుబాటులో లేవు'},
+  checking:{en:'Checking availability',te:'స్టాక్ తనిఖీ చేస్తున్నాం'},
+  error:{en:'Unable to Verify',te:'స్టాక్ తనిఖీ సాధ్యం కాలేదు'}
+};

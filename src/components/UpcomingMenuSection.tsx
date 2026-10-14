@@ -1,12 +1,15 @@
-import { PAPPU_VARIETIES, pappuForDate, type PappuVariety } from '../../shared/pappu';
+import { PAPPU_VARIETIES, pappuForDate } from '../../shared/pappu';
 import { getNextPreorderDeliverySlot } from '../../shared/preorderScheduling';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Clock3, Coffee, Sun, Moon, UtensilsCrossed, ArrowRight } from 'lucide-react';
 import { MENU_CATALOG, NEW_MENU_LAUNCH_ENABLED, NEW_MENU_ORDER_POLICY, type MealPeriod, type MenuItem } from '../../shared/menuCatalog.ts';
 import { useLanguage } from '../context/LanguageContext';
 import type { CheckoutSelection } from '../utils/checkoutSelection';
 import { checkReorderStock, type ReorderError, type ReorderRequest } from '../utils/reorder';
 import { FoodArtwork } from './FoodArtwork';
+import { FoodDetailDialog } from './FoodDetailDialog';
+import { MenuAvailabilityBadge } from './MenuAvailabilityBadge';
+import { availabilityForItem, STATUS_RECHECK_MS, validateMenuStatus, type VerifiedMenuStatus } from '../utils/menuAvailability';
 
 const money = (paisa: number) => '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
 
@@ -48,21 +51,38 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
   const te = language === 'te';
   const [period, setPeriod] = useState<MealPeriod>(initialCheckoutSelection?.period ?? 'MORNING');
   const [quantities, setQuantities] = useState<Record<string, number>>(() => Object.fromEntries((initialCheckoutSelection?.lines ?? []).map(line => [line.item.id, line.quantity])));
-  const [availability, setAvailability] = useState<{ deliveryDateIst: string; pappu: PappuVariety | null; stock: Record<string, number> } | null>(null);
+  const [availability, setAvailability] = useState<VerifiedMenuStatus | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const closeDetail = useCallback(() => setDetailId(null), []);
   const [availabilityError, setAvailabilityError] = useState(false);
   const [refresh, setRefresh] = useState(0);
   const [reorderNotice, setReorderNotice] = useState<'checking' | 'ready' | 'error' | ReorderError | null>(null);
   useEffect(() => {
     if (!NEW_MENU_LAUNCH_ENABLED) return;
     let active = true;
+    const controller = new AbortController();
     setAvailability(null); setAvailabilityError(false);
-    fetch('/api/new-menu/menu-status?period=' + period).then(async response => {
+    fetch('/api/new-menu/menu-status?period=' + period, { cache: 'no-store', signal: controller.signal }).then(async response => {
       if (!response.ok) throw new Error('Availability unavailable');
-      const data = await response.json();
-      if (active) setAvailability(data);
-    }).catch(() => { if (active) setAvailabilityError(true); });
-    return () => { active = false; };
+      const snapshot = validateMenuStatus(await response.json(), period, new Date());
+      if (!snapshot) throw new Error('Invalid or mismatched stock date');
+      if (active) setAvailability(snapshot);
+    }).catch(() => { if (active) { setAvailability(null); setAvailabilityError(true); } });
+    return () => { active = false; controller.abort(); };
   }, [period, refresh]);
+  // Invalidate on return/focus and at most once per two minutes while visible.
+  useEffect(() => {
+    if (!NEW_MENU_LAUNCH_ENABLED) return;
+    const onVisible = () => { if (document.visibilityState !== 'hidden') setRefresh(value => value + 1); };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+    const timer = window.setInterval(onVisible, STATUS_RECHECK_MS);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+      window.clearInterval(timer);
+    };
+  }, []);
   // This can only refill a fresh cart; new quote/payment is always customer-initiated.
   useEffect(() => {
     if (!reorderRequest) return;
@@ -81,17 +101,17 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
       })
       .then(data => {
         if (!active) return;
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(data?.deliveryDateIst) ||
-            !data?.stock || typeof data.stock !== 'object') {
+        const snapshot = validateMenuStatus(data, reorderRequest.period, new Date());
+        if (!snapshot || !snapshot.orderingEnabled) {
           setReorderNotice('unavailable');
           return;
         }
-        const issue = checkReorderStock(reorderRequest, data.stock);
+        const issue = checkReorderStock(reorderRequest, snapshot.stock);
         if (issue) {
           setReorderNotice(issue);
           return;
         }
-        setAvailability(data);
+        setAvailability(snapshot);
         setAvailabilityError(false);
         // Replace the old cart: do not silently combine it with a prior selection.
         setQuantities(Object.fromEntries(reorderRequest.lines.map(line => [line.itemId, line.quantity])));
@@ -104,9 +124,14 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
   const pappu = availability ? availability.pappu : NEW_MENU_LAUNCH_ENABLED ? null : pappuForDate(deliveryDate);
   function showCheckout() {
     if (subtotalPaisa < NEW_MENU_ORDER_POLICY.minimumCartPaisa || selected.length === 0) return;
+    if (NEW_MENU_LAUNCH_ENABLED && selected.some(line => {
+      const status = availabilityForItem(line.item, true, availability, availabilityError, new Date());
+      return (status !== 'available' && status !== 'preorder') || line.quantity > (availability?.stock[line.item.id] ?? 0);
+    })) return;
     onCheckout?.({ period, lines: selected, subtotalPaisa });
   }
   const visible = MENU_CATALOG.filter(item => item.mealPeriod === period).map(item => item.id === 'pappu-of-the-day' && pappu ? { ...item, ...PAPPU_VARIETIES[pappu] } : item);
+  const detailItem = visible.find(item => item.id === detailId);
   const selected = visible.filter(item => (quantities[item.id] ?? 0) > 0)
     .map(item => ({ item, quantity: quantities[item.id]! }));
   const subtotalPaisa = selected.reduce((total, line) =>
@@ -117,7 +142,11 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
     setReorderNotice(null);
     setQuantities(current => {
       const old = current[item.id] ?? 0;
-      const max = availability?.stock[item.id] ?? item.dailyPlateLimit ?? 500;
+      if (adjustment > 0 && NEW_MENU_LAUNCH_ENABLED) {
+        const status = availabilityForItem(item, true, availability, availabilityError, new Date());
+        if (status !== 'available' && status !== 'preorder') return current;
+      }
+      const max = NEW_MENU_LAUNCH_ENABLED ? (availability?.stock[item.id] ?? 0) : (item.dailyPlateLimit ?? 500);
       const next = adjustment > 0
         ? Math.min(max, old === 0 ? item.minimumQuantity : old + 1)
         : old <= item.minimumQuantity ? 0 : old - 1;
@@ -180,7 +209,7 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
         </div>
 
         <p className="mt-4 text-sm">{deliveryDate} · {period === 'EVENING' && pappu ? (te ? PAPPU_VARIETIES[pappu].nameTe : PAPPU_VARIETIES[pappu].nameEn) : ''}</p>
-        {availabilityError && <p role="alert">Menu availability unavailable. <button type="button" onClick={() => setRefresh(value => value + 1)}>Retry</button></p>}
+        {availabilityError && <p role="alert" className="mt-2 text-sm text-amber-900 dark:text-amber-200">{te ? 'స్టాక్ వివరాలు ధృవీకరించలేకపోయాం.' : 'Unable to verify stock.'} <button type="button" className="font-semibold underline" onClick={() => setRefresh(value => value + 1)}>{te ? 'మళ్లీ ప్రయత్నించండి' : 'Retry'}</button></p>
         {reorderNotice && (
           <p
             role={['error', 'unavailable', 'stock', 'minimum'].includes(reorderNotice) ? 'alert' : 'status'}
@@ -212,26 +241,31 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
             {visible.map(item => (
               <article key={item.id} role="listitem" data-testid="upcoming-menu-card" data-item-id={item.id}
                 className="solara-menu-row grid h-full min-w-0 grid-cols-[64px_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2 border-b border-[#ded7ce] py-5 sm:grid-cols-[80px_minmax(0,1fr)_auto] sm:gap-x-4 dark:border-stone-600">
-                <FoodArtwork itemId={item.id} className="h-16 w-16 rounded-lg sm:h-20 sm:w-20" />
+                <button type="button" aria-label={'View artwork details for ' + item.nameEn} onClick={() => setDetailId(item.id)} className="shrink-0 rounded-lg text-left focus-visible:outline-2 focus-visible:outline-[#A44732]">
+                  <FoodArtwork itemId={item.id} className="h-16 w-16 rounded-lg sm:h-20 sm:w-20" />
+                </button>
                 <div className="min-w-0 pt-1">
-                  <h4 className="text-base font-medium leading-snug text-[#384B35] dark:text-stone-100 sm:text-lg">{te ? item.nameTe : item.nameEn}</h4>
+                  <h4 className="text-base font-medium leading-snug text-[#384B35] dark:text-stone-100 sm:text-lg"><button type="button" aria-label={'View details for ' + item.nameEn} onClick={() => setDetailId(item.id)} className="text-left hover:underline focus-visible:outline-2 focus-visible:outline-[#A44732]">{te ? item.nameTe : item.nameEn}</button></h4>
                   <p className="mt-2 text-[11px] leading-relaxed text-[#756f67] dark:text-stone-300 sm:text-xs">{serving(item, te)}{item.includesChutney && <span> · {te ? 'చట్నీతో' : 'Chutney included'}</span>}</p>
-                  <p className="mt-1 text-[10px] leading-relaxed text-[#756f67] dark:text-stone-400">{!NEW_MENU_LAUNCH_ENABLED ? (te ? 'కొత్త మెనూ ఆర్డర్లు త్వరలో' : 'New-menu ordering coming soon') : ((availability?.stock[item.id] ?? 0) < item.minimumQuantity ? (te ? 'స్టాక్ లేదు' : 'Sold out') : (te ? 'అందుబాటులో ఉంది' : 'Available'))}</p>
+                   {!NEW_MENU_LAUNCH_ENABLED && <p className="mt-1 text-[10px] leading-relaxed text-[#756f67] dark:text-stone-400">{te ? 'కొత్త మెనూ ఆర్డర్లు త్వరలో' : 'New-menu ordering coming soon'}</p>}
+                   <div className="mt-2"><MenuAvailabilityBadge status={availabilityForItem(item, NEW_MENU_LAUNCH_ENABLED, availability, availabilityError, new Date())} te={te} /></div>
                 </div>
                 <div className="flex min-w-[70px] flex-col items-end gap-3 pt-0.5">
                   <p className="text-right font-serif text-xl text-[#A44732] dark:text-[#e8ad99]">{money(item.pricePaisa)}</p>
                   {(quantities[item.id] ?? 0) === 0 ? (
-                    <button type="button" disabled={NEW_MENU_LAUNCH_ENABLED && (!availability || (availability.stock[item.id] ?? 0) < item.minimumQuantity)}
+                    <button type="button" disabled={NEW_MENU_LAUNCH_ENABLED && !['available','preorder'].includes(availabilityForItem(item, true, availability, availabilityError, new Date()))}
                       aria-label={'Add ' + item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' to cart' : ' to sample cart')}
                       onClick={() => adjustQuantity(item, 1)}
                       className="min-h-11 rounded-md border border-[#A44732] px-3 py-2 text-xs font-semibold text-[#A44732] transition-colors hover:bg-[#A44732] hover:text-white disabled:cursor-not-allowed disabled:opacity-40 sm:text-sm">
-                      {NEW_MENU_LAUNCH_ENABLED && availability && (availability.stock[item.id] ?? 0) < item.minimumQuantity ? (te ? 'స్టాక్ లేదు' : 'Sold out') : (te ? 'జోడించండి +' : 'Add +')}
+                      {te ? 'జోడించండి +' : 'Add +'}
                     </button>
                   ) : (
                     <div className="solara-quantity-enter inline-flex h-11 items-center rounded-md border border-[#c7bcb0]">
                       <button type="button" aria-label={'Decrease ' + item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' quantity' : ' sample quantity')} onClick={() => adjustQuantity(item, -1)} className="h-11 w-9 rounded-l-md text-base font-bold text-[#A44732]">−</button>
                       <span aria-label={item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' quantity' : ' sample quantity')} className="min-w-5 text-center text-sm font-bold text-[#384B35] dark:text-stone-100">{quantities[item.id]}</span>
-                      <button type="button" aria-label={'Increase ' + item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' quantity' : ' sample quantity')} disabled={(quantities[item.id] ?? 0) >= (availability?.stock[item.id] ?? item.dailyPlateLimit ?? 500)} onClick={() => adjustQuantity(item, 1)} className="h-11 w-9 rounded-r-md text-base font-bold text-[#A44732] disabled:opacity-40">+</button>
+                      <button type="button" aria-label={'Increase ' + item.nameEn + (NEW_MENU_LAUNCH_ENABLED ? ' quantity' : ' sample quantity')} disabled={NEW_MENU_LAUNCH_ENABLED
+                          ? !['available','preorder'].includes(availabilityForItem(item, true, availability, availabilityError, new Date())) || (quantities[item.id] ?? 0) >= (availability?.stock[item.id] ?? 0)
+                          : (quantities[item.id] ?? 0) >= (item.dailyPlateLimit ?? 500)} onClick={() => adjustQuantity(item, 1)} className="h-11 w-9 rounded-r-md text-base font-bold text-[#A44732] disabled:opacity-40">+</button>
                     </div>
                   )}
                 </div>
@@ -269,6 +303,17 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
             : (NEW_MENU_LAUNCH_ENABLED ? 'Price, delivery area and stock are rechecked on the server before payment.' : 'These are preview prices. New-menu ordering is not open yet.')}
         </p>
       </div>
+      {detailItem && (
+        <FoodDetailDialog item={detailItem} te={te} deliveryDate={deliveryDate}
+          status={availabilityForItem(detailItem, NEW_MENU_LAUNCH_ENABLED, availability, availabilityError, new Date())}
+          quantity={quantities[detailItem.id] ?? 0}
+          maxQuantity={NEW_MENU_LAUNCH_ENABLED ? (availability?.stock[detailItem.id] ?? 0) : (detailItem.dailyPlateLimit ?? 500)}
+          canIncrease={!NEW_MENU_LAUNCH_ENABLED || ['available','preorder'].includes(availabilityForItem(detailItem, true, availability, availabilityError, new Date()))}
+          previewOnly={!NEW_MENU_LAUNCH_ENABLED}
+          onAdjust={adjustment => adjustQuantity(detailItem, adjustment)}
+          onClose={closeDetail}
+        />
+      )}
     </section>
   );
 }

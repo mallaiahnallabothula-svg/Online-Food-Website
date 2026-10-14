@@ -191,3 +191,13 @@ html { background:#FAF6ED; }
 .solara-app .solara-menu-list { min-width:0; }
 .solara-app .solara-checkout { max-width:100%; }
 .solara-app .solara-menu-row :is(h4,p) { overflow-wrap:break-word; }
+
+/* Signature story and food-preview polish; existing typography/colors unchanged. */
+@keyframes mev-food-preview-in {
+  from { opacity:0; transform:translate3d(0,10px,0); }
+  to { opacity:1; transform:translate3d(0,0,0); }
+}
+.solara-food-dialog { animation:mev-food-preview-in .22s ease-out both; }
+@media (prefers-reduced-motion:reduce) {
+  .solara-food-dialog { animation:none !important; transform:none !important; }
+}

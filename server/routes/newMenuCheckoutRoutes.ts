@@ -88,7 +88,7 @@ newMenuCheckoutRouter.get('/menu-status', limiter, async (req, res) => {
     const db = getDb();
     const pappu = period === 'EVENING' ? await resolvePappu(db, date) : null;
     const stock = Object.fromEntries(await Promise.all(MENU_CATALOG.filter(item => item.mealPeriod === period).map(async item => [item.id, await getMenuStockRemaining(db, item.id, date)])));
-    return res.json({ deliveryDateIst: date, pappu, stock });
+    return res.json({ deliveryDateIst: date, pappu, stock, orderingEnabled: isProductionCheckoutEnabled() });
   } catch { return res.status(503).json({ error: 'Menu availability unavailable. Please retry.' }); }
 });
 newMenuCheckoutRouter.use((req, res, next) => {

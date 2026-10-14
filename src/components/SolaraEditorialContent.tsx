@@ -19,11 +19,28 @@ export const SolaraEditorialContent: React.FC = () => {
   const [open, setOpen] = useState<number | null>(null);
   return (
     <>
-      <section id="brand-story" className="border-b border-[#ded7ce] bg-[#FAF6ED] px-4 py-16 sm:py-20 dark:border-stone-700 dark:bg-[#211f1c] sm:px-6">
+      <section id="brand-story" className="border-b border-[#ded7ce] bg-[#FAF6ED] px-4 py-16 dark:border-stone-700 dark:bg-[#211f1c] sm:px-6 sm:py-20" aria-labelledby="brand-story-heading">
         <div className="mx-auto grid max-w-7xl items-center gap-8 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-16">
-          <div><p className="text-xs font-bold uppercase tracking-[0.22em] text-[#A44732]">YOUR NEIGHBOURHOOD KITCHEN</p>
-          <h2 className="solara-display mt-4 text-4xl leading-relaxed text-[#384B35] dark:text-stone-100 sm:text-5xl">{te ? <>రోజుకు రెండు సమయాలు.<br /><span className="text-[#A44732]">మన ఇంటి రుచులు.</span></> : <>Two simple sessions.<br /><span className="text-[#A44732]">A familiar taste.</span></>}</h2></div>
-          <div><p className="text-base leading-loose text-[#605b53] dark:text-stone-300">{te ? 'కొల్లూరు చుట్టుపక్కల ఉన్నవారి కోసం చిన్న మెనూ. ఉదయం టిఫిన్లు, సాయంత్రం రొట్టెలు, పప్పు, కుర్మా — ధరలు, పరిమాణాలు స్పష్టంగా.' : 'A focused menu for Kollur and nearby neighbourhoods. Morning tiffins and evening rotis, dal and kurma, with clear portions and prices. Choose what you like for your preferred meal session.'}</p><p className="mt-6 border-t border-[#ded7ce] pt-5 text-xs font-semibold tracking-widest text-[#756f67]">12 MENU ITEMS · 2 MEAL SESSIONS · PRE-ORDERS</p></div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#A44732]">YOUR NEIGHBOURHOOD KITCHEN</p>
+            <h2 id="brand-story-heading" className="solara-display mt-4 text-4xl leading-snug text-[#384B35] dark:text-stone-100 sm:text-5xl">
+              {te ? <>మా వంటింటి నుంచి<br /><span className="text-[#A44732]">మీ ఇంటికి.</span></> : <>From Our Kitchen<br /><span className="text-[#A44732]">to Your Home.</span></>}
+            </h2>
+            <p className="mt-5 text-sm font-medium leading-relaxed text-[#A44732]">
+              {te ? 'రోజుకు రెండు సమయాలు. మన ఇంటి రుచులు.' : 'Two simple sessions. A familiar taste.'}
+            </p>
+          </div>
+          <div className="min-w-0">
+            <p className="text-base leading-loose text-[#605b53] dark:text-stone-300">
+              {te
+                ? 'కొల్లూరు, హైదరాబాద్‌లోని మా చిన్న హోమ్ కిచెన్ నుంచి చుట్టుపక్కల ఉన్నవారి కోసం సులభమైన మెనూ. ఉదయం టిఫిన్లు, సాయంత్రం రొట్టెలు, పప్పు, కుర్మా — మీకు ఏది కావాలో ధరలు, పరిమాణాలు స్పష్టంగా చూసి ఎంచుకోండి.'
+                : 'From our home kitchen in Kollur, Hyderabad, we keep the menu simple for nearby neighbourhoods. Start the morning with tiffins; choose rotis, pappu or kurma in the evening. Familiar everyday food, with clear portions and prices.'}
+            </p>
+            <div className="mt-6 flex items-center gap-3 border-t border-[#ded7ce] pt-5">
+              <span aria-hidden="true" className="h-px w-9 shrink-0 bg-[#A44732]" />
+              <p className="text-xs font-semibold tracking-wide text-[#756f67] dark:text-stone-300">12 MENU ITEMS · 2 MEAL SESSIONS · PRE-ORDERS</p>
+            </div>
+          </div>
         </div>
       </section>
       <section id="at-the-table" className="border-y border-[#ded7ce] bg-[#FAF6ED] px-4 py-16 sm:py-20 dark:border-stone-700 dark:bg-[#211f1c] sm:px-6">
