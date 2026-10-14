@@ -48,7 +48,7 @@ describe('PR14 Render Free feasibility checks — local only, not a Render deplo
       expect(health.status).toBe(200);
       const result = await health.json() as { status: string; service: string };
       expect(result.status).toBe('ok');
-      expect(result.service).toBe('Mana Enti Vanta API');
+      expect(result.service).toBe('Mannu’s Cloud Kitchen API');
 
       const missing = await fetch(base + '/api/not-a-real-path');
       expect(missing.status).toBe(404);

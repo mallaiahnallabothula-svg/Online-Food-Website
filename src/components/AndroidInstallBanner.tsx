@@ -33,7 +33,7 @@ export const AndroidInstallBanner: React.FC<AndroidInstallBannerProps> = ({
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
               <span className="font-bold text-xs sm:text-sm text-white truncate">
-                {language === 'te' ? 'మన ఇంటి వంట - Android యాప్ అందుబాటులో ఉంది!' : 'Mana Enti Vanta - Android App Available!'}
+                {language === 'te' ? 'Mannu’s Cloud Kitchen - Android యాప్ అందుబాటులో ఉంది!' : 'Mannu’s Cloud Kitchen - Android App Available!'}
               </span>
               <span className="hidden md:inline-flex items-center gap-1 px-2 py-0.2 rounded-full bg-emerald-500/25 border border-emerald-300/40 text-[10px] font-bold text-emerald-200">
                 <Sparkles className="w-2.5 h-2.5" />

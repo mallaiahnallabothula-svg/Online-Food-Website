@@ -89,7 +89,7 @@ export function buildWhatsAppTicket(order: Order, lang: 'te' | 'en' = 'te'): str
 
   if (lang === 'en') {
     const parts: string[] = [
-      '🧾 *MANA ENTI VANTA*',
+      '🧾 *MANNU’S CLOUD KITCHEN*',
       'Authentic Village Jowar Rotis & Chapathis • Kolluru Village',
       'WhatsApp Order Ticket to: +91 8499865803',
       '================================',
@@ -138,7 +138,7 @@ export function buildWhatsAppTicket(order: Order, lang: 'te' | 'en' = 'te'): str
 
   // Telugu ticket
   const parts: string[] = [
-    '🧾 *మన ఇంటి వంట (Mana Enti Vanta)*',
+    '🧾 *Mannu’s Cloud Kitchen*',
     'అచ్చమైన పల్లెటూరి జొన్న రొట్టెలు & చపాతీలు • కొల్లూరు గ్రామం',
     'యజమానికి వాట్సాప్ ఆర్డర్ టికెట్: +91 8499865803',
     '================================',

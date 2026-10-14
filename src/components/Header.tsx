@@ -43,7 +43,7 @@ export const Header: React.FC<HeaderProps> = ({
             <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[#384B35] dark:text-amber-100 font-telugu leading-tight">
               {t.brandName}
             </h1>
-            <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.2em] text-[#756f67] dark:text-stone-400 sm:text-[10px]">HOME KITCHEN · KOLLUR</p>
+            <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.2em] text-[#756f67] dark:text-stone-400 sm:text-[10px]">CLOUD KITCHEN · KOLLUR</p>
           </div>
         </div>
 

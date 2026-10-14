@@ -1,7 +1,7 @@
 export const BUSINESS_CONFIG = {
   brand: {
-    nameTe: 'మన ఇంటి వంట',
-    nameEn: 'Mana Enti Vanta',
+    nameTe: 'Mannu’s Cloud Kitchen',
+    nameEn: 'Mannu’s Cloud Kitchen',
     taglineTe: 'అచ్చమైన పల్లెటూరి రుచులు, స్వచ్ఛమైన ఆరోగ్యం',
     taglineEn: 'Authentic Village Tastes & Wholesome Health',
     phone: '8499865803',

@@ -15,7 +15,7 @@ export const publicRouter = Router();
 publicRouter.get('/health', (req: Request, res: Response) => {
   res.json({
     status: 'ok',
-    service: 'Mana Enti Vanta API',
+    service: 'Mannu’s Cloud Kitchen API',
     uptime: process.uptime(),
     timestamp: new Date().toISOString(),
   });

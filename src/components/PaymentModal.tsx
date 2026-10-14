@@ -83,7 +83,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, ord
       const checkout = new window.Razorpay!({
         key: intent.providerDetails.keyId, order_id: intent.providerDetails.orderId,
         amount: intent.amountPaisa, currency: intent.currency,
-        name: 'Mana Enti Vanta', description: `Order ${intent.orderId}`,
+        name: 'Mannu’s Cloud Kitchen', description: `Order ${intent.orderId}`,
         prefill: { name: orderData.customer.name, contact: orderData.customer.mobile },
         theme: { color: '#78350F' }, modal: { ondismiss: () => setBusy(false) },
         handler: async (result: GatewayResult) => {

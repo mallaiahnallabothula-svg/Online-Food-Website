@@ -313,7 +313,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-xl sm:text-2xl font-extrabold text-[#26231f] dark:text-amber-100">
-              {isTe ? 'మన ఇంటి వంట — యజమాని పోర్టల్' : 'Mana Enti Vanta — Owner Portal'}
+              {isTe ? 'Mannu’s Cloud Kitchen — యజమాని పోర్టల్' : 'Mannu’s Cloud Kitchen — Owner Portal'}
             </h2>
             <span className="px-2.5 py-0.5 rounded-md text-xs font-bold bg-amber-100 dark:bg-amber-950 text-[#78350F] dark:text-amber-400 font-mono">
               {role}

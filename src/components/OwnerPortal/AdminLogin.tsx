@@ -72,7 +72,7 @@ export const AdminLogin: React.FC<AdminLoginProps> = ({ onLoginSuccess, onCancel
             {isTe ? 'అధీకృత అడ్మిన్ లాగిన్' : 'Authorized Admin Portal'}
           </h2>
           <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
-            {isTe ? 'మన ఇంటి వంట ఆర్డర్ల నిర్వహణ వ్యవస్థ' : 'Mana Enti Vanta Kitchen & Delivery Management'}
+            {isTe ? 'Mannu’s Cloud Kitchen ఆర్డర్ల నిర్వహణ వ్యవస్థ' : 'Mannu’s Cloud Kitchen Kitchen & Delivery Management'}
           </p>
         </div>
 
