@@ -13,7 +13,7 @@ export function SecureCheckoutPage({ selection, onBack, onReorder }: {
   const { language } = useLanguage();
   const te = language === 'te';
   return (
-    <div data-testid="secure-checkout-page" className="min-h-[80vh] bg-[#FAF6ED] px-4 pb-14 pt-7 dark:bg-[#211f1c] sm:px-6 sm:pt-12">
+    <div data-testid="secure-checkout-page" className="solara-checkout-page-enter min-h-[80vh] bg-[#FAF6ED] px-4 pb-14 pt-7 dark:bg-[#211f1c] sm:px-6 sm:pt-12">
       <div className="mx-auto max-w-3xl">
         <div className="mb-7 flex flex-wrap items-center justify-between gap-4 border-b border-[#ded7ce] pb-5 dark:border-stone-700">
           <div className="flex items-center gap-3">

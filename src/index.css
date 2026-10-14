@@ -126,3 +126,60 @@ html { background:#FAF6ED; }
 .solara-app .solara-owner-dashboard :is(h1,h2) { color:#384B35; }
 .dark .solara-app .solara-owner-login :is(h1,h2),
 .dark .solara-app .solara-owner-dashboard :is(h1,h2) { color:#f4eedf; }
+
+/* Mana Enti Vanta: subtle motion, presentation only. */
+@keyframes mev-soft-rise {
+  from { opacity:0; transform:translate3d(0,14px,0); }
+  to { opacity:1; transform:translate3d(0,0,0); }
+}
+@keyframes mev-menu-change {
+  from { opacity:.55; transform:translate3d(0,6px,0); }
+  to { opacity:1; transform:translate3d(0,0,0); }
+}
+@keyframes mev-cart-pop { 50% { transform:scale(1.09); } }
+@keyframes mev-checkout-in {
+  from { opacity:0; transform:translate3d(0,10px,0); }
+  to { opacity:1; transform:translate3d(0,0,0); }
+}
+.solara-app .solara-hero-eyebrow { animation:mev-soft-rise .52s ease-out both; }
+.solara-app .solara-hero-heading { animation:mev-soft-rise .62s .09s ease-out both; }
+.solara-app .solara-hero-description { animation:mev-soft-rise .58s .18s ease-out both; }
+.solara-app .solara-hero-actions { animation:mev-soft-rise .5s .25s ease-out both; }
+.solara-app .solara-hero-illustration { animation:mev-soft-rise .5s ease-out both; }
+.solara-app .solara-hero-illustration:nth-child(1) { animation-delay:.22s; }
+.solara-app .solara-hero-illustration:nth-child(2) { animation-delay:.32s; }
+.solara-app .solara-hero-illustration:nth-child(3) { animation-delay:.42s; }
+.solara-app .solara-menu-tabs::after {
+  content:""; position:absolute; bottom:-4px; left:0;
+  width:calc((100% - .5rem)/2); height:2px; background:#A44732;
+  transform:translateX(0); transition:transform .25s ease; pointer-events:none;
+}
+.solara-app .solara-menu-tabs[data-period="EVENING"]::after { transform:translateX(calc(100% + .5rem)); }
+.solara-app .solara-menu-list { animation:mev-menu-change .24s ease-out both; }
+@media (hover:hover) and (pointer:fine) {
+  .solara-app .solara-menu-row { transition:transform .2s ease,background-color .2s ease; }
+  .solara-app .solara-menu-row:hover { transform:translate3d(0,-3px,0); background-color:rgba(56,75,53,.025); }
+  .solara-app .solara-menu-row button:not(:disabled):hover { transition:background-color .18s ease,color .18s ease; }
+  .solara-app :is(.solara-hero-actions a,.solara-footer-links a) { transition:color .2s ease; }
+}
+.solara-app .solara-menu-row button:not(:disabled):active { transform:scale(.96); }
+.solara-app .solara-quantity-enter { animation:mev-menu-change .2s ease-out both; }
+.solara-app .solara-cart-count { display:inline-block; animation:mev-cart-pop .22s ease-out; }
+.solara-app .solara-faq-panel {
+  display:grid; grid-template-rows:0fr; opacity:0;
+  transition:grid-template-rows .25s ease,opacity .25s ease;
+}
+.solara-app .solara-faq-panel-open { grid-template-rows:1fr; opacity:1; }
+.solara-app .solara-faq-symbol { display:inline-block; transition:transform .25s ease; }
+.solara-app .solara-faq-symbol-open { transform:rotate(45deg); }
+.solara-app .solara-checkout-page-enter { animation:mev-checkout-in .26s ease-out both; }
+@media (prefers-reduced-motion:reduce) {
+  .solara-app :is(.solara-hero-eyebrow,.solara-hero-heading,.solara-hero-description,.solara-hero-actions,
+    .solara-hero-illustration,.solara-menu-list,.solara-quantity-enter,.solara-cart-count,.solara-checkout-page-enter) {
+    animation:none !important; transform:none !important; opacity:1 !important;
+  }
+  .solara-app .solara-menu-tabs::after { transition:none !important; }
+  .solara-app :is(.solara-menu-row,.solara-menu-row button,.solara-faq-panel,.solara-faq-symbol,
+    .solara-footer-links a,.solara-hero-actions a) { transition:none !important; }
+  .solara-app .solara-menu-row:hover,.solara-app .solara-menu-row button:active { transform:none !important; }
+}
