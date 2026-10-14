@@ -11,10 +11,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder }) => 
   const { language } = useLanguage();
   const te = language === 'te';
   return (
-    <section id="home" className="solara-hero relative overflow-hidden border-b border-[#e6dece] bg-[#FAF6ED] px-4 py-14 text-[#384B35] dark:border-stone-700 dark:bg-[#211f1c] dark:text-stone-100 sm:px-6 sm:py-20">
+    <section id="home" className="solara-hero relative overflow-hidden border-b border-[#e6dece] bg-[#FAF6ED] px-4 py-14 text-[#384B35] dark:border-stone-700 dark:bg-[#211f1c] dark:text-stone-100 sm:px-6 sm:py-16 lg:py-20">
       <div className="solara-orbit pointer-events-none absolute left-1/2 top-1/2 -z-0 hidden h-[570px] w-[570px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#A44732]/10 lg:block" aria-hidden="true" />
-      <div className="solara-motion-hero solara-hero-inner relative mx-auto grid w-full max-w-7xl items-center gap-10 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)] lg:gap-10 xl:gap-16">
-        <div>
+      <div className="solara-motion-hero solara-hero-inner relative mx-auto grid w-full max-w-7xl items-center gap-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)] lg:gap-10 xl:gap-16">
+        <div className="min-w-0">
           <p className="solara-hero-eyebrow mb-5 text-[11px] font-bold uppercase tracking-[0.22em] text-[#A44732] dark:text-[#e3a795]">KOLLUR · HYDERABAD · HOME KITCHEN</p>
           <h1 className="solara-display solara-hero-title solara-hero-heading m-0 text-[clamp(3rem,4.85vw,5rem)] leading-[1.09] tracking-[-0.055em]">
             {te ? <>మన ఇంటి<br /><em className="not-italic text-[#A44732]">వంట.</em></> : <>Everyday food.<br /><em className="not-italic text-[#A44732] lg:whitespace-nowrap">Always familiar.</em></>}
@@ -30,7 +30,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder }) => 
           </div>
           <p className="mt-7 flex items-center gap-2 text-xs tracking-wide text-[#63685A] dark:text-stone-400"><Clock3 size={16} aria-hidden="true"/>{te ? 'ఉదయం 7–11 AM · సాయంత్రం 6–8 PM · బుధవారం సెలవు' : 'Morning 7–11 AM · Evening 6–8 PM · Wednesday closed'}</p>
         </div>
-        <div className="solara-hero-art grid min-w-0 grid-cols-3 items-end gap-2 sm:gap-4" aria-label={te ? 'ఉదయం, పెసరట్టు, సాయంత్రం వంటకాల సూచన చిత్రాలు' : 'Three home-food editorial illustrations'}>
+        <div className="solara-hero-art mx-auto grid w-full max-w-xl min-w-0 grid-cols-3 items-end gap-2 sm:gap-4 lg:mx-0 lg:max-w-none" aria-label={te ? 'ఉదయం, పెసరట్టు, సాయంత్రం వంటకాల సూచన చిత్రాలు' : 'Three home-food editorial illustrations'}>
           {([
             { key: 'idly', en: 'Morning favourites', te: 'ఉదయం టిఫిన్లు', dark: false },
             { key: 'pesarattu', en: 'A familiar flavour', te: 'తెలిసిన ఇంటి రుచి', dark: true },
