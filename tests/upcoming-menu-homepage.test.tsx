@@ -53,18 +53,21 @@ describe('PR17 public coming-soon menu (display only)', () => {
     expect(rows).toHaveLength(6);
     for (const row of rows) {
       const artwork = row.querySelector('[aria-hidden="true"].food-artwork');
-      expect(artwork?.querySelector('svg[viewBox="0 0 160 160"]')).toBeTruthy();
+      expect(artwork?.querySelector('svg[viewBox="0 0 160 160"]') ?? artwork?.querySelector('[data-exact-artwork]')).toBeTruthy();
     }
+    expect(container.querySelector('[data-item-id="idly"]')?.querySelector('[data-exact-artwork="idly"]')).toBeTruthy();
+    expect(container.querySelector('[data-item-id="ragi-idly"]')?.querySelector('svg')).toBeTruthy();
     expect(container.querySelector('[data-item-id="idly"]')?.textContent).toContain('₹30');
     fireEvent.click(within(menu).getByRole('button', { name: 'Add Idly to sample cart' }));
     expect(within(menu).getByRole('button', { name: 'View cart' })).toBeTruthy();
     expect(within(menu).getByTestId('menu-cart-total').textContent).toContain('₹30');
     fireEvent.click(screen.getByRole('button', { name: 'Evening (6)' }));
     expect(screen.getAllByTestId('upcoming-menu-card')).toHaveLength(6);
+    expect(container.querySelector('[data-item-id="chapathi"]')?.querySelector('[data-exact-artwork="chapathi"]')).toBeTruthy();
     expect(container.querySelector('[data-item-id="pappu-of-the-day"]')?.querySelector('svg')).toBeTruthy();
     expect(container.querySelector('[data-item-id="mixed-veg-kurma"]')?.querySelector('svg')).toBeTruthy();
     for (const item of MENU_CATALOG.filter(entry => entry.mealPeriod === 'EVENING')) {
-      expect(container.querySelector('[data-item-id="' + item.id + '"]')?.querySelector('svg[viewBox="0 0 160 160"]')).toBeTruthy();
+      expect(container.querySelector('[data-item-id="' + item.id + '"]')?.querySelector('svg[viewBox="0 0 160 160"]') ?? container.querySelector('[data-item-id="' + item.id + '"]')?.querySelector('[data-exact-artwork]')).toBeTruthy();
     }
   });
 

@@ -1,6 +1,17 @@
 // Bright, original vector menu illustrations inspired by the approved artwork direction.
 // Illustration only: ingredient/portion facts come from the separate menu catalogue.
 // Do not use these illustrations as photographs of the actual prepared food.
+// Exact panels from the user-provided 2x2 food illustration image.
+// The artwork is a single optimized asset; positioning reveals each panel
+// without altering its composition or cutting off its edges.
+const EXACT_REFERENCE_PANELS: Record<string, string> = {
+  'idly': '0% 0%',
+  'onion-minapa-dosa': '100% 0%',
+  'onion-pesarattu': '0% 100%',
+  'chapathi': '100% 100%',
+};
+const EXACT_REFERENCE_IMAGE = '/images/mannus-food-illustration-grid.webp';
+
 const MENU_ARTWORK_IDS = [
   'idly', 'ragi-idly', 'plain-pesarattu', 'onion-pesarattu',
   'plain-minapa-dosa', 'onion-minapa-dosa', 'jowar-roti', 'chapathi',
@@ -117,6 +128,16 @@ function Curry({ kurma }: {kurma:boolean}) {
 }
 
 export function FoodArtwork({itemId,className=''}:{itemId:string;className?:string}) {
+  const exactPanel = EXACT_REFERENCE_PANELS[itemId];
+  if (exactPanel) return (
+    <span aria-hidden="true" className={'food-artwork flex shrink-0 items-center justify-center overflow-hidden bg-[#fff6e6] '+className}>
+      <span
+        data-exact-artwork={itemId}
+        className="block aspect-[3/2] w-full shrink-0 bg-no-repeat"
+        style={{ backgroundImage: `url("${EXACT_REFERENCE_IMAGE}")`, backgroundPosition: exactPanel, backgroundSize: '200% 200%' }}
+      />
+    </span>
+  );
   const id = isFoodId(itemId)?itemId:null;
   const isIdly = id === 'idly'||id === 'ragi-idly';
   const pesarattu=id === 'plain-pesarattu'||id === 'onion-pesarattu';
