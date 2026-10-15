@@ -32,6 +32,7 @@ import { KitchenBoard } from './KitchenBoard';
 import { TomorrowPreordersSummary } from './TomorrowPreordersSummary';
 import { PaidOrderAlerts } from './PaidOrderAlerts';
 import { PaymentReviewQueue } from './PaymentReviewQueue';
+import { RefundReviewQueue } from './RefundReviewQueue';
 import { DailyBusinessReport } from './DailyBusinessReport';
 import { AuditLogs } from './AuditLogs';
 import { CustomerFeedbackView } from './CustomerFeedbackView';
@@ -52,7 +53,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [feedbacks, setFeedbacks] = useState<OrderFeedback[]>([]);
-  const [activeTab, setActiveTab] = useState<'ORDERS' | 'KITCHEN' | 'DAILY' | 'ANALYTICS' | 'FEEDBACK' | 'AUDIT' | 'PAYMENT_REVIEW'>('ORDERS');
+  const [activeTab, setActiveTab] = useState<'ORDERS' | 'KITCHEN' | 'DAILY' | 'ANALYTICS' | 'FEEDBACK' | 'AUDIT' | 'PAYMENT_REVIEW' | 'REFUND_REVIEW'>('ORDERS');
   const [kitchenInitialDate, setKitchenInitialDate] = useState<string | null>(null);
   
   // Filters
@@ -464,6 +465,16 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
           </button>
         )}
         {role === 'ADMIN' && (
+          <button onClick={() => setActiveTab('REFUND_REVIEW')}
+            className={'flex items-center gap-2 whitespace-nowrap border-b-2 px-4 pb-3 text-sm font-bold transition-colors ' +
+              (activeTab === 'REFUND_REVIEW'
+                ? 'border-[#ab4d3e] text-[#ab4d3e] dark:border-amber-400 dark:text-amber-400'
+                : 'border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-stone-200')}>
+            <ShieldCheck className="h-4 w-4" />
+            <span>{isTe ? 'రిఫండ్ రివ్యూ' : 'Refund Review'}</span>
+          </button>
+        )}
+        {role === 'ADMIN' && (
           <button
             onClick={() => setActiveTab('AUDIT')}
             className={`pb-3 px-4 text-sm font-bold border-b-2 transition-colors cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
@@ -492,6 +503,13 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
             setActiveTab('ORDERS');
           }}
         />
+      )}
+
+      {role === 'ADMIN' && activeTab === 'REFUND_REVIEW' && (
+        <RefundReviewQueue onAccessDenied={onLogout} onViewOrder={id => {
+          setHighlightOrderId(id);setStatusFilter('ALL');setDateFilter('');
+          setSearchQuery(id);setPage(1);setActiveTab('ORDERS');
+        }} />
       )}
 
       {/* 1. ORDERS TAB */}
