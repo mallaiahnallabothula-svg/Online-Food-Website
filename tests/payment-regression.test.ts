@@ -233,10 +233,20 @@ describe('Owner order-status backend safety', () => {
     const cancelled = await statusRequest(second.orderId, 'CANCELLED', session);
     expect(cancelled.status).toBe(200);
     expect((await statusRequest(second.orderId, 'PREPARING', session)).status).toBe(409);
+    await expect(transitionOrderToTicketGenerated(second.orderId, {
+      provider: 'mock', providerPaymentId: 'pay_late_cancelled_mock', amountPaisa: second.amountPaisa, currency: 'INR',
+    })).rejects.toThrow('Cancelled pending order');
+    expect((await getDb().execute({sql:'SELECT payment_status, order_status, fulfillment_status FROM orders WHERE id=?',args:[second.orderId]})).rows[0])
+      .toMatchObject({payment_status:'PENDING',order_status:'PENDING',fulfillment_status:'CANCELLED'});
 
     await transitionOrderToTicketGenerated(first.orderId, {
       provider: 'mock', providerPaymentId: 'pay_status_fixture', amountPaisa: first.amountPaisa, currency: 'INR',
     });
+    const paidCancellation = await statusRequest(first.orderId, 'CANCELLED', session);
+    expect(paidCancellation.status).toBe(409);
+    expect(paidCancellation.body.error.code).toBe('CANCELLATION_PAYMENT_REVIEW_REQUIRED');
+    expect((await getDb().execute({sql:'SELECT payment_status, fulfillment_status FROM orders WHERE id=?',args:[first.orderId]})).rows[0])
+      .toMatchObject({payment_status:'PAID',fulfillment_status:'RECEIVED'});
     expect((await statusRequest(first.orderId, 'DELIVERED', session)).status).toBe(409);
     for (const next of ['PREPARING', 'OUT_FOR_DELIVERY', 'DELIVERED']) {
       const result = await statusRequest(first.orderId, next, session);
@@ -248,6 +258,25 @@ describe('Owner order-status backend safety', () => {
     expect((await statusRequest(first.orderId, 'DELIVERED', session)).status).toBe(409);
     expect(await auditCount()).toBe(baseline + 4);
   });
+  it('blocks Razorpay checkout cancellation without altering order or audit data', async () => {
+    const password = 'Cancellation-guard-test-password';
+    await getDb().execute({
+      sql: 'INSERT INTO admin_users (id, username, password_hash, role, name, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+      args: ['USR-bound', 'admin', await bcrypt.hash(password, 4), 'ADMIN', 'Test admin', new Date().toISOString()],
+    });
+    const login = await loginAdmin('admin', password, '127.0.0.1');
+    expect(login.success).toBe(true);
+    const { intent, gatewayOrderId } = await realIntent();
+    const count = async () => Number((await getDb().execute("SELECT COUNT(*) n FROM audit_logs WHERE action='ORDER_STATUS_UPDATED'")).rows[0]?.n);
+    const before = await count();
+    const result = await statusRequest(intent.orderId, 'CANCELLED', login.sessionCookie!);
+    expect(result.status).toBe(409);
+    expect(result.body.error.code).toBe('CANCELLATION_PAYMENT_REVIEW_REQUIRED');
+    const order = (await getDb().execute({sql:'SELECT payment_status, fulfillment_status, provider_order_id FROM orders WHERE id=?',args:[intent.orderId]})).rows[0];
+    expect(order).toMatchObject({payment_status:'PENDING',fulfillment_status:'RECEIVED',provider_order_id:gatewayOrderId});
+    expect(await count()).toBe(before);
+  });
+
 });
 
 afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); });

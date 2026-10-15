@@ -100,6 +100,27 @@ describe('inactive new-menu payment and stock settlement safety',()=>{
       expect((await db.execute('SELECT status FROM menu_stock_reservations')).rows[0]?.status).toBe('HELD');
     }finally{db.close();}
   });
+
+  it('records captured money on a pre-existing cancelled pending order for manual review only',async()=>{
+    const db=await setup();try{
+      const created=await createPendingNewMenuCheckout(db,request(),start);
+      await bindNewMenuRazorpayOrder(db,created.orderId,gateway,start.getTime());
+      // Reproduce an older cancelled order without using any live endpoint.
+      await db.execute({sql:"UPDATE orders SET fulfillment_status='CANCELLED' WHERE id=?",args:[created.orderId]});
+      const at=start.getTime()+60_000;
+      expect(await verifyAndSettleNewMenuPayment(db,input(created.orderId),at,signed,gatewayFetch()))
+        .toMatchObject({status:'REVIEW_REQUIRED',idempotent:false});
+      expect(await verifyAndSettleNewMenuPayment(db,input(created.orderId),at,signed,gatewayFetch()))
+        .toMatchObject({status:'REVIEW_REQUIRED',idempotent:true});
+      const order=(await db.execute({sql:'SELECT payment_status,order_status,fulfillment_status,ticket_text FROM orders WHERE id=?',args:[created.orderId]})).rows[0];
+      expect(order).toMatchObject({payment_status:'PENDING',order_status:'PENDING',fulfillment_status:'CANCELLED',ticket_text:null});
+      expect((await db.execute("SELECT COUNT(*) n FROM payments WHERE status='REVIEW_REQUIRED'")).rows[0]?.n).toBe(1);
+      expect((await db.execute("SELECT COUNT(*) n FROM audit_logs WHERE action='NEW_MENU_PAYMENT_REVIEW_REQUIRED'")).rows[0]?.n).toBe(1);
+      expect((await db.execute("SELECT status FROM menu_stock_reservations")).rows[0]?.status).toBe('HELD');
+      expect(await getMenuStockRemaining(db,'idly','2026-10-10',at)).toBe(26);
+    } finally {db.close();}
+  });
+
   it('releases only unbound unpaid failed gateway setup and preserves order history',async()=>{
     const db=await setup();try{
       const created=await createPendingNewMenuCheckout(db,request(),start);
