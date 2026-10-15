@@ -446,6 +446,12 @@ async function transitionOrderInTransaction(
     }
   }
 
+  // Never revive an unpaid, cancelled order via a late payment callback.
+  // Preserve the existing idempotent response for historically paid orders.
+  if (existingRow.fulfillment_status === 'CANCELLED' && existingRow.payment_status !== 'PAID') {
+    throw new Error('Cancelled pending order requires manual payment review; no ticket can be issued.');
+  }
+
   // IDEMPOTENCY CHECK:
   // If order is already PAID / CONFIRMED / TICKET_GENERATED, return current state
   if (

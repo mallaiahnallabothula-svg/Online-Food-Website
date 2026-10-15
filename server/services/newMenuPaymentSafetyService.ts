@@ -291,7 +291,9 @@ export async function verifyAndSettleNewMenuPayment(
     const capped = new Map<string,number>();
     let subtotal = 0;
     let period: string | null = null;
-    let valid = true;
+    // Captured money for a cancelled order goes to durable review, not a ticket.
+    const cancelled = o.fulfillment_status === 'CANCELLED';
+    let valid = !cancelled;
     for (const line of snapshots.rows) {
       const item = findMenuItem(String(line.item_id));
       const qty = Number(line.quantity), price = Number(line.unit_price_paisa);
@@ -341,7 +343,9 @@ export async function verifyAndSettleNewMenuPayment(
         'INSERT INTO audit_logs (id,actor_type,actor_id,action,target_type,target_id,details,created_at)',
         "VALUES (?,'SYSTEM','MENU_GATEWAY','NEW_MENU_PAYMENT_REVIEW_REQUIRED','ORDER',?,?,?)",
       ].join(' '),args:[newAuditId(),input.orderId,
-        JSON.stringify({reason:'Expired or invalid stock hold/price snapshot; captured payment requires manual resolution',
+        JSON.stringify({reason:cancelled
+          ? 'Captured payment for cancelled order; manual refund/reconciliation required'
+          : 'Expired or invalid stock hold/price snapshot; captured payment requires manual resolution',
           providerPaymentId:captured.id}),now]});
       return {orderId:input.orderId,status:'REVIEW_REQUIRED',idempotent:false,
         reason:'Captured payment requires manual review/refund; order not confirmed'};

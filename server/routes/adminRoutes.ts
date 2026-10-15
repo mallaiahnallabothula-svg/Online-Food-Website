@@ -289,7 +289,7 @@ adminRouter.patch('/orders/:id/status', requireAuth, requireAdminCsrf, async (re
   const transaction = await db.transaction('write');
   try {
     const existingRes = await transaction.execute({
-      sql: 'SELECT id, payment_status, fulfillment_status FROM orders WHERE id = ? LIMIT 1',
+      sql: 'SELECT id, payment_status, payment_provider, provider_order_id, provider_payment_id, fulfillment_status FROM orders WHERE id = ? LIMIT 1',
       args: [orderId],
     });
     if (existingRes.rows.length === 0) {
@@ -309,6 +309,38 @@ adminRouter.patch('/orders/:id/status', requireAuth, requireAdminCsrf, async (re
           message: `Cannot change order status from ${oldStatus} to ${newStatus}.`,
         },
       });
+    }
+    // Fail closed: only definitely unpaid/unbound mock test orders can be
+    // cancelled. Live Razorpay/bound/paid/ambiguous orders require separate
+    // owner-controlled payment reconciliation; this endpoint never refunds.
+    if (newStatus === 'CANCELLED') {
+      const order = existingRes.rows[0]!;
+      const receipts = await transaction.execute({
+        sql: 'SELECT 1 FROM payments WHERE order_id = ? LIMIT 1',
+        args: [orderId],
+      });
+      const intents = await transaction.execute({
+        sql: 'SELECT provider, provider_order_id, is_verified FROM payment_intents WHERE order_id = ?',
+        args: [orderId],
+      });
+      const unsafe = paymentStatus !== 'PENDING' ||
+        order.payment_provider !== 'mock' ||
+        order.provider_payment_id !== 'AWAITING_PAYMENT' ||
+        order.provider_order_id !== null ||
+        receipts.rows.length > 0 ||
+        intents.rows.some(intent => intent.provider !== 'mock' ||
+          (intent.provider_order_id !== null &&
+            intent.provider_order_id !== `mock_order_${orderId}`) ||
+          Number(intent.is_verified) !== 0);
+      if (unsafe) {
+        await transaction.rollback();
+        return res.status(409).json({
+          error: {
+            code: 'CANCELLATION_PAYMENT_REVIEW_REQUIRED',
+            message: 'Payment may be captured or pending. Check Razorpay and arrange manual review before cancellation; no refund was issued.',
+          },
+        });
+      }
     }
     if (newStatus !== 'CANCELLED' && paymentStatus !== 'PAID') {
       await transaction.rollback();
