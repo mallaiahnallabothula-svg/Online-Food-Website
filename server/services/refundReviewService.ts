@@ -80,13 +80,16 @@ export async function createRefundReviewCase(db: Client, input: Input) {
         (payment.status==='REVIEW_REQUIRED' && order.payment_status!=='PENDING')) {
       throw conflict('Captured payment and order snapshot mismatch; manual investigation required');
     }
+    const providerPaymentId=payment.provider_payment_id;
+    if(typeof providerPaymentId!=='string'||!/^pay_[A-Za-z0-9]{5,64}$/.test(providerPaymentId))
+      throw conflict('Invalid payment reference; manual investigation required');
     const date=nowIso(),caseId=id('RRC-');
     await tx.execute({
       sql:`INSERT INTO refund_review_cases
         (id,order_id,provider_payment_id,amount_paisa,currency,reason,status,initial_note,
          created_by,updated_by,version,created_at_utc,updated_at_utc)
         VALUES (?,?,?,?,? ,?,'NEEDS_REVIEW',?,?,?,1,?,?)`,
-      args:[caseId,input.orderId,payment.provider_payment_id,Number(payment.amount_paisa),
+      args:[caseId,input.orderId,providerPaymentId,Number(payment.amount_paisa),
         'INR',input.reason,input.note,input.actor,input.actor,date,date],
     });
     await tx.execute({sql:`INSERT INTO refund_review_events

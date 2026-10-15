@@ -11,7 +11,7 @@ export function RefundReviewQueue({onAccessDenied,onViewOrder}:Props){
   const [revision,setRevision]=useState(0);
   const [orderId,setOrderId]=useState(''),[reason,setReason]=useState<RefundReason>('CUSTOMER_REQUEST');
   const [note,setNote]=useState(''),[refundId,setRefundId]=useState('');
-  const [events,setEvents]=useState<Array<{action:string;from:string|null;to:string;note:string;actor:string;createdAt:string}>|null>(null);
+  const [events,setEvents]=useState<Array<{action:string;from:string|null;to:string;note:string;actor:string;version:number;createdAt:string}>|null>(null);
   const [eventCaseId,setEventCaseId]=useState<string|null>(null);
   const load=useCallback(async()=>{
     setLoading(true);setError('');
