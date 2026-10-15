@@ -240,7 +240,7 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
           <div key={period} className="solara-menu-list grid min-w-0 grid-cols-1 gap-x-10 gap-y-3 md:auto-rows-fr md:grid-cols-2" role="list">
             {visible.map(item => (
               <article key={item.id} role="listitem" data-testid="upcoming-menu-card" data-item-id={item.id}
-                className="solara-menu-row grid h-full min-w-0 grid-cols-[76px_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2 rounded-xl border border-[#e6dece] bg-[#fffdf9] px-3 py-4 sm:py-5 sm:grid-cols-[96px_minmax(0,1fr)_auto] sm:gap-x-4 sm:px-4 dark:border-stone-600 dark:bg-stone-800>
+                className="solara-menu-row grid h-full min-w-0 grid-cols-[76px_minmax(0,1fr)_auto] items-start gap-x-3 gap-y-2 rounded-xl border border-[#e6dece] bg-[#fffdf9] px-3 py-4 sm:py-5 sm:grid-cols-[96px_minmax(0,1fr)_auto] sm:gap-x-4 sm:px-4 dark:border-stone-600 dark:bg-stone-800">
                 <button type="button" aria-label={'View artwork details for ' + item.nameEn} onClick={() => setDetailId(item.id)} className="shrink-0 rounded-lg text-left focus-visible:outline-2 focus-visible:outline-[#A44732]">
                   <FoodArtwork itemId={item.id} className="h-[76px] w-[76px] rounded-lg sm:h-24 sm:w-24" />
                 </button>
