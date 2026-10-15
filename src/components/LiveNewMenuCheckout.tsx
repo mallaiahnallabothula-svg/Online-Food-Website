@@ -314,15 +314,17 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
           {te ? 'ఆర్డర్ & డెలివరీ వివరాలు' : 'Order and delivery details'}
         </h3>
         <p className="mt-1 max-w-2xl text-xs leading-relaxed text-stone-600 dark:text-stone-300">
-          {te ? 'మీ వివరాలు నమోదు చేసి, డెలివరీ తేదీ మరియు మొత్తం సరిచూసి చెల్లించండి.' : 'Add your details, then review your delivery date and total before paying.'}
+          {completed ? (te ? 'మీ చెల్లింపు ధృవీకరించబడింది. క్రింద మీ ఆర్డర్ ట్రాక్ చేయండి.' : 'Payment verified. Track your confirmed order below.') : (te ? 'మీ వివరాలు నమోదు చేసి, డెలివరీ తేదీ మరియు మొత్తం సరిచూసి చెల్లించండి.' : 'Add your details, then review your delivery date and total before paying.')}
         </p>
         <div aria-label="Checkout progress" className="mt-3 grid grid-cols-3 gap-2 text-[11px] font-semibold">
           <span className="rounded-md bg-[#A44732] px-2 py-2 text-center text-white">1 · {te ? 'వివరాలు' : 'Details'}</span>
           <span className={'rounded-md px-2 py-2 text-center ' + (quote ? 'bg-[#A44732] text-white' : 'bg-[#ebe4da] text-[#81766d] dark:bg-stone-700 dark:text-stone-200')}>2 · {te ? 'సమీక్ష' : 'Review'}</span>
-          <span className="rounded-md bg-[#ebe4da] px-2 py-2 text-center text-[#81766d] dark:bg-stone-700 dark:text-stone-200">3 · {te ? 'చెల్లింపు' : 'Payment'}</span>
+          <span className={'rounded-md px-2 py-2 text-center ' + (completed ? 'bg-[#26543A] text-white' : 'bg-[#ebe4da] text-[#81766d] dark:bg-stone-700 dark:text-stone-200')}>3 · {te ? 'చెల్లింపు' : 'Payment'}</span>
         </div>
         <p data-testid="checkout-guidance" className="mt-3 rounded-lg border border-[#ded7ce] bg-white/80 px-3 py-2 text-xs leading-relaxed text-[#384B35] dark:border-stone-600 dark:bg-stone-900/70 dark:text-stone-200">
-          {quote
+          {completed
+            ? (te ? 'ఆర్డర్ ఖరారైంది. డెలివరీ సమాచారం కోసం క్రింద నా ఆర్డర్ ట్రాక్ చేయండి ఉపయోగించండి.' : 'Order confirmed. Use Track this order below for delivery updates.')
+            : quote
             ? (te ? 'డెలివరీ ఛార్జీ, తేదీ మరియు మొత్తం క్రింద సరిచూసి, తర్వాత Razorpay ద్వారా చెల్లించండి.' : 'Review the verified delivery fee, date and total below before paying with Razorpay.')
             : (te ? 'పేరు, చిరునామా నమోదు చేయండి → GPS లేదా Maps పిన్ ఎంచుకుని ధృవీకరించండి → డెలివరీ ఛార్జీ, మొత్తం చెక్ చేయండి.' :
               'Enter your details → Select and confirm a GPS/Maps pin → Check the delivery fee and final total.')}
@@ -468,7 +470,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
 
         {quote && (
           <div className="rounded-xl border border-emerald-300/60 bg-emerald-50/60 p-3 text-sm dark:border-emerald-800 dark:bg-emerald-950/30 sm:p-4">
-            <h4 className="font-extrabold text-[#A44732] dark:text-emerald-200">{te ? 'చెల్లింపు ముందు సారాంశం' : 'Review before payment'}</h4>
+            <h4 className="font-extrabold text-[#A44732] dark:text-emerald-200">{completed ? (te ? 'చెల్లింపు సారాంశం' : 'Payment summary') : (te ? 'చెల్లింపు ముందు సారాంశం' : 'Review before payment')}</h4>
             <ul className="mt-3 space-y-1.5 text-stone-700 dark:text-stone-200">
               {quote.items.map(item => <li key={item.itemId}>{item.itemName} × {item.quantity}</li>)}
             </ul>
@@ -476,7 +478,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
               <span>{te ? 'డెలివరీ' : 'Delivery'} ({quote.distanceKm} km)</span><strong className="tabular-nums">{money(quote.deliveryChargePaisa)}</strong>
             </p>
             <p className="mt-3 flex items-center justify-between gap-3 border-t border-emerald-800/15 pt-3 text-base dark:border-emerald-400/20">
-              <span className="font-bold">{te ? 'చెల్లించాల్సిన మొత్తం' : 'Total to pay'}</span>
+              <span className="font-bold">{completed ? (te ? 'చెల్లించిన మొత్తం' : 'Total paid') : (te ? 'చెల్లించాల్సిన మొత్తం' : 'Total to pay')}</span>
               <strong className="text-xl font-extrabold tabular-nums text-[#A44732] dark:text-emerald-200">{money(quote.totalAmountPaisa)}</strong>
             </p>
             <p className="mt-2 text-xs text-stone-600 dark:text-stone-300">{quote.deliveryDateIst} · {quote.deliveryWindow} IST</p>
@@ -511,7 +513,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
         )}
 
         <div className="space-y-2 border-t border-stone-200 pt-3 dark:border-stone-700">
-          {!quote ? (
+          {!completed && (!quote ? (
             <button type="submit" disabled={busy || lines.length === 0 || !locationConfirmed} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#A44732] px-4 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-[#934034] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#A44732] disabled:cursor-not-allowed disabled:bg-[#b0bdb2] disabled:text-white disabled:shadow-none">
               {busy ? <RefreshCw size={20} className="animate-spin" aria-hidden="true" /> : <ArrowRight size={19} aria-hidden="true" />}
               {busy ? (te ? 'దయచేసి వేచి ఉండండి…' : 'Checking…') : te ? 'డెలివరీ & మొత్తం చెక్ చేయండి' : 'Check delivery and total'}
@@ -521,10 +523,11 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
               {busy ? <RefreshCw size={19} className="animate-spin" aria-hidden="true" /> : <Lock size={19} aria-hidden="true" />}
               {completed ? (te ? 'ఆర్డర్ ఖరారైంది' : 'Order confirmed') : busy ? (te ? 'దయచేసి వేచి ఉండండి…' : 'Please wait…') : te ? 'Razorpay ద్వారా చెల్లించండి' : 'Pay ' + money(quote.totalAmountPaisa) + ' with Razorpay'}
             </button>
-          )}
+          ))}
           {lines.length === 0 && <p className="text-center text-xs text-stone-500 dark:text-stone-300">{te ? 'కొనసాగించడానికి పైన కార్ట్‌లో ఐటమ్స్ జోడించండి.' : 'Add items to the cart above to continue.'}</p>}
           {completed && trackingToken && (
-            <button type="button" onClick={() => setTrackingOpen(true)} className="min-h-11 w-full rounded-xl border border-emerald-700/40 bg-white px-4 py-2.5 text-sm font-bold text-[#A44732] transition-colors hover:bg-emerald-50 dark:border-emerald-400/40 dark:bg-stone-900 dark:text-emerald-200">
+            <button type="button" onClick={() => setTrackingOpen(true)} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#26543A] px-4 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-[#1d422e] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#26543A] dark:bg-emerald-700 dark:hover:bg-emerald-600">
+              <ShoppingBag size={18} aria-hidden="true" />
               {te ? 'నా ఆర్డర్ ట్రాక్ చేయండి' : 'Track this order'}
             </button>
           )}
@@ -532,9 +535,11 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
             <span className="inline-flex items-center gap-1.5"><ShieldCheck size={14} aria-hidden="true" />{te ? 'ధర, స్టాక్ మళ్లీ చెక్ చేస్తాం' : 'Price and stock rechecked'}</span>
             <span className="inline-flex items-center gap-1.5"><Lock size={13} aria-hidden="true" />{te ? 'Razorpay పేమెంట్' : 'Razorpay payment'}</span>
           </div>
-          <p className="text-center text-xs leading-relaxed text-stone-500 dark:text-stone-300">
-            {te ? 'చెల్లింపుకు ముందు మొత్తం, డెలివరీ తేదీ, చిరునామా సరిచూడండి.' : 'Review total, delivery time and address before payment.'}
-          </p>
+          {!completed && (
+            <p className="text-center text-xs leading-relaxed text-stone-500 dark:text-stone-300">
+              {te ? 'చెల్లింపుకు ముందు మొత్తం, డెలివరీ తేదీ, చిరునామా సరిచూడండి.' : 'Review total, delivery time and address before payment.'}
+            </p>
+          )}
         </div>
       </form>
       <OrderTrackingModal isOpen={completed && trackingOpen} onClose={() => setTrackingOpen(false)} initialOrderId={completed ? trackingToken : undefined} onReorder={onReorder} />

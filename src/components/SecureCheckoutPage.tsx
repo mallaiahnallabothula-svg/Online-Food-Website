@@ -32,7 +32,7 @@ export function SecureCheckoutPage({ selection, onBack, onReorder }: {
             <LockKeyhole size={15} aria-hidden="true" /> {te ? 'సురక్షితమైన చెకౌట్' : 'SECURE CHECKOUT'}
           </p>
           <h1 className="solara-display mt-2 text-3xl leading-tight text-[#384B35] dark:text-stone-100 sm:text-5xl">{te ? 'డెలివరీ వివరాలు' : 'Delivery details'}</h1>
-          <p className="mt-2 text-sm leading-relaxed text-[#756f67] dark:text-stone-300">{te ? 'మీ డెలివరీ వివరాలు ఇచ్చి, పిన్ మరియు మొత్తం సరిచూసుకోండి.' : 'Confirm your delivery address, location pin and total before payment.'}</p>
+          <p className="mt-2 text-sm leading-relaxed text-[#756f67] dark:text-stone-300">{te ? 'మీ డెలివరీ చిరునామా, ఆర్డర్ వివరాలు మరియు చెల్లింపు స్థితి క్రింద చూడండి.' : 'Review your delivery address, order details and payment status below.'}</p>
         </div>
         {selection ? (
           <UpcomingCheckoutPreview period={selection.period} lines={selection.lines} subtotalPaisa={selection.subtotalPaisa} te={te} onReorder={onReorder} />
@@ -45,7 +45,7 @@ export function SecureCheckoutPage({ selection, onBack, onReorder }: {
         )}
         <p className="mt-5 flex items-center justify-center gap-2 text-center text-xs text-[#756f67] dark:text-stone-400">
           <ShieldCheck size={15} aria-hidden="true" />
-          {te ? 'ధర, స్టాక్, డెలివరీ అర్హత పేమెంట్ ముందు సర్వర్‌లో ధృవీకరిస్తాం.' : 'Price, stock and delivery eligibility are verified before payment.'}
+          {te ? 'ధర, స్టాక్, డెలివరీ అర్హతను సర్వర్ సురక్షితంగా ధృవీకరిస్తుంది.' : 'Price, stock and delivery eligibility are verified securely by the server.'}
         </p>
       </div>
     </div>

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { LanguageProvider } from '../src/context/LanguageContext.tsx';
 import { LiveNewMenuCheckout } from '../src/components/LiveNewMenuCheckout.tsx';
 import { MENU_CATALOG } from '../shared/menuCatalog.ts';
@@ -8,8 +8,8 @@ import { MENU_CATALOG } from '../shared/menuCatalog.ts';
 const orderId = 'MENU-test-payment-gate';
 const token = 'a'.repeat(64);
 const proof = { razorpay_payment_id:'pay_test', razorpay_order_id:'order_test', razorpay_signature:'signature_test' };
-const mount = () => render(<LanguageProvider><LiveNewMenuCheckout
-  period="MORNING" lines={[{ item: MENU_CATALOG[0]!, quantity: 4 }]} te={false}
+const mount = (te = false) => render(<LanguageProvider><LiveNewMenuCheckout
+  period="MORNING" lines={[{ item: MENU_CATALOG[0]!, quantity: 4 }]} te={te}
   /></LanguageProvider>);
 
 beforeEach(() => {
@@ -64,4 +64,32 @@ describe('Payment-before-tracking safety — new-menu checkout', () => {
     expect(sessionStorage.getItem('mana_new_menu_pending_order')).toBeNull();
     expect(sessionStorage.getItem('mana_new_menu_payment_proof')).toBeNull();
   });
+  it.each([
+    { te: false, track: 'Track this order', guidance: 'Order confirmed. Use Track this order below for delivery updates.', heading: 'Payment verified. Track your confirmed order below.' },
+    { te: true, track: 'నా ఆర్డర్ ట్రాక్ చేయండి', guidance: 'ఆర్డర్ ఖరారైంది.', heading: 'మీ చెల్లింపు ధృవీకరించబడింది.' },
+  ])('keeps private tracking gated after a verified payment ($track)', async ({ te, track, guidance, heading }) => {
+    sessionStorage.setItem('mana_new_menu_pending_order', JSON.stringify({orderId,token}));
+    sessionStorage.setItem('mana_new_menu_payment_proof', JSON.stringify(proof));
+    const fetcher = vi.fn(async (url: string) => {
+      if (url === '/api/new-menu/confirm') return {ok:true,json:async()=>({settlement:{status:'CONFIRMED'}})} as Response;
+      if (url === '/api/orders/' + encodeURIComponent(token)) return {ok:false,json:async()=>({error:{message:'Fixture tracking only'}})} as Response;
+      throw new Error('Unexpected request: ' + url);
+    });
+    vi.stubGlobal('fetch', fetcher);
+    mount(te);
+    const tracker = await screen.findByRole('button', {name:track});
+    expect(screen.getByTestId('checkout-guidance').textContent).toContain(guidance);
+    expect(screen.getByText(new RegExp(heading))).toBeTruthy();
+    expect(screen.getByLabelText('Checkout progress').lastElementChild?.className).toContain('bg-[#26543A]');
+    expect(screen.queryByRole('button', {name:'Check delivery and total'})).toBeNull();
+    expect(screen.queryByRole('button', {name:/Pay .*with Razorpay/})).toBeNull();
+    expect(screen.queryByText('Review total, delivery time and address before payment.')).toBeNull();
+    expect(tracker.className).toContain('bg-[#26543A]');
+    fireEvent.click(tracker);
+    await waitFor(() => expect(fetcher).toHaveBeenCalledWith('/api/orders/' + encodeURIComponent(token)));
+    expect(fetcher.mock.calls.filter(([url]) => url === '/api/new-menu/confirm')).toHaveLength(1);
+    expect(fetcher.mock.calls.some(([url]) => url === '/api/new-menu/gateway')).toBe(false);
+    expect(fetcher.mock.calls.some(([url]) => url === '/api/new-menu/prepare')).toBe(false);
+  });
+
 });
