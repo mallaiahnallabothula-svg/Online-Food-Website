@@ -131,7 +131,7 @@ describe('Stage 2G P0-B1 manual-only refund review with isolated DB',()=>{
     });
     const after=await db.execute({sql:'SELECT payment_status,fulfillment_status,provider_payment_id FROM orders WHERE id=?',args:[orderId]});
     expect(after.rows[0]).toEqual(before.rows[0]);
-    expect(Number((await db.execute('SELECT COUNT(*) n FROM payments WHERE order_id=?',args:[orderId]})).rows[0]?.n)).toBe(1);
+    expect(Number((await db.execute({sql:'SELECT COUNT(*) n FROM payments WHERE order_id=?',args:[orderId]})).rows[0]?.n)).toBe(1);
     expect(Number((await db.execute('SELECT COUNT(*) n FROM refund_review_events')).rows[0]?.n)).toBe(1);
     expect(Number((await db.execute("SELECT COUNT(*) n FROM audit_logs WHERE action='REFUND_REVIEW_CASE_CREATED'")).rows[0]?.n)).toBe(1);
   });
