@@ -201,3 +201,9 @@ html { background:#FAF6ED; }
 @media (prefers-reduced-motion:reduce) {
   .solara-food-dialog { animation:none !important; transform:none !important; }
 }
+
+/* Stage 1 customer-only presentation polish; keep all ordering controls unchanged. */
+.solara-app .solara-menu-row { box-shadow:0 4px 15px rgba(51,45,31,.055); }
+@media (hover:hover) and (pointer:fine) {
+  .solara-app .solara-menu-row:hover { box-shadow:0 10px 22px rgba(51,45,31,.095); }
+}
