@@ -108,7 +108,7 @@ describe('Stage 2G P0-C safe Razorpay refund GET verification (mocked network on
     await expect(verifyReportedRefund(db,{...request(),expectedVersion:2},mock)).rejects.toThrow();
     expect(mock).not.toHaveBeenCalled();
     await db.execute({sql:'UPDATE payments SET amount_paisa=11000 WHERE order_id=?',args:[orderId]});
-    await expect(verifyReportedRefund(db,request(),mock)).rejects.toThrow('Financial');
+    await expect(verifyReportedRefund(db,request(),mock)).rejects.toThrow('financial receipt changed');
     expect(await counts()).toEqual({events:3,audits:0});
   });
 });
