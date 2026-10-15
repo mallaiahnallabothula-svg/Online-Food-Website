@@ -45,6 +45,17 @@ export function RefundReviewQueue({onAccessDenied,onViewOrder}:Props){
     }catch(e){setError(e instanceof Error?e.message:'Unable to update refund case')}
     finally{setSaving(false)}
   }
+  async function verify(row:RefundCase){
+    if(saving)return;
+    setSaving(true);setError('');
+    try{
+      await refundRequest('/'+encodeURIComponent(row.id)+'/verify',{
+        method:'POST',body:JSON.stringify({expectedVersion:row.version}),
+      });
+      setRevision(x=>x+1);
+    }catch(e){setError(e instanceof Error?e.message:'Razorpay verification unavailable')}
+    finally{setSaving(false)}
+  }
   async function history(row:RefundCase){
     setError('');
     try{
@@ -85,11 +96,16 @@ export function RefundReviewQueue({onAccessDenied,onViewOrder}:Props){
           <p className="break-all font-bold">{row.orderId}</p><p className="text-xs">Status: <strong>{row.status}</strong> · Version {row.version}</p>
           <p className="font-bold">₹{(row.amountPaisa/100).toFixed(2)}</p>
           <p className="break-all text-xs">Payment: {row.providerPaymentId??'Unverified'}</p>
-          {row.reportedRefundId&&<p className="break-all text-xs">Externally reported (NOT verified): {row.reportedRefundId}</p>}
+          {row.reportedRefundId&&<p className="break-all text-xs">{row.status==='REFUND_PROCESSED_VERIFIED'?'Razorpay processed — verified by API: ':'Externally reported (NOT verified): '}{row.reportedRefundId}</p>}
           <p className="text-xs">Reason: {row.reason}</p>
           <div className="flex flex-wrap gap-2">
             <button type="button" className="min-h-10 rounded-md border px-2 text-xs" onClick={()=>onViewOrder(row.orderId)}>View order</button>
             <button type="button" className="min-h-10 rounded-md border px-2 text-xs" onClick={()=>void history(row)}>Audit history</button>
+            {row.status==='REFUND_REPORTED_UNVERIFIED'&&<button
+              type="button" disabled={saving} onClick={()=>void verify(row)}
+              className="min-h-10 rounded-md border border-emerald-700 px-2 text-xs">
+              Verify processed refund with Razorpay (READ ONLY)
+            </button>}
             {row.status==='NEEDS_REVIEW'&&<button type="button" disabled={saving||note.trim().length<5} onClick={()=>void changeCase(row,'IN_PROGRESS')}
               className="min-h-10 rounded-md border px-2 text-xs">Begin review</button>}
             {(row.status==='NEEDS_REVIEW'||row.status==='IN_PROGRESS')&&<button type="button" disabled={saving||note.trim().length<5} onClick={()=>void changeCase(row,'CLOSED_NO_REFUND')}
@@ -113,6 +129,6 @@ export function RefundReviewQueue({onAccessDenied,onViewOrder}:Props){
         </div>}
       </>}
     </>}
-    <p className="text-xs text-amber-900 dark:text-amber-200">Financial status stays unchanged. Reported refunds are never shown as confirmed. Check Razorpay independently; no gateway action is triggered here.</p>
+    <p className="text-xs text-amber-900 dark:text-amber-200">Financial order status stays unchanged. Only a matching full-amount refund marked processed by Razorpay is displayed as provider-verified. Bank credit is not guaranteed. No refund is initiated here.</p>
   </section>;
 }

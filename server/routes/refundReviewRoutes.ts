@@ -6,6 +6,7 @@ import { getDb } from '../db/index.ts';
 import { requireAuth, requireRole, requireAdminCsrf, type AuthenticatedRequest } from '../auth/index.ts';
 import { RefundReviewFault, createRefundReviewCase, listRefundReviewCases,
   changeRefundReviewCase, getRefundReviewHistory } from '../services/refundReviewService.ts';
+import {verifyReportedRefund} from '../services/refundReconciliationService.ts';
 
 export const refundReviewRouter=Router();
 refundReviewRouter.use(requireAuth,requireRole(['ADMIN']));
@@ -57,4 +58,20 @@ refundReviewRouter.patch('/:id',requireAdminCsrf,async(req:AuthenticatedRequest,
   try{
     res.json({case:await changeRefundReviewCase(getDb(),{...parsed.data,caseId:idResult.data,actor:req.user!.username})});
   }catch(err){handleError(err,res,next);}
+});
+
+// Owner-triggered server-side Razorpay READ ONLY lookup. No gateway refund is sent.
+refundReviewRouter.post('/:id/verify',requireAdminCsrf,async(req:AuthenticatedRequest,res:Response,next:NextFunction)=>{
+  if(process.env.REFUND_RECONCILIATION_ENABLED!=='true')return res.status(503).json({
+    error:{code:'REFUND_RECONCILIATION_NOT_ACTIVATED',
+      message:'Provider refund verification is not activated.'},
+  });
+  const caseResult=caseId.safeParse(req.params.id);
+  const parsed=z.strictObject({expectedVersion:z.number().int().min(1)}).safeParse(req.body);
+  if(!caseResult.success||!parsed.success)return res.status(400).json({error:{code:'INVALID_REFUND_VERIFICATION_REQUEST'}});
+  try{
+    res.json(await verifyReportedRefund(getDb(),{
+      caseId:caseResult.data,expectedVersion:parsed.data.expectedVersion,actor:req.user!.username,
+    }));
+  }catch(error){handleError(error,res,next);}
 });

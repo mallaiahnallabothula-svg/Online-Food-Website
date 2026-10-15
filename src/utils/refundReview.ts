@@ -1,5 +1,5 @@
 /** Strict owner-only refund review records. These are NOT provider-verified refunds. */
-export type RefundCaseStatus = 'NEEDS_REVIEW'|'IN_PROGRESS'|'REFUND_REPORTED_UNVERIFIED'|'CLOSED_NO_REFUND';
+export type RefundCaseStatus = 'NEEDS_REVIEW'|'IN_PROGRESS'|'REFUND_REPORTED_UNVERIFIED'|'REFUND_PROCESSED_VERIFIED'|'CLOSED_NO_REFUND';
 export type RefundReason = 'CUSTOMER_REQUEST'|'ORDER_UNAVAILABLE'|'PAYMENT_EXCEPTION'|'OTHER';
 export interface RefundCase {
   id:string;orderId:string;providerPaymentId:string|null;amountPaisa:number;currency:'INR';
@@ -7,7 +7,7 @@ export interface RefundCase {
   version:number;createdAt:string;updatedAt:string;
 }
 export interface RefundPage {cases:RefundCase[];pagination:{page:number;limit:20;total:number}}
-const statuses=['NEEDS_REVIEW','IN_PROGRESS','REFUND_REPORTED_UNVERIFIED','CLOSED_NO_REFUND'];
+const statuses=['NEEDS_REVIEW','IN_PROGRESS','REFUND_REPORTED_UNVERIFIED','REFUND_PROCESSED_VERIFIED','CLOSED_NO_REFUND'];
 const reasons=['CUSTOMER_REQUEST','ORDER_UNAVAILABLE','PAYMENT_EXCEPTION','OTHER'];
 export function validateRefundPage(v:unknown,page:number):RefundPage {
   if(!v||typeof v!=='object')throw new Error('Invalid refund review response');
