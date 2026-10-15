@@ -329,7 +329,9 @@ adminRouter.patch('/orders/:id/status', requireAuth, requireAdminCsrf, async (re
         order.provider_order_id !== null ||
         receipts.rows.length > 0 ||
         intents.rows.some(intent => intent.provider !== 'mock' ||
-          intent.provider_order_id !== null || Number(intent.is_verified) !== 0);
+          (intent.provider_order_id !== null &&
+            intent.provider_order_id !== `mock_order_${orderId}`) ||
+          Number(intent.is_verified) !== 0);
       if (unsafe) {
         await transaction.rollback();
         return res.status(409).json({
