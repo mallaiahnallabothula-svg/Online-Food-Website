@@ -41,6 +41,12 @@ describe('read-only owner order + ticket compatibility',()=>{
       ['jowar-roti',5,2000],['chapathi',5,500],
     ]);
     expect(legacy.ticketText).toBe('Historical WhatsApp ticket\nKeep unchanged!');
+    // Stored historical tickets keep their original heading; this fix is not retroactive.
+    const oldBrandTicket = '🧾 *MANA ENTI VANTA — ORDER TICKET*\nHistorical paid order';
+    const historical = buildOwnerOrderCompatibility({
+      ...base, id: 'OLD-BRAND', ticket_text: oldBrandTicket,
+    }, []);
+    expect(historical.ticketText).toBe(oldBrandTicket);
     expect(legacy.ticketStatus).toBe('LEGACY_STORED');
     expect(legacy.summaryMatchesSavedSubtotal).toBe(true);
   });
@@ -48,6 +54,9 @@ describe('read-only owner order + ticket compatibility',()=>{
     const x=buildOwnerOrderCompatibility(base,lines,true,holds);
     expect(x.format).toBe('ITEMIZED');
     expect(x.ticketStatus).toBe('READY');
+    // Only newly generated itemized tickets use the current brand.
+    expect(x.ticketText).toContain('🧾 *Mannu’s Cloud Kitchen — ఆర్డర్ టికెట్*');
+    expect(x.ticketText).not.toContain('మన ఇంటి వంట');
     expect(x.totalUnits).toBe(4);
     expect(x.summaryMatchesSavedSubtotal).toBe(true);
     expect(x.lines[0]?.nameTe).toBe('ఇడ్లీ');
@@ -56,6 +65,8 @@ describe('read-only owner order + ticket compatibility',()=>{
     expect(x.ticketText).toContain('₹140.00');
     expect(renderItemizedOwnerTicket(x,'en')).toContain('Ragi Idly');
     expect(renderItemizedOwnerTicket(x,'en')).toContain('Verified payment');
+    expect(renderItemizedOwnerTicket(x,'en')).toContain('🧾 *Mannu’s Cloud Kitchen — ORDER TICKET*');
+    expect(renderItemizedOwnerTicket(x,'en')).not.toContain('MANA ENTI VANTA');
   });
   it('never issues a paid ticket when payment proof or stock confirmation missing',()=>{
     const unpaid=buildOwnerOrderCompatibility({...base,payment_status:'PENDING'},lines,false,[]);
@@ -132,6 +143,7 @@ describe('read-only owner order + ticket compatibility',()=>{
       const next=await loadOwnerOrderCompatibility(db,'DB-MENU');
       expect(old?.ticketText).toBe('Legacy original');
       expect(next?.ticketStatus).toBe('READY');
+      expect(next?.ticketText).toContain('Mannu’s Cloud Kitchen');
       expect(next?.lines).toHaveLength(2);
       expect(await loadOwnerOrderCompatibility(db,'MISSING')).toBeNull();
       const historical=await db.execute("SELECT ticket_text FROM orders WHERE id='DB-LEGACY'");

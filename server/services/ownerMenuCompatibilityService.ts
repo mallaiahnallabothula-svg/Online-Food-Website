@@ -207,7 +207,7 @@ export function renderItemizedOwnerTicket(
     throw new Error('Only verified, ready itemized orders can create a new menu ticket');
   }
   const te = language === 'te';
-  const title = te ? '🧾 *మన ఇంటి వంట — ఆర్డర్ టికెట్*' : '🧾 *MANA ENTI VANTA — ORDER TICKET*';
+  const title = te ? '🧾 *Mannu’s Cloud Kitchen — ఆర్డర్ టికెట్*' : '🧾 *Mannu’s Cloud Kitchen — ORDER TICKET*';
   const result = [
     title,
     '--------------------------------',
