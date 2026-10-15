@@ -25,7 +25,7 @@ export function validateRefundPage(v:unknown,page:number):RefundPage {
        !Number.isSafeInteger(x.amountPaisa)||Number(x.amountPaisa)<=0||x.currency!=='INR'||
        !reasons.includes(String(x.reason))||!statuses.includes(String(x.status))||
        (x.reportedRefundId!==null&&(typeof x.reportedRefundId!=='string'||!/^rfnd_[a-zA-Z0-9]{5,64}$/.test(x.reportedRefundId)))||
-       (x.status==='REFUND_REPORTED_UNVERIFIED'&&!x.reportedRefundId)||
+       ((x.status==='REFUND_REPORTED_UNVERIFIED'||x.status==='REFUND_PROCESSED_VERIFIED')&&!x.reportedRefundId)||
        !Number.isSafeInteger(x.version)||Number(x.version)<1||
        typeof x.initialNote!=='string'||typeof x.createdAt!=='string'||typeof x.updatedAt!=='string')
        throw new Error('Invalid refund case');

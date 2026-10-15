@@ -1,5 +1,6 @@
-/** ADMIN-only feature-gated manual refund case ledger.
- * No schema auto-creation, no Razorpay requests, no order/payment/stock changes. */
+/** ADMIN-only feature-gated refund review ledger.
+ * Razorpay GET verification is separately gated. No refund creation, schema
+ * auto-creation, or order/payment/stock changes. */
 import { Router, type Response, type NextFunction } from 'express';
 import { z } from 'zod';
 import { getDb } from '../db/index.ts';

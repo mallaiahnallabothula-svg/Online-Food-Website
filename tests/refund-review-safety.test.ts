@@ -198,4 +198,25 @@ describe('Stage 2G P0-B1 manual-only refund review with isolated DB',()=>{
     expect(Number((await db.execute("SELECT COUNT(*) n FROM refund_review_cases WHERE reported_refund_id='rfnd_DUPLICATE1234'")).rows[0]?.n)).toBe(1);
     expect(Number((await db.execute('SELECT COUNT(*) n FROM refund_review_events')).rows[0]?.n)).toBe(5);
   });
+  it('P0-C provider verification denies anonymous/STAFF and remains OFF for ADMIN by default',async()=>{
+    const admin=await login('ADMIN'),staff=await login('STAFF');
+    const fakeId='RRC-'+ 'a'.repeat(24);
+    const mk=(base:string,token:string)=>fetch(base+'/api/admin/refund-reviews/'+fakeId+'/verify',{
+      method:'POST',
+      headers:{cookie:'admin_session='+token,'x-requested-with':'XMLHttpRequest',
+        'content-type':'application/json'},
+      body:JSON.stringify({expectedVersion:1}),
+    });
+    await withHttp(async base=>{
+      expect((await fetch(base+'/api/admin/refund-reviews/'+fakeId+'/verify',{
+        method:'POST',headers:{'x-requested-with':'XMLHttpRequest','content-type':'application/json'},
+        body:JSON.stringify({expectedVersion:1}),
+      })).status).toBe(401);
+      expect((await mk(base,staff)).status).toBe(403);
+      const blocked=await mk(base,admin);
+      expect(blocked.status).toBe(503);
+      expect((await blocked.json()).error.code).toBe('REFUND_RECONCILIATION_NOT_ACTIVATED');
+    });
+  });
+
 });

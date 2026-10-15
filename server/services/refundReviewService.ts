@@ -3,7 +3,7 @@
 import crypto from 'node:crypto';
 import type { Client, Transaction } from '@libsql/client';
 
-export type RefundCaseStatus = 'NEEDS_REVIEW' | 'IN_PROGRESS' | 'REFUND_REPORTED_UNVERIFIED' | 'CLOSED_NO_REFUND';
+export type RefundCaseStatus = 'NEEDS_REVIEW' | 'IN_PROGRESS' | 'REFUND_REPORTED_UNVERIFIED' | 'REFUND_PROCESSED_VERIFIED' | 'CLOSED_NO_REFUND';
 export type RefundReason = 'CUSTOMER_REQUEST' | 'ORDER_UNAVAILABLE' | 'PAYMENT_EXCEPTION' | 'OTHER';
 
 export class RefundReviewFault extends Error {
@@ -114,7 +114,7 @@ export async function changeRefundReviewCase(db: Client, input: Change) {
     const allowed: Record<RefundCaseStatus,RefundCaseStatus[]>={
       NEEDS_REVIEW:['IN_PROGRESS','CLOSED_NO_REFUND'],
       IN_PROGRESS:['REFUND_REPORTED_UNVERIFIED','CLOSED_NO_REFUND'],
-      REFUND_REPORTED_UNVERIFIED:[],CLOSED_NO_REFUND:[],
+      REFUND_REPORTED_UNVERIFIED:[],REFUND_PROCESSED_VERIFIED:[],CLOSED_NO_REFUND:[],
     };
     if(!allowed[before].includes(input.status)) throw conflict('Invalid manual review transition');
     if(input.status==='REFUND_REPORTED_UNVERIFIED'&&!input.reportedRefundId) {
