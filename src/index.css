@@ -207,3 +207,7 @@ html { background:#FAF6ED; }
 @media (hover:hover) and (pointer:fine) {
   .solara-app .solara-menu-row:hover { box-shadow:0 10px 22px rgba(51,45,31,.095); }
 }
+
+/* Stage 2A UI-only: compact delivery / progress presentation. No checkout or pricing behavior. */
+.solara-app [data-testid="menu-delivery-rates"] { overflow-wrap: anywhere; }
+.solara-app [data-testid="menu-minimum-progress"] { min-width: 0; }

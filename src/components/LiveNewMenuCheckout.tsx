@@ -321,6 +321,12 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
           <span className={'rounded-md px-2 py-2 text-center ' + (quote ? 'bg-[#A44732] text-white' : 'bg-[#ebe4da] text-[#81766d] dark:bg-stone-700 dark:text-stone-200')}>2 · {te ? 'సమీక్ష' : 'Review'}</span>
           <span className="rounded-md bg-[#ebe4da] px-2 py-2 text-center text-[#81766d] dark:bg-stone-700 dark:text-stone-200">3 · {te ? 'చెల్లింపు' : 'Payment'}</span>
         </div>
+        <p data-testid="checkout-guidance" className="mt-3 rounded-lg border border-[#ded7ce] bg-white/80 px-3 py-2 text-xs leading-relaxed text-[#384B35] dark:border-stone-600 dark:bg-stone-900/70 dark:text-stone-200">
+          {quote
+            ? (te ? 'డెలివరీ ఛార్జీ, తేదీ మరియు మొత్తం క్రింద సరిచూసి, తర్వాత Razorpay ద్వారా చెల్లించండి.' : 'Review the verified delivery fee, date and total below before paying with Razorpay.')
+            : (te ? 'పేరు, చిరునామా నమోదు చేయండి → GPS లేదా Maps పిన్ ఎంచుకుని ధృవీకరించండి → డెలివరీ ఛార్జీ, మొత్తం చెక్ చేయండి.' :
+              'Enter your details → Select and confirm a GPS/Maps pin → Check the delivery fee and final total.')}
+        </p>
       </div>
 
       <form noValidate autoComplete="on" onSubmit={checkQuote} className="space-y-3 px-3 py-3 sm:px-5 sm:py-4">

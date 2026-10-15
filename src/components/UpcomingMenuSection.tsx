@@ -7,6 +7,7 @@ import { useLanguage } from '../context/LanguageContext';
 import type { CheckoutSelection } from '../utils/checkoutSelection';
 import { checkReorderStock, type ReorderError, type ReorderRequest } from '../utils/reorder';
 import { FoodArtwork } from './FoodArtwork';
+import { DELIVERY_POLICY } from '../../shared/deliveryPolicy.ts';
 import { FoodDetailDialog } from './FoodDetailDialog';
 import { MenuAvailabilityBadge } from './MenuAvailabilityBadge';
 import { availabilityForItem, STATUS_RECHECK_MS, validateMenuStatus, type VerifiedMenuStatus } from '../utils/menuAvailability';
@@ -137,6 +138,9 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
   const subtotalPaisa = selected.reduce((total, line) =>
     total + line.item.pricePaisa * line.quantity, 0);
   const selectedQuantity = selected.reduce((total, line) => total + line.quantity, 0);
+  // Presentation-only progress: server remains authoritative for minimum and pricing.
+  const minimumProgressRupees = Math.min(subtotalPaisa, NEW_MENU_ORDER_POLICY.minimumCartPaisa) / 100;
+  const minimumProgressPercent = Math.min(100, subtotalPaisa / NEW_MENU_ORDER_POLICY.minimumCartPaisa * 100);
 
   function adjustQuantity(item: MenuItem, adjustment: number) {
     setReorderNotice(null);
@@ -183,6 +187,19 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
         </div>
 
         <p className="mt-3 rounded-lg border border-[#d4dbc9] bg-[#e8ebdc]/65 px-3 py-2.5 text-sm text-[#384B35] dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100">{te ? 'ప్యాకింగ్ ధరలో కలిపి ఉంది. కూరలు ఐచ్ఛికం. ప్రతి ఆర్డర్ ఆహార కనీస మొత్తం ₹100; డెలివరీ అదనం.' : 'Packing included. Curries are optional. ₹100 food minimum per order, excluding delivery.'}</p>
+        <div className="mt-3 flex flex-col gap-1.5 rounded-lg border border-[#d4dbc9] bg-[#f5f7f0] px-3 py-2.5 text-[#384B35] dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100"
+          role="note" aria-label={te ? 'డెలివరీ ఛార్జీల వివరాలు' : 'Delivery rate guide'} data-testid="menu-delivery-rates">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold">
+            <span>{te ? 'డెలివరీ:' : 'Delivery:'}</span>
+            <span>0–{DELIVERY_POLICY.freeRadiusKm} km · {te ? 'ఉచితం' : 'Free'}</span>
+            <span>{DELIVERY_POLICY.freeRadiusKm}–{DELIVERY_POLICY.standardRadiusKm} km · {money(DELIVERY_POLICY.standardChargePaisa)}</span>
+            <span>{DELIVERY_POLICY.standardRadiusKm}–{DELIVERY_POLICY.maxRadiusKm} km · {money(DELIVERY_POLICY.outerChargePaisa)}</span>
+          </div>
+          <p className="text-[11px] leading-relaxed text-[#56624e] dark:text-stone-300">
+            {te ? DELIVERY_POLICY.maxRadiusKm + ' కి.మీ. దాటితే డెలివరీ లేదు. ఇవి నేరుగా కొలిచిన దూరాలు; మ్యాప్ పిన్ ధృవీకరించిన తర్వాత తుది ఛార్జీ తెలుస్తుంది.' :
+              'Beyond ' + DELIVERY_POLICY.maxRadiusKm + ' km: no delivery. Straight-line distance; final fee and eligibility follow map-pin verification.'}
+          </p>
+        </div>
         <div className="solara-menu-tabs relative mt-6 flex w-full max-w-sm gap-2" data-period={period} role="group" aria-label={te ? 'మెనూ సమయం ఎంచుకోండి' : 'Choose meal period'}>
           {(['MORNING', 'EVENING'] as const).map(key => (
             <button
@@ -281,6 +298,15 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
                 : (te ? 'కనీస ఆహార మొత్తం పూర్తైంది.' : 'Food minimum met.')}
               {' · '}{te ? 'డెలివరీ ఛార్జీ లొకేషన్ తనిఖీ తర్వాత.' : 'Delivery checked after location.'}
             </p>
+            <div className="mt-2 max-w-xs" data-testid="menu-minimum-progress">
+              <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#e8e3d7] dark:bg-stone-600"
+                role="progressbar" aria-label={te ? 'కనీస ఆహార మొత్తం పురోగతి' : 'Food minimum progress'}
+                aria-valuemin={0} aria-valuemax={NEW_MENU_ORDER_POLICY.minimumCartPaisa / 100}
+                aria-valuenow={minimumProgressRupees}>
+                <div className="h-full rounded-full bg-[#A44732] transition-[width] duration-200 motion-reduce:transition-none"
+                  style={{ width: minimumProgressPercent + '%' }} />
+              </div>
+            </div>
           </div>
           <button type="button" onClick={showCheckout} disabled={subtotalPaisa < NEW_MENU_ORDER_POLICY.minimumCartPaisa}
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-[#A44732] px-5 py-2.5 text-sm font-semibold text-white sm:w-auto hover:bg-[#934034] disabled:cursor-not-allowed disabled:opacity-40">
