@@ -97,11 +97,12 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onOpenOrderTracker}
               id="header-track-order-btn"
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg text-[#A44732] dark:text-amber-300 bg-[#fcf9f3] hover:bg-[#f0ebdf] dark:bg-stone-800 dark:hover:bg-stone-700 border border-[#ded7ce] dark:border-stone-700 transition-colors font-telugu cursor-pointer"
-              title={ui("నా ఆర్డర్లు — ఆర్డర్ స్థితి చూడండి / My Orders — Track your order")}
+              title={ui("నా ఆర్డర్లు చూడండి. అర్హత ఉన్న డెలివరీ అయిన ఆర్డర్లను మళ్లీ ఎంచుకోండి / Track orders or reorder eligible delivered items")}
             >
               <ShoppingBag className="w-3.5 h-3.5 text-[#A44732] dark:text-amber-400" />
               <span className="hidden sm:inline">{t.trackFeedbackBtn}</span>
               <span className="sm:hidden">{t.trackFeedbackBtn}</span>
+              <span className="hidden lg:inline text-[10px] font-medium opacity-80">{language === "te" ? "· మళ్లీ ఆర్డర్" : "· Reorder"}</span>
             </button>
           )}
 
