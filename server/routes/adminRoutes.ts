@@ -15,10 +15,13 @@ import {
 import { AdminLoginSchema, UpdateOrderStatusSchema } from '../validation/schemas.ts';
 import { authRateLimiter } from '../middleware/rateLimit.ts';
 import { getDb } from '../db/index.ts';
+import { refundReviewRouter } from './refundReviewRoutes.ts';
 import { getAuthoritativeAnalytics } from '../services/analyticsService.ts';
 import { generateOrdersCsv } from '../services/exportService.ts';
 
 export const adminRouter = Router();
+// Explicitly feature-gated ADMIN-only extension; migration is never auto-applied.
+adminRouter.use('/refund-reviews',refundReviewRouter);
 
 // -------------------------------------------------------------
 // Authentication Endpoints
