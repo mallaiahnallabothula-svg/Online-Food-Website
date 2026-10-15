@@ -1,6 +1,9 @@
 import React from 'react';
 import { ArrowDown, Clock3 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
+import { FoodArtwork } from './FoodArtwork';
+import { DELIVERY_POLICY } from '../../shared/deliveryPolicy.ts';
+import { NEW_MENU_ORDER_POLICY } from '../../shared/menuCatalog.ts';
 
 interface HeroSectionProps {
   onScrollToOrder: () => void;
@@ -10,6 +13,7 @@ interface HeroSectionProps {
 export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder }) => {
   const { language } = useLanguage();
   const te = language === 'te';
+  const minimumFoodRupees = NEW_MENU_ORDER_POLICY.minimumCartPaisa / 100;
   return (
     <section id="home" className="solara-hero relative overflow-hidden border-b border-[#e6dece] bg-[#FAF6ED] px-4 py-8 text-[#384B35] dark:border-stone-700 dark:bg-[#211f1c] dark:text-stone-100 sm:px-6 sm:py-10 lg:py-12">
       <div className="solara-orbit pointer-events-none absolute left-1/2 top-1/2 -z-0 hidden h-[570px] w-[570px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-[#A44732]/10 lg:block" aria-hidden="true" />
@@ -30,47 +34,35 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder }) => 
           </div>
           <p className="mt-5 flex items-center gap-2 text-xs tracking-wide text-[#63685A] dark:text-stone-400"><Clock3 size={16} aria-hidden="true"/>{te ? 'ఉదయం 7–11 AM · సాయంత్రం 6–8 PM · బుధవారం సెలవు' : 'Morning 7–11 AM · Evening 6–8 PM · Wednesday closed'}</p>
         </div>
-        <div className="solara-hero-art mx-auto grid w-full max-w-xl min-w-0 grid-cols-3 items-end gap-2 sm:gap-4 lg:mx-0 lg:max-w-none" aria-label={te ? 'ఉదయం, పెసరట్టు, సాయంత్రం వంటకాల సూచన చిత్రాలు' : 'Three home-food editorial illustrations'}>
-          {([
-            { key: 'idly', en: 'Morning favourites', te: 'ఉదయం టిఫిన్లు', dark: false },
-            { key: 'pesarattu', en: 'A familiar flavour', te: 'తెలిసిన ఇంటి రుచి', dark: true },
-            { key: 'roti', en: 'Evening comfort', te: 'సాయంత్రం రుచులు', dark: false },
-          ] as const).map(item => (
-            <div key={item.key} className={'solara-hero-illustration relative aspect-[2/3] overflow-hidden rounded-2xl ' + (item.dark ? 'bg-[#384B35]' : 'bg-[#e8dec5]')} role="img"
-              aria-label={te ? item.te + ' — సూచన చిత్రం' : item.en + ' — illustrative artwork'}>
-              <svg className="absolute inset-0 h-full w-full" viewBox="0 0 160 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M68 59 C59 50 66 44 69 39 M87 59 C77 49 87 42 90 36" fill="none" stroke={item.dark ? '#cdaa7e' : '#c7b49b'} strokeWidth="1.6" strokeLinecap="round"/>
-                <ellipse cx="80" cy="171" rx="76" ry="27" fill="#b58c72"/>
-                <ellipse cx="80" cy="158" rx="76" ry="27" fill={item.dark ? '#d7c6a9' : '#a9a08a'} />
-                <ellipse cx="80" cy="151" rx="70" ry="25" fill="#f7f0db"/>
-                {item.key === 'idly' && (
-                  <>
-                    <ellipse cx="57" cy="136" rx="25" ry="19" fill="#fef9ea"/><ellipse cx="102" cy="136" rx="26" ry="19" fill="#fef9ea"/>
-                    <ellipse cx="57" cy="159" rx="26" ry="19" fill="#fff9e8"/><ellipse cx="102" cy="159" rx="26" ry="19" fill="#fff9e8"/>
-                  </>
-                )}
-                {item.key === 'pesarattu' && (
-                  <>
-                    <path d="M17 168 L89 75 Q105 93 146 166 Q84 189 17 168" fill="#b57b42"/>
-                    <path d="M21 164 L89 79 L130 166 Q78 177 21 164" fill="#d49a53"/>
-                    <path d="M33 159 L88 99 L118 160" fill="none" stroke="#e9b874" strokeWidth="3"/>
-                  </>
-                )}
-                {item.key === 'roti' && (
-                  <>
-                    <ellipse cx="80" cy="160" rx="53" ry="20" fill="#ba8652"/>
-                    <ellipse cx="80" cy="149" rx="53" ry="19" fill="#dbb37c"/>
-                    <ellipse cx="80" cy="143" rx="53" ry="18" fill="#eac68d"/>
-                    <ellipse cx="62" cy="140" rx="7" ry="3" fill="#bb946c"/>
-                    <ellipse cx="98" cy="144" rx="5" ry="3" fill="#bb946c"/>
-                    <ellipse cx="82" cy="151" rx="8" ry="3" fill="#bb946c"/>
-                  </>
-                )}
-              </svg>
-              <span className={'absolute inset-x-1 bottom-5 text-center text-[10px] font-medium sm:text-xs ' + (item.dark ? 'text-[#fff1dc]' : 'text-[#fffaf1]')}>{te ? item.te : item.en}</span>
-            </div>
-          ))}
-          <p className="col-span-3 text-left text-[11px] text-[#756f67] dark:text-stone-300">{te ? 'ఆహార సూచన చిత్రాలు మాత్రమే. పరిమాణాలకు మెనూ చూడండి.' : 'Food illustrations · See the menu for serving sizes.'}</p>
+        <div className="solara-hero-art relative mx-auto h-[250px] w-full max-w-xl min-w-0 sm:h-[345px] lg:mx-0 lg:h-[390px] lg:max-w-none"
+          aria-label={te ? 'మా మెనూలోని ఇడ్లీ, గుంత పొంగనాలు, పెసరట్టు సూచన చిత్రాలు' : 'Illustrated Idly, Guntha Ponganaalu and Pesarattu from our menu'}>
+          <div className="solara-hero-illustration absolute inset-y-[7%] right-[1%] w-[79%] overflow-hidden rounded-[24px] border border-[#e6dece] bg-[#fffdf8] shadow-[0_15px_32px_rgba(43,38,28,0.12)] dark:border-stone-700 dark:bg-stone-800"
+            role="img" aria-label={te ? 'సాయంత్రం రుచులు — గుంత పొంగనాలు సూచన చిత్రం' : 'Evening comfort — Guntha Ponganaalu illustration'}>
+            <FoodArtwork itemId="guntha-ponganaalu" className="h-full w-full" />
+          </div>
+          <div className="solara-hero-illustration absolute left-[1%] top-[7%] w-[37%] overflow-hidden rounded-2xl border-[3px] border-[#FAF6ED] bg-[#fffdf8] shadow-[0_8px_18px_rgba(43,38,28,0.12)] dark:border-[#211f1c]"
+            role="img" aria-label={te ? 'ఉదయం టిఫిన్లు — ఇడ్లీ సూచన చిత్రం' : 'Morning favourites — Idly illustration'}>
+            <FoodArtwork itemId="idly" className="aspect-[4/3] w-full" />
+          </div>
+          <div className="solara-hero-illustration absolute bottom-[8%] left-[1%] w-[39%] overflow-hidden rounded-2xl border-[3px] border-[#FAF6ED] bg-[#fffdf8] shadow-[0_8px_18px_rgba(43,38,28,0.12)] dark:border-[#211f1c]"
+            role="img" aria-label={te ? 'తెలిసిన ఇంటి రుచి — పెసరట్టు సూచన చిత్రం' : 'A familiar flavour — Pesarattu illustration'}>
+            <FoodArtwork itemId="plain-pesarattu" className="aspect-[4/3] w-full" />
+          </div>
+          <p className="sr-only">{te ? 'ఇవి సూచన చిత్రాలు మాత్రమే; వడ్డించే పరిమాణాల కోసం మెనూ చూడండి.' : 'Food illustrations only; see the menu for exact portions.'}</p>
+        </div>
+      </div>
+      <div className="solara-hero-trust relative mx-auto mt-8 grid w-full max-w-7xl grid-cols-3 divide-x divide-[#d4dbc9] rounded-xl border border-[#d4dbc9] bg-[#e8ebdc] py-3 text-center text-[#384B35] dark:divide-stone-600 dark:border-stone-700 dark:bg-[#302b25] dark:text-stone-100 sm:mt-9 sm:py-4" aria-label={te ? 'డెలివరీ మరియు ఆర్డర్ వివరాలు' : 'Delivery and ordering highlights'}>
+        <div className="min-w-0 px-2 sm:px-4">
+          <p className="text-xs font-bold sm:text-sm">{te ? DELIVERY_POLICY.freeRadiusKm + ' కి.మీ. లోపు' : 'Within ' + DELIVERY_POLICY.freeRadiusKm + ' km'}</p>
+          <p className="mt-1 text-[10px] leading-snug opacity-80 sm:text-xs">{te ? 'ఉచిత డెలివరీ' : 'Free delivery'}</p>
+        </div>
+        <div className="min-w-0 px-2 sm:px-4">
+          <p className="text-xs font-bold sm:text-sm">₹{minimumFoodRupees}</p>
+          <p className="mt-1 text-[10px] leading-snug opacity-80 sm:text-xs">{te ? 'కనీస ఆహార మొత్తం' : 'Food order minimum'}</p>
+        </div>
+        <div className="min-w-0 px-2 sm:px-4">
+          <p className="text-xs font-bold sm:text-sm">{te ? '2 సెషన్లు' : '2 meal sessions'}</p>
+          <p className="mt-1 text-[10px] leading-snug opacity-80 sm:text-xs">{te ? 'ఉదయం & సాయంత్రం' : 'Morning & evening'}</p>
         </div>
       </div>
     </section>
