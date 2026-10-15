@@ -62,10 +62,12 @@ export async function verifyReportedRefund(db:Client,input:VerifyInput,fetcher:t
        current.reported_refund_id!==refundId||
        Number(current.amount_paisa)!==Number(provider.amount))
       throw conflict('Refund case changed during verification');
+    const currentOrderId=current.order_id;
+    if(typeof currentOrderId!=='string')throw conflict('Invalid refund case order reference');
     const receipt=await tx.execute({sql:`SELECT p.provider_payment_id,p.amount_paisa,p.currency,o.payment_provider
       FROM payments p JOIN orders o ON o.id=p.order_id
       WHERE p.order_id=? AND p.provider='razorpay' AND p.verified_at IS NOT NULL
-        AND p.status IN ('SUCCESS','REVIEW_REQUIRED')`,args:[current.order_id]});
+        AND p.status IN ('SUCCESS','REVIEW_REQUIRED')`,args:[currentOrderId]});
     if(receipt.rows.length!==1||receipt.rows[0]?.provider_payment_id!==paymentId||
        Number(receipt.rows[0]?.amount_paisa)!==Number(provider.amount)||
        receipt.rows[0]?.currency!=='INR'||receipt.rows[0]?.payment_provider!=='razorpay')
