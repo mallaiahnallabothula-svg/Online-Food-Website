@@ -9,6 +9,8 @@ import { Router, type Request, type Response } from 'express';
 import { z } from 'zod';
 import { NEW_MENU_LAUNCH_ENABLED, MENU_CATALOG } from '../../shared/menuCatalog.ts';
 import { priceNewMenuCheckout } from '../services/newMenuCheckoutService.ts';
+import { getDb } from '../db/index.ts';
+import { assertSmartMenuAvailable } from '../services/smartMenuService.ts';
 import { createRateLimiter } from '../middleware/rateLimit.ts';
 
 const cartLineSchema = z.strictObject({
@@ -46,13 +48,14 @@ export function createNewMenuQuoteRouter(enabled = NEW_MENU_LAUNCH_ENABLED) {
       if (!enabled) return res.status(404).json({ error: { code: 'NOT_FOUND', message: 'Menu checkout is not available yet.' } });
       menuQuoteLimiter(req, res, next);
     },
-    (req: Request, res: Response) => {
+    async (req: Request, res: Response) => {
       const parsed = quoteSchema.safeParse(req.body);
       if (!parsed.success) {
         return res.status(400).json({ error: { code: 'INVALID_MENU_QUOTE', message: 'Invalid cart or delivery information.' } });
       }
       try {
         const quote = priceNewMenuCheckout(parsed.data);
+        await assertSmartMenuAvailable(getDb(),quote.period,quote.deliveryDateIst,quote.items.map(x=>x.item.id));
         // No personal customer information is returned or persisted.
         return res.json({
           quote: {

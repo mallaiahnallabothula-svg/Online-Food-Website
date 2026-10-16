@@ -83,6 +83,7 @@ function fingerprintOf(request: NewMenuCheckoutRequest): string {
     },
     requestedDeliveryDateIst: request.requestedDeliveryDateIst ?? null,
     expectedPappu: request.expectedPappu ?? null,
+    expectedCurry: request.expectedCurry ?? null,
   });
   return crypto.createHash('sha256').update(canonical).digest('hex');
 }

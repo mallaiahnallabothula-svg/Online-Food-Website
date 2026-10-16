@@ -16,15 +16,15 @@ const money = (paisa: number) => '₹' + (paisa / 100).toLocaleString('en-IN', {
 
 const periods = {
   MORNING: {
-    en: 'Morning (6)',
-    te: 'ఉదయం (6)',
+    en: 'Morning ('+MENU_CATALOG.filter(item=>item.mealPeriod==='MORNING').length+')',
+    te: 'ఉదయం ('+MENU_CATALOG.filter(item=>item.mealPeriod==='MORNING').length+')',
     hours: '7:00 AM – 11:00 AM',
     titleEn: 'Homestyle breakfast',
     titleTe: 'ఇంటి రుచితో ఉదయం అల్పాహారం',
   },
   EVENING: {
-    en: 'Evening (6)',
-    te: 'సాయంత్రం (6)',
+    en: 'Evening ('+MENU_CATALOG.filter(item=>item.mealPeriod==='EVENING').length+')',
+    te: 'సాయంత్రం ('+MENU_CATALOG.filter(item=>item.mealPeriod==='EVENING').length+')',
     hours: '6:00 PM – 8:00 PM',
     titleEn: 'Comforting evening favourites',
     titleTe: 'సాయంత్రం ఇంటి రుచులు',
@@ -32,7 +32,7 @@ const periods = {
 } as const;
 
 function serving(item: MenuItem, telugu: boolean): string {
-  if (item.saleUnit === 'PACK') return '120 g / ' + (telugu ? 'ప్యాక్' : 'pack');
+  if (item.saleUnit === 'PACK') return String(item.gramsPerUnit ?? 120) + ' g / ' + (telugu ? 'ప్యాక్' : 'pack');
   if (item.saleUnit === 'PIECE') {
     return item.minimumQuantity > 1
       ? (telugu ? 'కనీసం ' : 'Minimum ') + item.minimumQuantity + (telugu ? ' ముక్కలు' : ' pieces')
@@ -131,7 +131,11 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
     })) return;
     onCheckout?.({ period, lines: selected, subtotalPaisa });
   }
-  const visible = MENU_CATALOG.filter(item => item.mealPeriod === period).map(item => item.id === 'pappu-of-the-day' && pappu ? { ...item, ...PAPPU_VARIETIES[pappu] } : item);
+  const visible = MENU_CATALOG.filter(item => item.mealPeriod === period).map(item =>
+    item.id === 'pappu-of-the-day' && pappu ? { ...item, ...PAPPU_VARIETIES[pappu] } :
+    item.id === 'curry-of-the-day' && availability?.curryName
+      ? { ...item, nameEn: availability.curryName, nameTe: availability.curryNameTe || availability.curryName }
+      : item);
   const detailItem = visible.find(item => item.id === detailId);
   const selected = visible.filter(item => (quantities[item.id] ?? 0) > 0)
     .map(item => ({ item, quantity: quantities[item.id]! }));
@@ -172,7 +176,7 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
               {NEW_MENU_LAUNCH_ENABLED ? (te ? 'ఆర్డర్లు స్వీకరిస్తున్నాం' : 'Ordering open') : (te ? 'త్వరలో అందుబాటులోకి' : 'Coming Soon')}
             </span>
             <h2 id="upcoming-menu-heading" className="solara-display mt-3 text-4xl font-normal tracking-tight text-[#384B35] sm:text-6xl dark:text-amber-100">
-              {te ? 'మన మెనూ — 12 వంటకాలు' : 'Our menu — 12 favourites'}
+              {te ? 'మన మెనూ — '+MENU_CATALOG.length+' వంటకాలు' : 'Our menu — '+MENU_CATALOG.length+' favourites'}
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-stone-600 dark:text-stone-300">
               {te

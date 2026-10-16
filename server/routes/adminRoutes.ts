@@ -16,12 +16,14 @@ import { AdminLoginSchema, UpdateOrderStatusSchema } from '../validation/schemas
 import { authRateLimiter } from '../middleware/rateLimit.ts';
 import { getDb } from '../db/index.ts';
 import { refundReviewRouter } from './refundReviewRoutes.ts';
+import { smartMenuRouter } from './smartMenuRoutes.ts';
 import { getAuthoritativeAnalytics } from '../services/analyticsService.ts';
 import { generateOrdersCsv } from '../services/exportService.ts';
 
 export const adminRouter = Router();
 // Explicitly feature-gated ADMIN-only extension; migration is never auto-applied.
 adminRouter.use('/refund-reviews',refundReviewRouter);
+adminRouter.use('/smart-menu',smartMenuRouter);
 
 // -------------------------------------------------------------
 // Authentication Endpoints

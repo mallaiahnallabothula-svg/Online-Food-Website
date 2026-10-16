@@ -1,4 +1,6 @@
 import { PappuSettings } from './PappuSettings';
+import { SmartMenuControls } from './SmartMenuControls';
+import { SMART_MENU_CONTROLS_ENABLED } from '../../../shared/menuCatalog.ts';
 import { OrderItemLines } from '../OrderItemLines';
 import { uiError, paymentStatusLabel } from '../../utils/uiCopy';
 import { useUiText } from '../../context/useUiText';
@@ -309,6 +311,7 @@ export const OwnerDashboard: React.FC<OwnerDashboardProps> = ({ role, onLogout }
       {errorMessage && <div role="alert" className="p-4 rounded-xl bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-300 text-sm">{uiError(errorMessage, language)}</div>}
       
       {role === 'ADMIN' && <PappuSettings />}
+      {role === 'ADMIN' && SMART_MENU_CONTROLS_ENABLED && <SmartMenuControls />}
       {/* Top Header Bar */}
       <div className="bg-white dark:bg-[#211E1A] p-4 sm:p-6 rounded-xl border border-[#ded7ce] dark:border-stone-800 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
