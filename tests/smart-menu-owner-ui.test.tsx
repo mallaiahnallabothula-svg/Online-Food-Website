@@ -32,7 +32,7 @@ describe('Stage 2B Smart Menu owner browser acceptance',()=>{
     vi.stubGlobal('fetch',fetcher);
     render(<SmartMenuControls/>);
     fireEvent.click(screen.getByText('Smart Menu Availability · Owner Controls'));
-    const save=screen.getByRole('button',{name:'Save availability settings'});
+    const save=await screen.findByRole('button',{name:'Save availability settings'});
     await waitFor(()=>expect(save.hasAttribute('disabled')).toBe(false));
     expect((screen.getByLabelText(/Curry name \(required/) as HTMLInputElement).value).toBe('Tomato Curry');
     fireEvent.change(screen.getByLabelText(/Curry name \(required/),{target:{value:'Palakura Curry'}});
@@ -59,8 +59,9 @@ describe('Stage 2B Smart Menu owner browser acceptance',()=>{
     render(<SmartMenuControls/>);
     fireEvent.click(screen.getByText('Smart Menu Availability · Owner Controls'));
     await screen.findByText('Cannot load menu controls for this date');
-    expect(screen.queryByRole('button',{name:'Save availability settings'})).toBeNull();
-    expect(fetcher.mock.calls.every(([url])=>!String(url).includes('PUT'))).toBe(true);
+    const disabled=await screen.findByRole('button',{name:'Save availability settings'});
+    expect(disabled.hasAttribute('disabled')).toBe(true);
+    expect(fetcher).not.toHaveBeenCalledWith(expect.anything(),expect.objectContaining({method:'PUT'}));
   });
   it('failed save preserves owner input for safe retry; no fake saved confirmation',async()=>{
     let saveCount=0;
@@ -76,7 +77,7 @@ describe('Stage 2B Smart Menu owner browser acceptance',()=>{
     vi.stubGlobal('fetch',fetcher);
     render(<SmartMenuControls/>);
     fireEvent.click(screen.getByText('Smart Menu Availability · Owner Controls'));
-    const save=screen.getByRole('button',{name:'Save availability settings'});
+    const save=await screen.findByRole('button',{name:'Save availability settings'});
     await waitFor(()=>expect(save.hasAttribute('disabled')).toBe(false));
     const input=screen.getByLabelText(/Curry name \(required/) as HTMLInputElement;
     fireEvent.change(input,{target:{value:'Dal Curry'}});
