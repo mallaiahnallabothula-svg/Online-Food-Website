@@ -11,6 +11,7 @@ type Line = { item: MenuItem; quantity: number };
 type Quote = {
   quote: {
     expectedPappu?: string;
+    expectedCurry?: string;
     items: Array<{ itemId: string; itemName: string; quantity: number; lineTotalPaisa: number }>;
     deliveryDateIst: string; deliveryWindow: string; subtotalPaisa: number;
     deliveryChargePaisa: number; totalAmountPaisa: number; distanceKm: number;
@@ -254,7 +255,7 @@ export function LiveNewMenuCheckout({ period, lines, te, onReorder }: { period: 
           return;
         }
       }
-      const request = { ...requestBody(), expectedPappu: quote?.expectedPappu, requestedDeliveryDateIst: quote?.deliveryDateIst };
+      const request = { ...requestBody(), expectedPappu: quote?.expectedPappu, expectedCurry: quote?.expectedCurry, requestedDeliveryDateIst: quote?.deliveryDateIst };
       const prepared = await post('/prepare', { request, requestKey: requestKey.current });
       const orderId = prepared.checkout.orderId as string;
       const token = prepared.checkout.customerAccessToken as string;

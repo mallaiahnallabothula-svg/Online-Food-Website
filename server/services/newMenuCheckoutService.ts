@@ -3,6 +3,7 @@
  * this module. Gateway integration and user approval are required before launch.
  */
 import { applyPappuSnapshot } from './pappuService.ts';
+import { assertSmartMenuAvailable,applyCurrySnapshot } from './smartMenuService.ts';
 import crypto from 'node:crypto';
 import type { Client } from '@libsql/client';
 import { MENU_CATALOG, NEW_MENU_LAUNCH_ENABLED, NEW_MENU_ORDER_POLICY, type MealPeriod, type MenuItem } from '../../shared/menuCatalog.ts';
@@ -23,6 +24,7 @@ export interface NewMenuCheckoutRequest {
   /** Optional requested slot; the next eligible IST date is calculated server-side. */
   readonly requestedDeliveryDateIst?: string;
   readonly expectedPappu?: string;
+  readonly expectedCurry?: string;
 }
 export interface NewMenuPricing {
   readonly period: MealPeriod;
@@ -148,7 +150,13 @@ export async function createPendingNewMenuCheckout(
     const tx = await db.transaction('write');
     try {
       if (mode === 'production' && pricing.items.some(line => line.item.id === 'pappu-of-the-day') && !request.expectedPappu) throw new Error('Review pappu variety before payment');
+      if (mode === 'production') {
+        await assertSmartMenuAvailable(tx,pricing.period,pricing.deliveryDateIst,pricing.items.map(x=>x.item.id),placedAt);
+        if (pricing.items.some(x=>x.item.id==='curry-of-the-day') && !request.expectedCurry)
+          throw new Error('Review daily curry before payment');
+      }
       await applyPappuSnapshot(tx, pricing, request.expectedPappu);
+      await applyCurrySnapshot(tx, pricing, request.expectedCurry);
       await tx.execute({
         sql: [
           'INSERT INTO orders (id,public_token_hash,created_at_utc,created_at_ist,delivery_date,delivery_window,',

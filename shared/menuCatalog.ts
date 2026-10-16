@@ -43,6 +43,11 @@ export const NEW_MENU_ORDER_POLICY = {
 // runtime. The default remains fail-closed.
 export const NEW_MENU_LAUNCH_ENABLED = process.env.NEW_MENU_LAUNCH_ENABLED === 'true';
 
+/** Explicitly OFF until isolated migration, acceptance and owner-approved production activation. */
+export const SMART_MENU_CONTROLS_ENABLED =
+  process.env.SMART_MENU_CONTROLS_ENABLED === 'true' &&
+  process.env.SMART_MENU_SCHEMA_READY === 'true';
+
 export const MENU_CATALOG: readonly MenuItem[] = [
   {
     id: 'idly', nameEn: 'Idly', nameTe: 'ఇడ్లీ',
@@ -116,6 +121,18 @@ export const MENU_CATALOG: readonly MenuItem[] = [
     pricePaisa: 4000, minimumQuantity: 1, dailyPlateLimit: 30,
     includesChutney: false, photoUrl: null, legacyItem: false,
   },
+
+  ...(SMART_MENU_CONTROLS_ENABLED ? [{
+    id: 'uthappam', nameEn: 'Uthappam', nameTe: 'ఉత్తప్పం',
+    mealPeriod: 'MORNING', saleUnit: 'PLATE', piecesPerUnit: 2,
+    pricePaisa: 3000, minimumQuantity: 1, dailyPlateLimit: 30,
+    includesChutney: false, photoUrl: null, legacyItem: false,
+  }, {
+    id: 'curry-of-the-day', nameEn: 'Curry of the Day', nameTe: 'రోజు కూర',
+    mealPeriod: 'EVENING', saleUnit: 'PACK', piecesPerUnit: null, gramsPerUnit: 100,
+    pricePaisa: 5000, minimumQuantity: 1, dailyPlateLimit: 30,
+    includesChutney: false, photoUrl: null, legacyItem: false,
+  }] as const : []),
 ];
 
 export function findMenuItem(id: string): MenuItem | undefined {

@@ -3,6 +3,7 @@
  * are all configured. Legacy checkout routes are independent.
  */
 import { applyPappuSnapshot, resolvePappu } from '../services/pappuService.ts';
+import { getSmartMenuRules,menuRuleBlock,assertSmartMenuAvailable,applyCurrySnapshot,isPendingOrderMenuOpen } from '../services/smartMenuService.ts';
 import { getNextPreorderDeliverySlot } from '../../shared/preorderScheduling.ts';
 import crypto from 'node:crypto';
 import { Router } from 'express';
@@ -33,6 +34,7 @@ const cartSchema = z.strictObject({
     locationLink: z.string().max(2000).optional(),
   }),
   expectedPappu: z.string().regex(/^\d{4}-\d{2}-\d{2}:(TOMATO|PALAKURA|THOTAKURA)$/).optional(),
+  expectedCurry: z.string().min(12).max(80).optional(),
   requestedDeliveryDateIst: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 });
 const prepareSchema = z.strictObject({ request: cartSchema, requestKey: z.string().uuid() });
@@ -87,8 +89,16 @@ newMenuCheckoutRouter.get('/menu-status', limiter, async (req, res) => {
   try {
     const db = getDb();
     const pappu = period === 'EVENING' ? await resolvePappu(db, date) : null;
-    const stock = Object.fromEntries(await Promise.all(MENU_CATALOG.filter(item => item.mealPeriod === period).map(async item => [item.id, await getMenuStockRemaining(db, item.id, date)])));
-    return res.json({ deliveryDateIst: date, pappu, stock, orderingEnabled: isProductionCheckoutEnabled() });
+    const rules=await getSmartMenuRules(db,period,date);
+    const closed=Boolean(menuRuleBlock(rules,[],new Date()));
+    const menu=MENU_CATALOG.filter(item=>item.mealPeriod===period);
+    const unavailableItemIds=menu.filter(item=>closed || rules.pauses[item.id] ||
+      (item.id==='curry-of-the-day' && !rules.curryName)).map(item=>item.id);
+    const stock:Record<string,number>={};
+    for (const item of menu)
+      stock[item.id]=unavailableItemIds.includes(item.id)?0:await getMenuStockRemaining(db,item.id,date);
+    return res.json({ deliveryDateIst: date, pappu, stock, orderingEnabled: isProductionCheckoutEnabled(),
+      closed,unavailableItemIds,curryName:rules.curryName,curryNameTe:rules.curryNameTe });
   } catch { return res.status(503).json({ error: 'Menu availability unavailable. Please retry.' }); }
 });
 newMenuCheckoutRouter.use((req, res, next) => {
@@ -108,7 +118,9 @@ newMenuCheckoutRouter.post('/quote', async (req, res) => {
   try {
     const db = getDb();
     const pricing = priceNewMenuCheckout(parsed.data);
+    await assertSmartMenuAvailable(db,pricing.period,pricing.deliveryDateIst,pricing.items.map(x=>x.item.id));
     const pappu = await applyPappuSnapshot(db, pricing);
+    const expectedCurry = await applyCurrySnapshot(db, pricing);
     const items = await Promise.all(pricing.items.map(async ({ item, quantity, lineTotalPaisa }) => ({
       itemId: item.id,
       itemName: item.nameEn,
@@ -123,6 +135,7 @@ newMenuCheckoutRouter.post('/quote', async (req, res) => {
       quote: {
         items,
         expectedPappu: pappu ? pricing.deliveryDateIst + ':' + pappu : undefined,
+        expectedCurry,
         period: pricing.period,
         deliveryDateIst: pricing.deliveryDateIst,
         deliveryWindow: pricing.deliveryWindow,
@@ -172,6 +185,8 @@ newMenuCheckoutRouter.post('/gateway', async (req, res) => {
     if (!await orderForToken(parsed.data.orderId, parsed.data.customerAccessToken)) {
       return res.status(403).json({ error: { code: 'INVALID_TRACKING_TOKEN' } });
     }
+    // Stop NEW payment attempts when the owner closes, pauses or changes today's menu.
+    await isPendingOrderMenuOpen(getDb(),parsed.data.orderId);
     const result = await createProductionNewMenuGatewayOrder(
       getDb(), parsed.data.orderId, credentials(), fetch, Date.now(),
     );
