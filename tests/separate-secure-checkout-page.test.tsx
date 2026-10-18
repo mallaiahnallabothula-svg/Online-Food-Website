@@ -7,9 +7,10 @@ import { MENU_CATALOG } from '../shared/menuCatalog';
 import { rememberCheckoutSelection, restoreCheckoutSelection, type CheckoutSelection } from '../src/utils/checkoutSelection';
 
 afterEach(() => { cleanup(); sessionStorage.clear(); localStorage.clear(); vi.unstubAllGlobals(); });
+const eveningItem = MENU_CATALOG.find(item => item.id === 'pulka')!;
 const selection: CheckoutSelection = {
-  period: 'MORNING', lines: [{ item: MENU_CATALOG[0]!, quantity: 4 }],
-  subtotalPaisa: MENU_CATALOG[0]!.pricePaisa * 4,
+  period: 'EVENING', lines: [{ item: eveningItem, quantity: 4 }],
+  subtotalPaisa: eveningItem.pricePaisa * 4,
 };
 describe('Separate secure checkout page', () => {
   it('renders checkout with Back to Menu and preserves the launch gate', () => {
@@ -26,13 +27,13 @@ describe('Separate secure checkout page', () => {
     expect(screen.getByText('Your cart is empty')).toBeTruthy();
     expect(screen.queryByTestId('upcoming-preview-form')).toBeNull();
   });
-  it('reconstructs catalog prices and rejects under-minimum and mixed-session carts', () => {
+  it('reconstructs evening catalog prices and rejects discontinued morning and invalid carts', () => {
     rememberCheckoutSelection(selection);
     expect(restoreCheckoutSelection()?.subtotalPaisa).toBe(12000);
     sessionStorage.setItem('mana_secure_checkout_selection_v1', JSON.stringify({ period: 'MORNING', lines: [{ itemId: 'idly', quantity: 1 }] }));
     expect(restoreCheckoutSelection()).toBeNull();
     sessionStorage.setItem('mana_secure_checkout_selection_v1', JSON.stringify({ period: 'MORNING', lines: [{ itemId: 'idly', quantity: 4, pricePaisa: 1 }] }));
-    expect(restoreCheckoutSelection()?.subtotalPaisa).toBe(12000);
+    expect(restoreCheckoutSelection()).toBeNull();
     sessionStorage.setItem('mana_secure_checkout_selection_v1', JSON.stringify({ period: 'EVENING', lines: [{ itemId: 'idly', quantity: 4 }] }));
     expect(restoreCheckoutSelection()).toBeNull();
   });

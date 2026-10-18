@@ -1,4 +1,4 @@
-import { MENU_CATALOG, NEW_MENU_ORDER_POLICY, type MealPeriod, type MenuItem } from '../../shared/menuCatalog';
+import { MENU_CATALOG, NEW_MENU_ORDER_POLICY, isPublicMenuPeriod, type MealPeriod, type MenuItem } from '../../shared/menuCatalog';
 
 export type CheckoutSelection = {
   period: MealPeriod;
@@ -9,6 +9,7 @@ const KEY = 'mana_secure_checkout_selection_v1';
 
 /** Store only selected item IDs and counts; never PII, payment or quote data. */
 export function rememberCheckoutSelection(selection: CheckoutSelection): void {
+  if (!isPublicMenuPeriod(selection.period)) return;
   try {
     sessionStorage.setItem(KEY, JSON.stringify({
       period: selection.period,
@@ -25,7 +26,7 @@ export function restoreCheckoutSelection(): CheckoutSelection | null {
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object') return null;
     const cart = parsed as { period?: unknown; lines?: unknown };
-    if (cart.period !== 'MORNING' && cart.period !== 'EVENING') return null;
+    if (!isPublicMenuPeriod(cart.period)) return null;
     if (!Array.isArray(cart.lines) || cart.lines.length === 0 || cart.lines.length > 6) return null;
     const seen = new Set<string>();
     const lines: CheckoutSelection['lines'] = [];

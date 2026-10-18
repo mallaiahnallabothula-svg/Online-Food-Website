@@ -138,3 +138,17 @@ export const MENU_CATALOG: readonly MenuItem[] = [
 export function findMenuItem(id: string): MenuItem | undefined {
   return MENU_CATALOG.find(item => item.id === id);
 }
+
+/** Customer-facing periods. Morning catalog entries remain for historical order snapshots. */
+export const PUBLIC_MENU_PERIODS = ['EVENING'] as const;
+export type PublicMenuPeriod = (typeof PUBLIC_MENU_PERIODS)[number];
+
+export function isPublicMenuPeriod(period: unknown): period is PublicMenuPeriod {
+  return typeof period === 'string' && (PUBLIC_MENU_PERIODS as readonly string[]).includes(period);
+}
+
+/** True only for known catalog items that have been removed from public ordering. */
+export function isDiscontinuedPublicMenuItem(itemId: string): boolean {
+  const item = findMenuItem(itemId);
+  return item !== undefined && !isPublicMenuPeriod(item.mealPeriod);
+}

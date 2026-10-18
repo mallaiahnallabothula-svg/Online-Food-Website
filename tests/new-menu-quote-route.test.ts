@@ -6,7 +6,7 @@ import { createNewMenuQuoteRouter } from '../server/routes/newMenuQuoteRoutes.ts
 import { NEW_MENU_LAUNCH_ENABLED } from '../shared/menuCatalog.ts';
 
 const validCart = {
-  lines: [{ itemId: 'idly', quantity: 4 }],
+  lines: [{ itemId: 'chapathi', quantity: 6 }, { itemId: 'mixed-veg-kurma', quantity: 1 }],
   customer: {
     name: 'Test Customer', mobile: '9000000001',
     address: 'Test Kollur apartment', latitude: 17.485, longitude: 78.235,
@@ -56,13 +56,14 @@ describe('inactive server-priced new-menu quote endpoint', () => {
       const response = await quote(base, validCart);
       expect(response.status).toBe(200);
       const result = await response.json();
-      expect(result.quote.period).toBe('MORNING');
-      expect(result.quote.items).toEqual([{
-        itemId: 'idly', unitPricePaisa: 3000, quantity: 4, lineTotalPaisa: 12000,
-      }]);
-      expect(result.quote.subtotalPaisa).toBe(12000);
-      expect(result.quote.totalAmountPaisa).toBe(12000);
-      expect(result.quote.deliveryWindow).toBe('07:00-11:00');
+      expect(result.quote.period).toBe('EVENING');
+      expect(result.quote.items).toEqual([
+        { itemId: 'chapathi', unitPricePaisa: 1000, quantity: 6, lineTotalPaisa: 6000 },
+        { itemId: 'mixed-veg-kurma', unitPricePaisa: 4000, quantity: 1, lineTotalPaisa: 4000 },
+      ]);
+      expect(result.quote.subtotalPaisa).toBe(10000);
+      expect(result.quote.totalAmountPaisa).toBe(10000);
+      expect(result.quote.deliveryWindow).toBe('18:00-20:00');
       expect(result.quote.deliveryDateIst).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(result.stockReserved).toBe(false);
       expect(result.paymentInitiated).toBe(false);
@@ -70,7 +71,18 @@ describe('inactive server-priced new-menu quote endpoint', () => {
     });
   });
 
-  it('rejects arbitrary client prices, invalid quantities and mixed meal slots', async () => {
+  it('rejects discontinued morning quotes before any database or payment work', async () => {
+    const app = express();
+    app.use(express.json());
+    app.use('/api/menu', createNewMenuQuoteRouter(true));
+    await withHttp(app, async base => {
+      const response = await quote(base, { ...validCart, lines: [{ itemId: 'idly', quantity: 4 }] });
+      expect(response.status).toBe(410);
+      expect((await response.json()).error.code).toBe('MENU_PERIOD_DISCONTINUED');
+    });
+  });
+
+  it('rejects arbitrary client prices, invalid quantities and discontinued meal slots', async () => {
     const app = express();
     app.use(express.json());
     app.use('/api/menu', createNewMenuQuoteRouter(true));
@@ -83,8 +95,8 @@ describe('inactive server-priced new-menu quote endpoint', () => {
         ...validCart, lines: [{ itemId: 'idly', quantity: 1 }],
       })).status).toBe(400); // ₹100 minimum
       expect((await quote(base, {
-        ...validCart, lines: [{ itemId: 'idly', quantity: 4 }, { itemId: 'pulka', quantity: 4 }],
-      })).status).toBe(400);
+        ...validCart, lines: [{ itemId: 'chapathi', quantity: 6 }, { itemId: 'idly', quantity: 4 }],
+      })).status).toBe(410);
       expect((await quote(base, {
         ...validCart, customer: { ...validCart.customer, longitude: null },
       })).status).toBe(400);

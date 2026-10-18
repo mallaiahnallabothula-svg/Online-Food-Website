@@ -1,4 +1,4 @@
-import { MENU_CATALOG, type MealPeriod } from '../../shared/menuCatalog.ts';
+import { MENU_CATALOG, isPublicMenuPeriod, type MealPeriod } from '../../shared/menuCatalog.ts';
 import type { Order } from '../types';
 
 export type ReorderRequest = {
@@ -24,7 +24,7 @@ export function buildReorderRequest(order: Order): ReorderRequest | null {
     lines.push({ itemId: item.id, quantity: line.quantity });
   }
   // No old prices, customer PII, payment info, tracking key, or delivery date.
-  return period ? { sourceOrderId: order.id, period, lines } : null;
+  return period && isPublicMenuPeriod(period) ? { sourceOrderId: order.id, period, lines } : null;
 }
 
 /** Reject invalid/stale stock or incompatible old quantities; never reduce silently. */
