@@ -33,7 +33,7 @@ describe('Signature bilingual local brand story',()=>{
     expect(section.firstElementChild?.className).toContain('md:grid-cols-');
     expect(section.textContent).toContain('From Our Kitchen');
     expect(section.textContent).toContain('Kollur');
-    expect(section.textContent).toContain('12 MENU ITEMS');
+    expect(section.textContent).toContain('6 EVENING ITEMS');
     expect(container.querySelector('#at-the-table a[href="#upcoming-menu"]')).toBeTruthy();
     fireEvent.click(screen.getByRole('button',{name:'Telugu language'}));
     expect(section.textContent).toContain('మా వంటింటి నుంచి');
@@ -45,14 +45,14 @@ describe('Signature bilingual local brand story',()=>{
 describe('Reusable food detail dialog — existing preview cart',()=>{
   it('opens by image or name, shows real item facts, closes with ESC and restores keyboard focus',()=>{
     const {container}=mountMenu();
-    const artwork=screen.getByRole('button',{name:'View artwork details for Idly'});
+    const artwork=screen.getByRole('button',{name:'View artwork details for Guntha Ponganaalu'});
     artwork.focus();
     fireEvent.click(artwork);
-    let dialog=screen.getByRole('dialog',{name:/Idly/});
+    let dialog=screen.getByRole('dialog',{name:/Guntha Ponganaalu/});
     expect(document.body.style.overflow).toBe('hidden');
-    expect(within(dialog).getByText('₹30')).toBeTruthy();
-    expect(within(dialog).getByText('4 pieces / plate')).toBeTruthy();
-    expect(within(dialog).getByText('Morning')).toBeTruthy();
+    expect(within(dialog).getByText('₹40')).toBeTruthy();
+    expect(within(dialog).getByText('12 pieces / plate')).toBeTruthy();
+    expect(within(dialog).getByText('Evening')).toBeTruthy();
     expect(within(dialog).getByText('Included')).toBeTruthy();
     expect(within(dialog).getByText('Ordering Unavailable')).toBeTruthy();
     expect(within(dialog).getByText(/Sample cart only/)).toBeTruthy();
@@ -60,15 +60,14 @@ describe('Reusable food detail dialog — existing preview cart',()=>{
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(document.activeElement).toBe(artwork);
     expect(document.body.style.overflow).toBe('');
-    fireEvent.click(screen.getByRole('button',{name:'View details for Idly'}));
-    dialog=screen.getByRole('dialog',{name:/Idly/});
+    fireEvent.click(screen.getByRole('button',{name:'View details for Guntha Ponganaalu'}));
+    dialog=screen.getByRole('dialog',{name:/Guntha Ponganaalu/});
     fireEvent.click(within(dialog).getByRole('button',{name:'Close food details'}));
     expect(screen.queryByRole('dialog')).toBeNull();
     expect(container.querySelector('#upcoming-menu')).toBeTruthy();
   });
-  it('syncs minimum quantities and cart controls; preserves morning/evening cart isolation',()=>{
+  it('syncs minimum quantities and cart controls on the evening-only menu',()=>{
     mountMenu();
-    fireEvent.click(screen.getByRole('button',{name:'Evening (6)'}));
     fireEvent.click(screen.getByRole('button',{name:'View details for Chapathi'}));
     let dialog=screen.getByRole('dialog',{name:/Chapathi/});
     expect(within(dialog).getByText('Minimum quantity')).toBeTruthy();
@@ -81,9 +80,8 @@ describe('Reusable food detail dialog — existing preview cart',()=>{
     expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹40');
     fireEvent.click(within(dialog).getByRole('button',{name:'Close food details'}));
     expect(screen.getByLabelText('Chapathi sample quantity').textContent).toBe('4');
-    fireEvent.click(screen.getByRole('button',{name:'Morning (6)'}));
-    expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹0');
-    fireEvent.click(screen.getByRole('button',{name:'Evening (6)'}));
+    expect(screen.getAllByTestId('upcoming-menu-card')).toHaveLength(6);
+    expect(screen.queryByRole('button',{name:/Morning|ఉదయం/})).toBeNull();
     expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹40');
   });
   it('has mobile-safe scroll and keyboard trap; sold-out purchasing disabled',()=>{

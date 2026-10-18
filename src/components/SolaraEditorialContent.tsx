@@ -38,7 +38,7 @@ export const SolaraEditorialContent: React.FC = () => {
             </p>
             <div className="mt-6 flex items-center gap-3 border-t border-[#ded7ce] pt-5">
               <span aria-hidden="true" className="h-px w-9 shrink-0 bg-[#A44732]" />
-              <p className="text-xs font-semibold tracking-wide text-[#756f67] dark:text-stone-300">12 MENU ITEMS · 2 MEAL SESSIONS · PRE-ORDERS</p>
+              <p className="text-xs font-semibold tracking-wide text-[#756f67] dark:text-stone-300">6 EVENING ITEMS · 2 MEAL SESSIONS · PRE-ORDERS</p>
             </div>
           </div>
         </div>

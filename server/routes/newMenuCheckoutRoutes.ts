@@ -10,7 +10,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { getDb } from '../db/index.ts';
 import { createRateLimiter } from '../middleware/rateLimit.ts';
-import { MENU_CATALOG, NEW_MENU_LAUNCH_ENABLED } from '../../shared/menuCatalog.ts';
+import { MENU_CATALOG, NEW_MENU_LAUNCH_ENABLED, isPublicMenuPeriod, isDiscontinuedPublicMenuItem } from '../../shared/menuCatalog.ts';
 import { priceNewMenuCheckout, type NewMenuCheckoutRequest } from '../services/newMenuCheckoutService.ts';
 import { getMenuStockRemaining } from '../services/menuStockService.ts';
 import { prepareProductionNewMenuCheckoutIdempotent } from '../services/inactiveNewMenuIdempotencyService.ts';
@@ -85,6 +85,7 @@ newMenuCheckoutRouter.get('/menu-status', limiter, async (req, res) => {
   if (!NEW_MENU_LAUNCH_ENABLED) return res.status(404).json({ error: 'Menu unavailable' });
   const period = req.query.period;
   if (period !== 'MORNING' && period !== 'EVENING') return res.status(400).json({ error: 'Invalid session' });
+  if (!isPublicMenuPeriod(period)) return res.status(404).json({ error: 'Menu unavailable' });
   const date = getNextPreorderDeliverySlot(period, new Date()).deliveryDateIst;
   try {
     const db = getDb();
@@ -115,6 +116,9 @@ newMenuCheckoutRouter.use((req, res, next) => {
 newMenuCheckoutRouter.post('/quote', async (req, res) => {
   const parsed = cartSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: { code: 'INVALID_CART' } });
+  if (parsed.data.lines.some(line => isDiscontinuedPublicMenuItem(line.itemId))) {
+    return res.status(410).json({ error: { code: 'MENU_PERIOD_DISCONTINUED', message: 'Morning menu is no longer available.' } });
+  }
   try {
     const db = getDb();
     const pricing = priceNewMenuCheckout(parsed.data);
@@ -158,6 +162,9 @@ newMenuCheckoutRouter.post('/quote', async (req, res) => {
 newMenuCheckoutRouter.post('/prepare', async (req, res) => {
   const parsed = prepareSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: { code: 'INVALID_CHECKOUT' } });
+  if (parsed.data.request.lines.some(line => isDiscontinuedPublicMenuItem(line.itemId))) {
+    return res.status(410).json({ error: { code: 'MENU_PERIOD_DISCONTINUED', message: 'Morning menu is no longer available.' } });
+  }
   try {
     const prepared = await prepareProductionNewMenuCheckoutIdempotent(
       getDb(), parsed.data.request as NewMenuCheckoutRequest,

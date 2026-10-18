@@ -1,8 +1,8 @@
 import { PAPPU_VARIETIES, pappuForDate } from '../../shared/pappu';
 import { getNextPreorderDeliverySlot } from '../../shared/preorderScheduling';
 import { useCallback, useEffect, useState } from 'react';
-import { Clock3, Coffee, Sun, Moon, UtensilsCrossed, ArrowRight } from 'lucide-react';
-import { MENU_CATALOG, NEW_MENU_LAUNCH_ENABLED, NEW_MENU_ORDER_POLICY, type MealPeriod, type MenuItem } from '../../shared/menuCatalog.ts';
+import { Clock3, Moon, UtensilsCrossed, ArrowRight } from 'lucide-react';
+import { MENU_CATALOG, NEW_MENU_LAUNCH_ENABLED, NEW_MENU_ORDER_POLICY, PUBLIC_MENU_PERIODS, isPublicMenuPeriod, type PublicMenuPeriod, type MenuItem } from '../../shared/menuCatalog.ts';
 import { useLanguage } from '../context/LanguageContext';
 import type { CheckoutSelection } from '../utils/checkoutSelection';
 import { checkReorderStock, type ReorderError, type ReorderRequest } from '../utils/reorder';
@@ -15,13 +15,6 @@ import { availabilityForItem, STATUS_RECHECK_MS, validateMenuStatus, type Verifi
 const money = (paisa: number) => '₹' + (paisa / 100).toLocaleString('en-IN', { maximumFractionDigits: 2 });
 
 const periods = {
-  MORNING: {
-    en: 'Morning ('+MENU_CATALOG.filter(item=>item.mealPeriod==='MORNING').length+')',
-    te: 'ఉదయం ('+MENU_CATALOG.filter(item=>item.mealPeriod==='MORNING').length+')',
-    hours: '7:00 AM – 11:00 AM',
-    titleEn: 'Homestyle breakfast',
-    titleTe: 'ఇంటి రుచితో ఉదయం అల్పాహారం',
-  },
   EVENING: {
     en: 'Evening ('+MENU_CATALOG.filter(item=>item.mealPeriod==='EVENING').length+')',
     te: 'సాయంత్రం ('+MENU_CATALOG.filter(item=>item.mealPeriod==='EVENING').length+')',
@@ -50,8 +43,14 @@ function serving(item: MenuItem, telugu: boolean): string {
 export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckoutSelection }: { reorderRequest?: ReorderRequest | null; onCheckout?: (selection: CheckoutSelection) => void; initialCheckoutSelection?: CheckoutSelection | null } = {}) {
   const { language } = useLanguage();
   const te = language === 'te';
-  const [period, setPeriod] = useState<MealPeriod>(initialCheckoutSelection?.period ?? 'MORNING');
-  const [quantities, setQuantities] = useState<Record<string, number>>(() => Object.fromEntries((initialCheckoutSelection?.lines ?? []).map(line => [line.item.id, line.quantity])));
+  const [period, setPeriod] = useState<PublicMenuPeriod>(() => {
+    const initialPeriod = initialCheckoutSelection?.period;
+    return isPublicMenuPeriod(initialPeriod) ? initialPeriod : PUBLIC_MENU_PERIODS[0];
+  });
+  const [quantities, setQuantities] = useState<Record<string, number>>(() => Object.fromEntries(
+    (initialCheckoutSelection && isPublicMenuPeriod(initialCheckoutSelection.period) ? initialCheckoutSelection.lines : [])
+      .map(line => [line.item.id, line.quantity]),
+  ));
   const [availability, setAvailability] = useState<VerifiedMenuStatus | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const closeDetail = useCallback(() => setDetailId(null), []);
@@ -87,6 +86,10 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
   // This can only refill a fresh cart; new quote/payment is always customer-initiated.
   useEffect(() => {
     if (!reorderRequest) return;
+    if (!isPublicMenuPeriod(reorderRequest.period)) {
+      setReorderNotice('unavailable');
+      return;
+    }
     let active = true;
     setReorderNotice('checking');
     setPeriod(reorderRequest.period);
@@ -131,7 +134,7 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
     })) return;
     onCheckout?.({ period, lines: selected, subtotalPaisa });
   }
-  const visible = MENU_CATALOG.filter(item => item.mealPeriod === period).map(item =>
+  const visible = MENU_CATALOG.filter(item => isPublicMenuPeriod(item.mealPeriod) && item.mealPeriod === period).map(item =>
     item.id === 'pappu-of-the-day' && pappu ? { ...item, ...PAPPU_VARIETIES[pappu] } :
     item.id === 'curry-of-the-day' && availability?.curryName
       ? { ...item, nameEn: availability.curryName, nameTe: availability.curryNameTe || availability.curryName }
@@ -176,12 +179,12 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
               {NEW_MENU_LAUNCH_ENABLED ? (te ? 'ఆర్డర్లు స్వీకరిస్తున్నాం' : 'Ordering open') : (te ? 'త్వరలో అందుబాటులోకి' : 'Coming Soon')}
             </span>
             <h2 id="upcoming-menu-heading" className="solara-display mt-3 text-4xl font-normal tracking-tight text-[#384B35] sm:text-6xl dark:text-amber-100">
-              {te ? 'మన మెనూ — '+MENU_CATALOG.length+' వంటకాలు' : 'Our menu — '+MENU_CATALOG.length+' favourites'}
+              {te ? 'మన మెనూ — '+MENU_CATALOG.filter(item => isPublicMenuPeriod(item.mealPeriod)).length+' వంటకాలు' : 'Our menu — '+MENU_CATALOG.filter(item => isPublicMenuPeriod(item.mealPeriod)).length+' favourites'}
             </h2>
             <p className="mt-2 max-w-2xl text-sm leading-relaxed text-stone-600 dark:text-stone-300">
               {te
-                ? (NEW_MENU_LAUNCH_ENABLED ? 'ఉదయం, సాయంత్రం మెనూ నుంచి ఎంచుకుని డెలివరీ వివరాలు ధృవీకరించండి.' : 'కొత్త మెనూను చూడండి. ఆర్డర్లు ఇంకా ప్రారంభం కాలేదు.')
-                : (NEW_MENU_LAUNCH_ENABLED ? 'Choose from the morning or evening menu and confirm your delivery details.' : 'Explore the planned menu. Ordering is not open yet.')}
+                ? (NEW_MENU_LAUNCH_ENABLED ? 'సాయంత్రం మెనూ నుంచి ఎంచుకుని డెలివరీ వివరాలు ధృవీకరించండి.' : 'కొత్త మెనూను చూడండి. ఆర్డర్లు ఇంకా ప్రారంభం కాలేదు.')
+                : (NEW_MENU_LAUNCH_ENABLED ? 'Choose from the evening menu and confirm your delivery details.' : 'Explore the planned menu. Ordering is not open yet.')}
             </p>
           </div>
           <div className="inline-flex items-center gap-2 rounded-xl bg-white/80 px-3 py-2 text-xs font-semibold text-[#5F4B33] dark:bg-stone-800 dark:text-stone-200">
@@ -204,29 +207,11 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
               'Beyond ' + DELIVERY_POLICY.maxRadiusKm + ' km: no delivery. Straight-line distance; final fee and eligibility follow map-pin verification.'}
           </p>
         </div>
-        <div className="solara-menu-tabs relative mt-6 flex w-full max-w-sm gap-2" data-period={period} role="group" aria-label={te ? 'మెనూ సమయం ఎంచుకోండి' : 'Choose meal period'}>
-          {(['MORNING', 'EVENING'] as const).map(key => (
-            <button
-              key={key}
-              type="button"
-              aria-pressed={period === key}
-              onClick={() => {
-                if (period !== key) {
-                  setPeriod(key);
-                  // Preserve each session cart; only the active session is checked out.
-                }
-              }}
-              className={
-                'solara-menu-tab relative inline-flex min-h-11 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border px-2 py-2.5 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 sm:px-4 ' +
-                (period === key
-                  ? 'border-[#A44732] bg-[#A44732] text-white'
-                  : 'border-[#ded7ce] bg-transparent text-[#756f67] hover:border-[#A44732] dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100')
-              }
-            >
-              {key === 'MORNING' ? <Sun size={17} aria-hidden="true" /> : <Moon size={17} aria-hidden="true" />}
-              {te ? periods[key].te : periods[key].en}
-            </button>
-          ))}
+        <div className="solara-menu-tabs relative mt-6 flex w-full max-w-sm gap-2" data-period={period} aria-label={te ? 'అందుబాటులో ఉన్న మెనూ' : 'Available menu period'} data-testid="menu-session-label">
+          <span className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-[#ded7ce] bg-white/60 px-4 py-2.5 text-sm font-bold text-[#756f67] dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100">
+            <Moon size={17} aria-hidden="true" />
+            {te ? periods[period].te : periods[period].en}
+          </span>
         </div>
 
         <p className="mt-4 text-sm">{deliveryDate} · {period === 'EVENING' && pappu ? (te ? PAPPU_VARIETIES[pappu].nameTe : PAPPU_VARIETIES[pappu].nameEn) : ''}</p>
@@ -250,7 +235,7 @@ export function UpcomingMenuSection({ reorderRequest, onCheckout, initialCheckou
         )}
         <div className="mt-5 flex items-center justify-between gap-3">
           <h3 className="flex items-center gap-2 text-2xl font-medium text-[#384B35] dark:text-stone-100">
-            {period === 'MORNING' ? <Coffee size={19} aria-hidden="true" /> : <UtensilsCrossed size={19} aria-hidden="true" />}
+            <UtensilsCrossed size={19} aria-hidden="true" />
             {te ? periods[period].titleTe : periods[period].titleEn}
           </h3>
           <span className="text-xs text-stone-500 dark:text-stone-400">{visible.length} {te ? 'రకాలు' : 'items'}</span>

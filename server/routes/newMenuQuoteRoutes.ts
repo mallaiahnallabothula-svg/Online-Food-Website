@@ -7,7 +7,7 @@
  */
 import { Router, type Request, type Response } from 'express';
 import { z } from 'zod';
-import { NEW_MENU_LAUNCH_ENABLED, MENU_CATALOG } from '../../shared/menuCatalog.ts';
+import { NEW_MENU_LAUNCH_ENABLED, MENU_CATALOG, isDiscontinuedPublicMenuItem } from '../../shared/menuCatalog.ts';
 import { priceNewMenuCheckout } from '../services/newMenuCheckoutService.ts';
 import { getDb } from '../db/index.ts';
 import { assertSmartMenuAvailable } from '../services/smartMenuService.ts';
@@ -52,6 +52,9 @@ export function createNewMenuQuoteRouter(enabled = NEW_MENU_LAUNCH_ENABLED) {
       const parsed = quoteSchema.safeParse(req.body);
       if (!parsed.success) {
         return res.status(400).json({ error: { code: 'INVALID_MENU_QUOTE', message: 'Invalid cart or delivery information.' } });
+      }
+      if (parsed.data.lines.some(line => isDiscontinuedPublicMenuItem(line.itemId))) {
+        return res.status(410).json({ error: { code: 'MENU_PERIOD_DISCONTINUED', message: 'Morning menu is no longer available.' } });
       }
       try {
         const quote = priceNewMenuCheckout(parsed.data);

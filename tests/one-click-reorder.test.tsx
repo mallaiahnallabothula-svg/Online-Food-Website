@@ -51,6 +51,7 @@ describe('one-click reorder V1 safety', () => {
       { items: [sourceOrder.items![0]!, sourceOrder.items![0]!] },
       { items: [sourceOrder.items![0]!, { ...sourceOrder.items![1]!, itemId: 'idly' }] },
       { items: [{ ...sourceOrder.items![0]!, quantity: 0 }] },
+      { items: [{ ...sourceOrder.items![0]!, itemId: 'idly' }] },
     ];
     for (const patch of cases) expect(buildReorderRequest({ ...sourceOrder, ...patch })).toBeNull();
   });

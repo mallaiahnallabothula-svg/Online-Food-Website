@@ -29,12 +29,14 @@ describe('Stage 2A ordering-clarity presentation', () => {
     const progress = screen.getByRole('progressbar', { name: 'Food minimum progress' });
     expect(progress.getAttribute('aria-valuemax')).toBe(String(NEW_MENU_ORDER_POLICY.minimumCartPaisa / 100));
     expect(progress.getAttribute('aria-valuenow')).toBe('0');
-    fireEvent.click(screen.getByRole('button', {name:'Add Idly to sample cart'}));
+    fireEvent.click(screen.getByRole('button', {name:'Add Chapathi to sample cart'}));
     expect(progress.getAttribute('aria-valuenow')).toBe('30');
     expect(screen.getByTestId('menu-cart-total').textContent).toContain('₹30');
     expect(screen.getByText(/Add ₹70 more/)).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', {name:'Add Ragi Idly to sample cart'}));
-    fireEvent.click(screen.getByRole('button', {name:'Increase Idly sample quantity'}));
+    fireEvent.click(screen.getByRole('button', {name:'Add Mixed Veg Kurma to sample cart'}));
+    fireEvent.click(screen.getByRole('button', {name:'Increase Chapathi sample quantity'}));
+    fireEvent.click(screen.getByRole('button', {name:'Increase Chapathi sample quantity'}));
+    fireEvent.click(screen.getByRole('button', {name:'Increase Chapathi sample quantity'}));
     expect(progress.getAttribute('aria-valuenow')).toBe('100');
     expect(screen.getByTestId('menu-cart-total').textContent).toContain('₹100');
     expect(screen.getByText(/Food minimum met/)).toBeTruthy();

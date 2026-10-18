@@ -31,9 +31,9 @@ function mount() {
   fireEvent.click(screen.getByRole('button', { name: 'English preview' }));
 }
 
-function addFourIdlies() {
-  fireEvent.click(screen.getByRole('button', { name: 'Add Idly to sample cart' }));
-  for (let i = 0; i < 3; i++) fireEvent.click(screen.getByRole('button', { name: 'Increase Idly sample quantity' }));
+function addFourPulkas() {
+  fireEvent.click(screen.getByRole('button', { name: 'Add Pulka to sample cart' }));
+  for (let i = 0; i < 3; i++) fireEvent.click(screen.getByRole('button', { name: 'Increase Pulka sample quantity' }));
 }
 function continueToDelivery() {
   fireEvent.click(screen.getByRole('button', { name: 'Continue to delivery' }));
@@ -62,11 +62,11 @@ describe('PR18 inactive menu cart — checkout is now on separate page', () => {
     expect(NEW_MENU_LAUNCH_ENABLED).toBe(false);
     expect(subtotal.textContent).toBe('₹0');
     expect(menu.textContent).toContain('₹100 minimum');
-    fireEvent.click(within(menu).getByRole('button', { name: 'Add Idly to sample cart' }));
+    fireEvent.click(within(menu).getByRole('button', { name: 'Add Pulka to sample cart' }));
     expect(subtotal.textContent).toBe('₹30');
     expect(menu.textContent).toContain('₹70');
     expect((screen.getByRole('button', { name: 'Continue to delivery' }) as HTMLButtonElement).disabled).toBe(true);
-    for (let i = 0; i < 3; i++) fireEvent.click(within(menu).getByRole('button', { name: 'Increase Idly sample quantity' }));
+    for (let i = 0; i < 3; i++) fireEvent.click(within(menu).getByRole('button', { name: 'Increase Pulka sample quantity' }));
     expect(subtotal.textContent).toBe('₹120');
     expect(menu.textContent).toContain('Food minimum met');
     continueToDelivery();
@@ -77,14 +77,10 @@ describe('PR18 inactive menu cart — checkout is now on separate page', () => {
     expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹120');
   });
 
-  it('keeps the morning and evening carts separate with the existing minimum-quantity rules', () => {
+  it('keeps the public menu evening-only and enforces minimum quantities', () => {
     mount();
-    expect(getNextPreorderDeliverySlot('MORNING', new Date()).deliveryDateIst).toBe('2026-10-10');
-    fireEvent.click(screen.getByRole('button', { name: 'Add Idly to sample cart' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Evening (6)' }));
-    expect(screen.getAllByTestId('upcoming-menu-card')).toHaveLength(6);
-    expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹0');
     expect(getNextPreorderDeliverySlot('EVENING', new Date()).deliveryDateIst).toBe('2026-10-10');
+    expect(screen.queryByRole('button', { name: /Morning|ఉదయం/ })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Add Chapathi to sample cart' }));
     expect(screen.getByLabelText('Chapathi sample quantity').textContent).toBe('3');
     expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹30');
@@ -93,16 +89,16 @@ describe('PR18 inactive menu cart — checkout is now on separate page', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Decrease Chapathi sample quantity' }));
     fireEvent.click(screen.getByRole('button', { name: 'Decrease Chapathi sample quantity' }));
     expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹0');
-    fireEvent.click(screen.getByRole('button', { name: 'Morning (6)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Pulka to sample cart' }));
     expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹30');
   });
 
   it('enforces daily quantity ceiling; stock is not claimed without server checking', () => {
     mount();
-    fireEvent.click(screen.getByRole('button', { name: 'Add Idly to sample cart' }));
-    const increase = screen.getByRole('button', { name: 'Increase Idly sample quantity' });
+    fireEvent.click(screen.getByRole('button', { name: 'Add Pulka to sample cart' }));
+    const increase = screen.getByRole('button', { name: 'Increase Pulka sample quantity' });
     for (let i = 0; i < 35; i++) if (!increase.hasAttribute('disabled')) fireEvent.click(increase);
-    expect(screen.getByLabelText('Idly sample quantity').textContent).toBe('30');
+    expect(screen.getByLabelText('Pulka sample quantity').textContent).toBe('30');
     expect(increase.hasAttribute('disabled')).toBe(true);
     expect(screen.getByTestId('menu-cart-total').textContent).toBe('₹900');
     continueToDelivery();
@@ -113,7 +109,7 @@ describe('PR18 inactive menu cart — checkout is now on separate page', () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch');
     mount();
     expect(validateUpcomingPreview(3000, { name: '', mobile: '', address: '', landmark: '' }).length).toBeGreaterThan(0);
-    addFourIdlies();
+    addFourPulkas();
     continueToDelivery();
     fireEvent.click(screen.getByRole('button', { name: 'Check preview details' }));
     expect(screen.getByRole('alert').textContent).toContain('Enter a valid 10-digit Indian mobile number');
@@ -135,9 +131,9 @@ describe('PR18 inactive menu cart — checkout is now on separate page', () => {
   it('keeps existing next-day IST scheduling on the checkout page', () => {
     vi.setSystemTime(new Date('2026-10-10T05:00:00Z')); // 10:30 AM IST
     mount();
-    addFourIdlies();
+    addFourPulkas();
     continueToDelivery();
-    expect(screen.getByTestId('upcoming-slot-preview').textContent).toContain('2026-10-11 · 07:00–11:00 IST');
+    expect(screen.getByTestId('upcoming-slot-preview').textContent).toContain('2026-10-10 · 18:00–20:00 IST');
     expect(screen.getByTestId('upcoming-slot-preview').textContent).toContain('not a confirmed delivery');
   });
 
