@@ -94,7 +94,7 @@ export default defineConfig(() => {
           id: '/',
           name: 'Mannu’s Cloud Kitchen',
           short_name: 'Mannu’s',
-          description: 'కొల్లూరు ప్రాంతంలో Mannu’s Cloud Kitchen ఉదయం అల్పాహారం, సాయంత్రం వంటకాల ఆన్‌లైన్ ఆర్డరింగ్ అప్లికేషన్',
+          description: 'కొల్లూరు ప్రాంతంలో Mannu’s Cloud Kitchen సాయంత్రం వంటకాల ఆన్‌లైన్ ఆర్డరింగ్ అప్లికేషన్',
           theme_color: '#78350F',
           background_color: '#FDFBF7',
           display: 'standalone',
