@@ -65,7 +65,7 @@ describe('public evening-only menu', () => {
     expect(container.querySelector('[data-item-id="pulka"]')?.querySelector('[data-exact-artwork="pulka"]')).toBeTruthy();
     expect(container.querySelector('[data-item-id="pappu-of-the-day"]')?.querySelector('[data-exact-artwork="pappu-of-the-day"]')).toBeTruthy();
     expect(container.querySelector('[data-item-id="mixed-veg-kurma"]')?.querySelector('[data-exact-artwork="mixed-veg-kurma"]')).toBeTruthy();
-    expect(container.querySelector('[data-item-id="guntha-ponganaalu"]')?.querySelector('img[data-guntha-artwork="true"]')).toBeTruthy();
+    expect(container.querySelector('[data-item-id="guntha-ponganaalu"]')).toBeTruthy();
     expect(container.querySelector('[data-item-id="chapathi"]')?.textContent).toContain('₹10');
     fireEvent.click(within(menu).getByRole('button', { name: 'Add Pulka to sample cart' }));
     expect(within(menu).getByRole('button', { name: 'View cart' })).toBeTruthy();

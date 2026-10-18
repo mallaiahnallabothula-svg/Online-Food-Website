@@ -92,7 +92,7 @@ describe('inactive server-priced new-menu quote endpoint', () => {
         ...validCart, lines: [{ itemId: 'idly', quantity: '4' }],
       })).status).toBe(400);
       expect((await quote(base, {
-        ...validCart, lines: [{ itemId: 'idly', quantity: 1 }],
+        ...validCart, lines: [{ itemId: 'chapathi', quantity: 1 }],
       })).status).toBe(400); // ₹100 minimum
       expect((await quote(base, {
         ...validCart, lines: [{ itemId: 'chapathi', quantity: 6 }, { itemId: 'idly', quantity: 4 }],
