@@ -23,7 +23,7 @@ describe('Approved full-site Cream + Olive + Terracotta UI', () => {
     const hero = read('src/components/HeroSection.tsx');
     expect(hero).toContain('lg:grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)]');
     expect(hero).toContain('lg:whitespace-nowrap');
-    for (const text of ['Everyday food.', 'Always familiar.', 'Morning favourites', 'A familiar flavour', 'Evening comfort']) {
+    for (const text of ['Everyday food.', 'Always familiar.', 'Evening favourites', 'A familiar evening flavour', 'Evening comfort']) {
       expect(hero).toContain(text);
     }
     expect(hero).toContain('Explore the menu');

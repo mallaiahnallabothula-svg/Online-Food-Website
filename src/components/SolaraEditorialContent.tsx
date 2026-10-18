@@ -7,7 +7,7 @@ const faq = [
   ['Is the kitchen open on Wednesdays?', 'No. Wednesday is our weekly kitchen holiday. Choose another available date.', 'బుధవారం వంటశాల తెరిచి ఉంటుందా?', 'లేదు. ప్రతి బుధవారం వంటశాలకు సెలవు. మరో అందుబాటులో ఉన్న రోజు ఎంచుకోండి.'],
   ['How much is delivery?', '0–5 km free; 5–7 km ₹27; 7–10 km ₹45. Beyond 10 km, no delivery. Final eligibility and charges are checked against your location.', 'డెలివరీ ఛార్జీలు ఎంత?', '0–5 కి.మీ. ఉచితం, 5–7 కి.మీ. ₹27, 7–10 కి.మీ. ₹45. 10 కి.మీ. దాటితే డెలివరీ లేదు. తుది ఛార్జీలు మీ లొకేషన్ ఆధారంగా నిర్ణయిస్తాం.'],
   ['Is there a minimum order?', 'Yes. The food subtotal must be at least ₹100, excluding delivery. Some items also have their own minimum quantities.', 'కనీస ఆర్డర్ ఎంత?', 'ఆహార మొత్తం కనీసం ₹100 ఉండాలి. డెలివరీ ఛార్జీలు వేరు. కొన్ని వంటకాలకు ప్రత్యేక కనీస పరిమాణం ఉంటుంది.'],
-  ['Do the dishes come with chutney?', 'All six morning tiffins and guntha ponganaalu include chutney. Add pappu or kurma separately when you want them.', 'చట్నీ ఇస్తారా?', 'ఉదయం ఆరు టిఫిన్లు, గుంత పొంగనాలతో చట్నీ ఉంటుంది. పప్పు, కుర్మా విడిగా ఎంచుకోవచ్చు.'],
+  ['Do the dishes come with chutney?', 'Guntha ponganaalu includes chutney. Add pappu or kurma separately when you want them.', 'చట్నీ ఇస్తారా?', 'గుంత పొంగనాలతో చట్నీ ఉంటుంది. పప్పు, కుర్మా విడిగా ఎంచుకోవచ్చు.'],
   ['Will the same pappu be available every day?', 'Pappu of the Day changes with the delivery date. Check the selected variety on the live menu.', 'రోజూ ఒకే పప్పు ఉంటుందా?', 'లేదు. డెలివరీ తేదీని బట్టి పప్పు మారుతుంది. మెనూలో ఆ రోజు రకాన్ని చెక్ చేయండి.'],
   ['Are these pictures from your kitchen?', 'No. The three editorial panels are stylised illustrations, not photographs of our kitchen or the food you will receive.', 'ఇవి మీ వంటశాల ఫోటోలా?', 'కాదు. ఇవి భావనను చూపించే illustrations మాత్రమే. మా వంటశాల లేదా నిజమైన వంటకాల ఫోటోలు కావు.'],
   ['Can I pay or reserve food when ordering is disabled?', 'No. Real payment, ordering and inventory reservation are possible only when ordering is enabled on the live website.', 'ఆర్డర్లు ప్రారంభం కాకముందే చెల్లించవచ్చా?', 'లేదు. Live website లో ordering enabled ఉన్నప్పుడు మాత్రమే నిజమైన order, payment, stock reservation జరుగుతాయి.'],
@@ -27,18 +27,18 @@ export const SolaraEditorialContent: React.FC = () => {
               {te ? <>మా వంటింటి నుంచి<br /><span className="text-[#A44732]">మీ ఇంటికి.</span></> : <>From Our Kitchen<br /><span className="text-[#A44732]">to Your Home.</span></>}
             </h2>
             <p className="mt-5 text-sm font-medium leading-relaxed text-[#A44732]">
-              {te ? 'రోజుకు రెండు సమయాలు. మన ఇంటి రుచులు.' : 'Two simple sessions. A familiar taste.'}
+              {te ? 'సాయంత్రం ఇంటి రుచులు.' : 'A familiar evening menu.'}
             </p>
           </div>
           <div className="min-w-0">
             <p className="text-base leading-loose text-[#605b53] dark:text-stone-300">
               {te
-                ? 'కొల్లూరు, హైదరాబాద్‌లోని మా చిన్న హోమ్ కిచెన్ నుంచి చుట్టుపక్కల ఉన్నవారి కోసం సులభమైన మెనూ. ఉదయం టిఫిన్లు, సాయంత్రం రొట్టెలు, పప్పు, కుర్మా — మీకు ఏది కావాలో ధరలు, పరిమాణాలు స్పష్టంగా చూసి ఎంచుకోండి.'
-                : 'From our home kitchen in Kollur, Hyderabad, we keep the menu simple for nearby neighbourhoods. Start the morning with tiffins; choose rotis, pappu or kurma in the evening. Familiar everyday food, with clear portions and prices.'}
+                ? 'కొల్లూరు, హైదరాబాద్‌లోని మా చిన్న హోమ్ కిచెన్ నుంచి చుట్టుపక్కల ఉన్నవారి కోసం సులభమైన సాయంత్రం మెనూ. జొన్న రొట్టె, చపాతీ, పుల్కా, గుంత పొంగనాలు, పప్పు, కుర్మా — స్పష్టమైన ధరలు, పరిమాణాలతో ఎంచుకోండి.'
+                : 'From our home kitchen in Kollur, Hyderabad, we serve a simple evening menu: jowar roti, chapathi, pulka, guntha ponganaalu, pappu and kurma, with clear portions and prices.'}
             </p>
             <div className="mt-6 flex items-center gap-3 border-t border-[#ded7ce] pt-5">
               <span aria-hidden="true" className="h-px w-9 shrink-0 bg-[#A44732]" />
-              <p className="text-xs font-semibold tracking-wide text-[#756f67] dark:text-stone-300">6 EVENING ITEMS · 2 MEAL SESSIONS · PRE-ORDERS</p>
+              <p className="text-xs font-semibold tracking-wide text-[#756f67] dark:text-stone-300">6 EVENING ITEMS · EVENING SERVICE · PRE-ORDERS</p>
             </div>
           </div>
         </div>
@@ -46,17 +46,17 @@ export const SolaraEditorialContent: React.FC = () => {
       <section id="at-the-table" className="border-y border-[#ded7ce] bg-[#FAF6ED] px-4 py-8 sm:py-10 lg:py-12 dark:border-stone-700 dark:bg-[#211f1c] sm:px-6">
         <div className="mx-auto max-w-7xl"><p className="text-xs font-bold uppercase tracking-[0.22em] text-[#A44732]">AT THE TABLE</p><h2 className="solara-display mt-3 text-4xl dark:text-stone-100 sm:text-5xl">{te ? 'మీ తదుపరి భోజనానికి కొన్ని ఎంపికలు.' : 'A little inspiration for your next meal.'}</h2><p className="mt-3 max-w-2xl text-sm leading-loose text-[#605b53] dark:text-stone-300">{te ? 'ఇవి కేవలం వంటకాల కలయిక సూచనలు. కార్ట్ కనీస మొత్తాన్ని సరిచూసుకోండి.' : 'No complicated set meals. These are simple combinations to explore from the available menu; check the food minimum at checkout.'}</p>
           <div className="mt-6 grid gap-6 sm:auto-rows-fr sm:grid-cols-3 lg:mt-8">{[
-            ['Idly & chutney','Four idlies with included chutney, or try the ragi idly plate.','ఇడ్లీ & చట్నీ','చట్నీతో నాలుగు ఇడ్లీలు లేదా రాగి ఇడ్లీ ప్లేట్.'],
+            ['Guntha Ponganaalu & chutney','Guntha ponganaalu served with included chutney.','గుంత పొంగనాలు & చట్నీ','చట్నీతో గుంత పొంగనాలు.'],
             ['Jowar roti & pappu','Try three jowar rotis with a separate 120 g Pappu of the Day pack.','జొన్న రొట్టె & పప్పు','మూడు జొన్న రొట్టెలు, విడిగా 120 గ్రాముల పప్పు ప్యాక్.'],
             ['Chapathi & kurma','Combine chapathis with a 120 g mixed-veg kurma pack.','చపాతీ & కుర్మా','చపాతీలకు 120 గ్రాముల మిక్స్ వెజ్ కుర్మా ప్యాక్ జోడించండి.']
-          ].map((m,i)=><article key={m[0]} className="flex h-full min-w-0 flex-col border-t border-dotted border-[#c7bcb0] pt-4"><p className="font-serif text-sm italic text-[#A44732]">0{i+1} / {i===0?'MORNING':'EVENING'}</p><h3 className="solara-display mt-3 text-2xl">{te?m[2]:m[0]}</h3><p className="mt-2 text-sm leading-loose text-[#605b53] dark:text-stone-300">{te?m[3]:m[1]}</p><a className="mt-auto inline-flex items-center self-start gap-1 border-b border-[#A44732] pt-4 text-xs text-[#A44732]" href="#upcoming-menu">{te?'మెనూ చూడండి':'Browse the menu'} <ArrowUpRight size={13} /></a></article>)}</div>
+          ].map((m,i)=><article key={m[0]} className="flex h-full min-w-0 flex-col border-t border-dotted border-[#c7bcb0] pt-4"><p className="font-serif text-sm italic text-[#A44732]">0{i+1} / EVENING</p><h3 className="solara-display mt-3 text-2xl">{te?m[2]:m[0]}</h3><p className="mt-2 text-sm leading-loose text-[#605b53] dark:text-stone-300">{te?m[3]:m[1]}</p><a className="mt-auto inline-flex items-center self-start gap-1 border-b border-[#A44732] pt-4 text-xs text-[#A44732]" href="#upcoming-menu">{te?'మెనూ చూడండి':'Browse the menu'} <ArrowUpRight size={13} /></a></article>)}</div>
         </div>
       </section>
       <section id="delivery-info" className="bg-[#e8ebdc] px-4 py-8 sm:py-10 lg:py-12 text-[#384B35] dark:bg-[#302b25] dark:text-stone-100 sm:px-6">
         <div className="mx-auto max-w-7xl"><p className="text-xs font-bold uppercase tracking-[0.22em] text-[#A44732]">ORDERING & DELIVERY</p><h2 className="solara-display mt-3 text-4xl sm:text-6xl">{te?'మీ ఇంటి వరకు.':'To your door.'}</h2>
           <div className="mt-6 grid gap-6 border-t border-[#d8d0c5] pt-6 sm:auto-rows-fr sm:grid-cols-2 lg:mt-8 lg:grid-cols-4">
             <div><h3 className="mb-3 text-sm font-semibold">{te?'డెలివరీ ఛార్జీలు':'Delivery rates'}</h3><p className="text-sm leading-loose">0–5 km · Free<br/>5–7 km · ₹27<br/>7–10 km · ₹45<br/>10+ km · {te?'డెలివరీ లేదు':'No delivery'}</p></div>
-            <div><h3 className="mb-3 text-sm font-semibold">{te?'డెలివరీ సమయాలు':'Delivery hours'}</h3><p className="text-sm leading-loose">Morning · 7–11 AM<br/>Evening · 6–8 PM</p></div>
+            <div><h3 className="mb-3 text-sm font-semibold">{te?'డెలివరీ సమయాలు':'Delivery hours'}</h3><p className="text-sm leading-loose">Evening · 6–8 PM</p></div>
             <div><h3 className="mb-3 text-sm font-semibold">{te?'వారపు సెలవు':'Weekly holiday'}</h3><p className="text-sm leading-loose">{te?'బుధవారం సెలవు':'Wednesday closed'}<br/>{te?'ఆహార కనీస మొత్తం ₹100':'₹100 minimum food subtotal'}</p></div>
             <div><h3 className="mb-3 text-sm font-semibold">{te?'మా ప్రాంతం':'Our area'}</h3><p className="text-sm leading-loose">Kollur, Hyderabad<br/>{te?'తుది డెలివరీ ఛార్జీ లొకేషన్ ఆధారంగా.':'Final charge depends on your location.'}</p><a className="mt-2 inline-flex items-center gap-1 border-b border-[#A44732] text-xs text-[#A44732]" target="_blank" rel="noopener noreferrer" href="https://maps.google.com/?q=17.444210,78.251478"><MapPin size={14}/>{te?'మ్యాప్‌లో చూడండి':'View location'}</a></div>
           </div>

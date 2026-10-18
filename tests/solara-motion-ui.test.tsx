@@ -18,7 +18,7 @@ describe('Customer-only subtle motion and accessibility', () => {
     }
     expect(hero).toContain('Everyday food.');
     expect(hero).toContain('Always familiar.');
-    expect(hero).toContain('Morning favourites');
+    expect(hero).toContain('Evening favourites');
     expect(hero).toContain('Evening comfort');
   });
 

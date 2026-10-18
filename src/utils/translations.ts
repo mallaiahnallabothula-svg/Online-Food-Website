@@ -248,7 +248,7 @@ export const translations: Record<Language, Translations> = {
     // Brand
     brandName: 'Mannu’s Cloud Kitchen',
     brandTagline: 'అచ్చమైన పల్లెటూరి రుచులు — స్వచ్ఛమైన ఆరోగ్యం',
-    brandSubtext: 'ఉదయం అల్పాహారం | సాయంత్రం ఇంటివంటలు — 12 రకాల మెనూ',
+    brandSubtext: 'సాయంత్రం ఇంటివంటలు — 6 రకాల మెనూ',
     villageLocation: 'కొల్లూరు గ్రామం',
 
     // Language switcher
@@ -265,9 +265,9 @@ export const translations: Record<Language, Translations> = {
 
     // Hero Section
     badgeTraditional: 'స్వచ్ఛమైన గ్రామీణ సంప్రదాయ ఆహారం',
-    heroDescription: 'ఉదయం ఇడ్లీ, రాగి ఇడ్లీ, ప్లెయిన్/ఉల్లి పెసరట్టు, ప్లెయిన్/ఉల్లి మినప దోసె; సాయంత్రం జొన్న రొట్టె, చపాతీ, పుల్కా, గుంత పొంగనాలు — మొత్తం 10 ఇంటి వంటలు.',
-    featurePriceTitle: '12 రకాల మెనూ',
-    featurePriceSub: 'ఉదయం 6 | సాయంత్రం 4 | ₹20 నుండి',
+    heroDescription: 'సాయంత్రం జొన్న రొట్టె, చపాతీ, పుల్కా, గుంత పొంగనాలు, పప్పు, మిక్స్ వెజ్ కుర్మా — మొత్తం 6 ఇంటి వంటలు.',
+    featurePriceTitle: '6 రకాల సాయంత్రం మెనూ',
+    featurePriceSub: 'సాయంత్రం 6 రకాలు | ₹10 నుండి',
     featureKaramTitle: 'ఇంటి తోడు రుచులు',
     featureKaramSub: 'వంటకాన్ని బట్టి చట్నీ, తోడు రుచులు',
     featureDeliveryTitle: 'ఉచిత డెలివరీ',
@@ -279,15 +279,15 @@ export const translations: Record<Language, Translations> = {
 
     // Menu Highlights
     highlightsTitle: 'Mannu’s Cloud Kitchen విశిష్టతలు',
-    highlightsSubtitle: 'ఉదయం 6 రకాల అల్పాహారం, సాయంత్రం 4 రకాల ఇంటివంటలు',
-    pureIngredientsTitle: 'ఉదయం అల్పాహారం',
-    pureIngredientsDesc: 'ఇడ్లీ, రాగి ఇడ్లీ, పెసరట్టు మరియు మినప దోసె రకాలు.',
+    highlightsSubtitle: 'సాయంత్రం 6 రకాల ఇంటివంటలు',
+    pureIngredientsTitle: 'సాయంత్రం ఇంటివంటలు',
+    pureIngredientsDesc: 'జొన్న రొట్టె, చపాతీ, పుల్కా, గుంత పొంగనాలు, పప్పు, మిక్స్ వెజ్ కుర్మా.',
     freshlyMadeTitle: 'సాయంత్రం ఇష్టమైనవి',
     freshlyMadeDesc: 'జొన్న రొట్టె, చపాతీ, పుల్కా, గుంత పొంగనాలు.',
     healthyNutritiousTitle: 'మీకు నచ్చినవి ఎంచుకోండి',
     healthyNutritiousDesc: 'మెనూ నుంచి వంటకాలు, పరిమాణాలు ఎంచుకుని ఆర్డర్ వివరాలు చూడండి.',
     hygienicKitchenTitle: 'ఇంటి వంట',
-    hygienicKitchenDesc: 'Mannu’s Cloud Kitchen‌లో ఉదయం, సాయంత్రం వంటకాల ఎంపికలు ఉన్నాయి.',
+    hygienicKitchenDesc: 'Mannu’s Cloud Kitchen‌లో సాయంత్రం వంటకాల ఎంపికలు ఉన్నాయి.',
     freshBatchBadge: 'నేటి తాజా బ్యాచ్',
     villageCraftBadge: '100% పల్లెటూరి సంప్రదాయం',
 
@@ -467,7 +467,7 @@ export const translations: Record<Language, Translations> = {
     // Android Install Modal & Banner
     pwaInstallBadge: 'ఆండ్రాయిడ్ యాప్',
     pwaBannerHeadline: 'Mannu’s Cloud Kitchen - Android యాప్ అందుబాటులో ఉంది!',
-    pwaBannerDesc: 'ఫోన్ హోమ్ స్క్రీన్‌లో ఇన్‌స్టాల్ చేసి 12 రకాల మెనూను చూడండి, ఆర్డర్ చేయండి.',
+    pwaBannerDesc: 'ఫోన్ హోమ్ స్క్రీన్‌లో సాయంత్రం మెనూను ఇన్‌స్టాల్ చేసి 6 వంటకాలు చూడండి.',
     pwaFreeBadge: '100% ఉచిత డౌన్‌లోడ్',
     installAppBtn: 'యాప్ ఇన్‌స్టాల్',
     noPlayStoreNeeded: 'ప్లేస్టోర్ అవసరం లేదు (Direct)',
@@ -484,14 +484,14 @@ export const translations: Record<Language, Translations> = {
     footerRights: 'Mannu’s Cloud Kitchen — అన్ని హక్కులు ప్రత్యేకించబడ్డాయి.',
     footerFreeDelivery: 'కొల్లూరు గ్రామం నుండి 5 కి.మీ. పరిధిలో ఉచిత డెలివరీ.',
     ownerPortalLink: 'యజమాని పోర్టల్',
-    footerTimings: 'కొత్త మెనూ: ఉదయం 7:00 – 11:00 | సాయంత్రం 6:00 – 8:00 IST',
+    footerTimings: 'కొత్త మెనూ: సాయంత్రం 6:00 – 8:00 IST',
   },
 
   en: {
     // Brand
     brandName: 'Mannu’s Cloud Kitchen',
     brandTagline: 'Authentic Homemade Village Flavors — Pure & Healthy',
-    brandSubtext: 'Fresh breakfast & homestyle evening meals — 10 dishes',
+    brandSubtext: 'Homestyle evening meals — 6 dishes',
     villageLocation: 'Kolluru Village',
 
     // Language switcher
@@ -508,9 +508,9 @@ export const translations: Record<Language, Translations> = {
 
     // Hero Section
     badgeTraditional: '100% Traditional Village Cuisine',
-    heroDescription: 'Choose from 10 home-style dishes: idly and ragi idly, plain or onion pesarattu, plain or onion minapa dosa in the morning; jowar roti, chapathi, pulka and guntha ponganaalu in the evening.',
-    featurePriceTitle: '12-item menu',
-    featurePriceSub: '6 morning + 4 evening · from ₹20',
+    heroDescription: 'Choose from 6 home-style evening dishes: jowar roti, chapathi, pulka, guntha ponganaalu, pappu of the day and mixed-veg kurma.',
+    featurePriceTitle: '6 evening dishes',
+    featurePriceSub: '6 evening dishes · from ₹10',
     featureKaramTitle: 'Homemade accompaniments',
     featureKaramSub: 'Side options vary by dish',
     featureDeliveryTitle: 'Free Delivery',
@@ -522,15 +522,15 @@ export const translations: Record<Language, Translations> = {
 
     // Menu Highlights
     highlightsTitle: 'Why Choose Mannu’s Cloud Kitchen?',
-    highlightsSubtitle: 'Choose from 6 morning and 4 evening dishes.',
-    pureIngredientsTitle: 'Morning breakfast',
-    pureIngredientsDesc: 'Idly, ragi idly, plain and onion pesarattu, plain and onion minapa dosa.',
+    highlightsSubtitle: 'Choose from 6 evening dishes.',
+    pureIngredientsTitle: 'Evening favourites',
+    pureIngredientsDesc: 'Jowar roti, chapathi, pulka, guntha ponganaalu, pappu of the day and mixed-veg kurma.',
     freshlyMadeTitle: 'Evening favourites',
     freshlyMadeDesc: 'Jowar roti, chapathi, pulka and guntha ponganaalu.',
     healthyNutritiousTitle: 'Choose what you like',
     healthyNutritiousDesc: 'Pick dishes and quantities from the menu, then review your order details.',
     hygienicKitchenTitle: 'Homestyle menu',
-    hygienicKitchenDesc: 'Explore 6 morning and 4 evening options from Mannu’s Cloud Kitchen.',
+    hygienicKitchenDesc: 'Explore 6 evening options from Mannu’s Cloud Kitchen.',
     freshBatchBadge: "Today's Fresh Batch",
     villageCraftBadge: '100% Traditional Village Craft',
 
@@ -710,7 +710,7 @@ export const translations: Record<Language, Translations> = {
     // Android Install Modal & Banner
     pwaInstallBadge: 'Android App',
     pwaBannerHeadline: 'Mannu’s Cloud Kitchen - Android App Available!',
-    pwaBannerDesc: 'Install the menu on your phone home screen and browse all 10 dishes.',
+    pwaBannerDesc: 'Install the evening menu on your phone home screen and browse all 6 dishes.',
     pwaFreeBadge: '100% Free Download',
     installAppBtn: 'Install App',
     noPlayStoreNeeded: 'No Play Store needed (Direct)',
@@ -727,6 +727,6 @@ export const translations: Record<Language, Translations> = {
     footerRights: 'Mannu’s Cloud Kitchen — All rights reserved.',
     footerFreeDelivery: 'Free delivery within 5 km of Kolluru village.',
     ownerPortalLink: 'Owner Portal',
-    footerTimings: 'New menu: 7:00–11:00 AM and 6:00–8:00 PM IST',
+    footerTimings: 'Evening menu: 6:00 PM – 8:00 PM IST',
   }
 };

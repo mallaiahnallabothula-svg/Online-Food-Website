@@ -36,6 +36,10 @@ describe('public menu metadata', () => {
     const html = readFileSync('index.html', 'utf8');
     const manifest = JSON.parse(readFileSync('public/manifest.json', 'utf8')) as { description: string };
     const vite = readFileSync('vite.config.ts', 'utf8');
+    const hero = readFileSync('src/components/HeroSection.tsx', 'utf8');
+    const editorial = readFileSync('src/components/SolaraEditorialContent.tsx', 'utf8');
+    const translations = readFileSync('src/utils/translations.ts', 'utf8');
+    const orderHours = readFileSync('src/components/OrderingHoursBanner.tsx', 'utf8');
     expect(html).not.toContain('ఉదయం');
     expect(html).not.toContain('ఇడ్లీ');
     expect(html).toContain('సాయంత్రం');
@@ -43,6 +47,20 @@ describe('public menu metadata', () => {
     expect(manifest.description).toContain('సాయంత్రం');
     expect(vite).not.toContain('ఉదయం అల్పాహారం');
     expect(vite).toContain('సాయంత్రం');
+    expect(hero).not.toContain('ఉదయం టిఫిన్లు');
+    expect(hero).not.toContain('Morning favourites');
+    expect(hero).not.toContain('Morning 7–11 AM');
+    expect(editorial).not.toContain('morning tiffins');
+    expect(editorial).not.toContain('Morning · 7–11 AM');
+    expect(editorial).not.toContain('All six morning tiffins');
+    expect(translations).not.toContain('Fresh breakfast & homestyle evening meals');
+    expect(translations).not.toContain('Choose from 6 morning and 4 evening dishes.');
+    expect(translations).not.toContain('ఉదయం అల్పాహారం | సాయంత్రం');
+    expect(translations).not.toContain('12-item menu');
+    expect(translations).not.toContain('12 రకాల మెనూ');
+    expect(translations).not.toContain('12 రకాల మెనూను');
+    expect(translations).toContain('Homestyle evening meals — 6 dishes');
+    expect(orderHours).not.toContain('ఆర్డర్లు: ఉదయం');
   });
 });
 

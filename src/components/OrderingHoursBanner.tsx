@@ -55,7 +55,7 @@ export const OrderingHoursBanner: React.FC<OrderingHoursBannerProps> = ({
               </p>
 
               <div className="flex items-center gap-4 text-xs font-telugu text-stone-600 dark:text-stone-400 pt-0.5 flex-wrap">
-                <span>🕒 {language === 'en' ? 'Orders: 11:00 AM – 4:00 PM IST' : 'ఆర్డర్లు: ఉదయం 11:00 – సాయంత్రం 4:00 IST'}</span>
+                <span>🕒 {language === 'en' ? 'Orders: 11:00 AM – 4:00 PM IST' : 'ఆర్డర్లు: 11:00 AM – 4:00 PM IST'}</span>
                 <span>🚚 {language === 'en' ? 'Delivery: 6:00 – 8:00 PM' : 'డెలివరీ: సాయంత్రం 6:00 – 8:00'}</span>
               </div>
             </div>
