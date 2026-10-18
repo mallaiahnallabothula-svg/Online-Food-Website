@@ -1,4 +1,5 @@
 import express from 'express';
+import { readFileSync } from 'node:fs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 afterEach(() => {
@@ -29,6 +30,21 @@ const morningRequest = {
   },
 };
 const headers = { 'content-type': 'application/json', 'x-menu-checkout': '1' };
+
+describe('public menu metadata', () => {
+  it('does not advertise morning items in page or PWA metadata', () => {
+    const html = readFileSync('index.html', 'utf8');
+    const manifest = JSON.parse(readFileSync('public/manifest.json', 'utf8')) as { description: string };
+    const vite = readFileSync('vite.config.ts', 'utf8');
+    expect(html).not.toContain('ఉదయం');
+    expect(html).not.toContain('ఇడ్లీ');
+    expect(html).toContain('సాయంత్రం');
+    expect(manifest.description).not.toContain('ఉదయం');
+    expect(manifest.description).toContain('సాయంత్రం');
+    expect(vite).not.toContain('ఉదయం అల్పాహారం');
+    expect(vite).toContain('సాయంత్రం');
+  });
+});
 
 describe('production morning menu removal', () => {
   it('rejects morning status, quote and new checkout preparation without database/provider access', async () => {
