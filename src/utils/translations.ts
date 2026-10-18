@@ -240,7 +240,7 @@ export interface Translations {
   footerRights: string;
   footerFreeDelivery: string;
   ownerPortalLink: string;
-  footerTimings: 'Evening menu: 6:00 PM – 8:00 PM IST',
+  footerTimings: string;
 }
 
 export const translations: Record<Language, Translations> = {
