@@ -49,6 +49,6 @@ describe('Solara full-site UI protects business workflows', () => {
     expect(editorial).not.toContain('id="details"');
     expect(editorial).not.toContain('id="how-it-works"');
     expect(source('src/App.tsx')).not.toContain('<BrandEmblem');
-    expect(source('src/components/HeroSection.tsx')).toContain('Morning favourites');
+    expect(source('src/components/HeroSection.tsx')).toContain('Evening favourites');
   });
 });

@@ -6,7 +6,7 @@ const read = (p: string) => fs.readFileSync(p, 'utf8');
 describe('Stage 1 conversion-first presentation only', () => {
   it('reuses three approved local food artworks in the hero without changing the CTA', () => {
     const hero = read('src/components/HeroSection.tsx');
-    for (const id of ['idly','plain-pesarattu','guntha-ponganaalu']) {
+    for (const id of ['jowar-roti','chapathi','guntha-ponganaalu']) {
       expect(hero).toContain('FoodArtwork itemId="' + id + '"');
     }
     expect(hero).toContain('id="hero-order-now-btn"');
@@ -22,7 +22,7 @@ describe('Stage 1 conversion-first presentation only', () => {
     expect(hero).toContain('NEW_MENU_ORDER_POLICY.minimumCartPaisa / 100');
     expect(hero).toContain('Free delivery');
     expect(hero).toContain('Food order minimum');
-    expect(hero).toContain('Morning & evening');
+    expect(hero).toContain('6 evening dishes');
     expect(hero).not.toContain('Limited time');
   });
 
