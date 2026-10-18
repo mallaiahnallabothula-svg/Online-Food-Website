@@ -24,7 +24,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder }) => 
             {te ? <>ఇంటి రుచులు.<br /><em className="not-italic text-[#A44732]">మీ ఇంటికి.</em></> : <>Everyday food.<br /><em className="not-italic text-[#A44732] lg:whitespace-nowrap">Always familiar.</em></>}
           </h1>
           <p className="solara-hero-description mt-5 max-w-lg text-base leading-relaxed text-[#50584B] dark:text-stone-300">
-            {te ? 'ఉదయం టిఫిన్లు. సాయంత్రం ఇంటి వంటకాలు. మీకు నచ్చిన రోజు, సమయం కోసం ముందుగా ఎంచుకోండి.' : 'Start with idly or dosa. Come back for rotis, pappu and kurma. Explore everyday Telugu favourites, with clear portions and prices.'}
+            {te ? 'సాయంత్రం జొన్న రొట్టె, చపాతీ, పుల్కా, పప్పు, కుర్మా, గుంత పొంగనాలు — స్పష్టమైన ధరలు, పరిమాణాలతో ఎంచుకోండి.' : 'Choose from evening jowar roti, chapathi, pulka, pappu, kurma and guntha ponganaalu, with clear portions and prices.'}
           </p>
           <div className="solara-hero-actions mt-6 flex flex-wrap items-center gap-5 text-xs font-bold tracking-[0.04em]">
             <button id="hero-order-now-btn" onClick={onScrollToOrder} type="button" className="inline-flex min-h-12 items-center gap-2 rounded-lg bg-[#A44732] px-6 py-3 text-white transition-colors hover:bg-[#8e3928]">
@@ -32,21 +32,21 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder }) => 
             </button>
             <a href="#delivery-info" className="border-b border-[#A44732] pb-1 text-[#384B35] hover:text-[#A44732]">{te ? 'డెలివరీ వివరాలు' : 'Delivery details'}</a>
           </div>
-          <p className="mt-5 flex items-center gap-2 text-xs tracking-wide text-[#63685A] dark:text-stone-400"><Clock3 size={16} aria-hidden="true"/>{te ? 'ఉదయం 7–11 AM · సాయంత్రం 6–8 PM · బుధవారం సెలవు' : 'Morning 7–11 AM · Evening 6–8 PM · Wednesday closed'}</p>
+          <p className="mt-5 flex items-center gap-2 text-xs tracking-wide text-[#63685A] dark:text-stone-400"><Clock3 size={16} aria-hidden="true"/>{te ? 'సాయంత్రం 6–8 PM · బుధవారం సెలవు' : 'Evening 6–8 PM · Wednesday closed'}</p>
         </div>
         <div className="solara-hero-art relative mx-auto h-[250px] w-full max-w-xl min-w-0 sm:h-[345px] lg:mx-0 lg:h-[390px] lg:max-w-none"
-          aria-label={te ? 'మా మెనూలోని ఇడ్లీ, గుంత పొంగనాలు, పెసరట్టు సూచన చిత్రాలు' : 'Illustrated Idly, Guntha Ponganaalu and Pesarattu from our menu'}>
+          aria-label={te ? 'మా సాయంత్రం మెనూలోని జొన్న రొట్టె, గుంత పొంగనాలు, చపాతీ సూచన చిత్రాలు' : 'Illustrated Jowar Roti, Guntha Ponganaalu and Chapathi from our evening menu'}>
           <div className="solara-hero-illustration absolute inset-y-[7%] right-[1%] w-[79%] overflow-hidden rounded-[24px] border border-[#e6dece] bg-[#fffdf8] shadow-[0_15px_32px_rgba(43,38,28,0.12)] dark:border-stone-700 dark:bg-stone-800"
             role="img" aria-label={te ? 'సాయంత్రం రుచులు — గుంత పొంగనాలు సూచన చిత్రం' : 'Evening comfort — Guntha Ponganaalu illustration'}>
             <FoodArtwork itemId="guntha-ponganaalu" className="h-full w-full" />
           </div>
           <div className="solara-hero-illustration absolute left-[1%] top-[7%] w-[37%] overflow-hidden rounded-2xl border-[3px] border-[#FAF6ED] bg-[#fffdf8] shadow-[0_8px_18px_rgba(43,38,28,0.12)] dark:border-[#211f1c]"
-            role="img" aria-label={te ? 'ఉదయం టిఫిన్లు — ఇడ్లీ సూచన చిత్రం' : 'Morning favourites — Idly illustration'}>
-            <FoodArtwork itemId="idly" className="aspect-[4/3] w-full" />
+            role="img" aria-label={te ? 'సాయంత్రం రుచులు — జొన్న రొట్టె సూచన చిత్రం' : 'Evening favourites — Jowar Roti illustration'}>
+            <FoodArtwork itemId="jowar-roti" className="aspect-[4/3] w-full" />
           </div>
           <div className="solara-hero-illustration absolute bottom-[8%] left-[1%] w-[39%] overflow-hidden rounded-2xl border-[3px] border-[#FAF6ED] bg-[#fffdf8] shadow-[0_8px_18px_rgba(43,38,28,0.12)] dark:border-[#211f1c]"
-            role="img" aria-label={te ? 'తెలిసిన ఇంటి రుచి — పెసరట్టు సూచన చిత్రం' : 'A familiar flavour — Pesarattu illustration'}>
-            <FoodArtwork itemId="plain-pesarattu" className="aspect-[4/3] w-full" />
+            role="img" aria-label={te ? 'సాయంత్రం ఇంటి రుచి — చపాతీ సూచన చిత్రం' : 'A familiar evening flavour — Chapathi illustration'}>
+            <FoodArtwork itemId="chapathi" className="aspect-[4/3] w-full" />
           </div>
           <p className="sr-only">{te ? 'ఇవి సూచన చిత్రాలు మాత్రమే; వడ్డించే పరిమాణాల కోసం మెనూ చూడండి.' : 'Food illustrations only; see the menu for exact portions.'}</p>
         </div>
@@ -61,8 +61,8 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onScrollToOrder }) => 
           <p className="mt-1 text-[10px] leading-snug opacity-80 sm:text-xs">{te ? 'కనీస ఆహార మొత్తం' : 'Food order minimum'}</p>
         </div>
         <div className="min-w-0 px-2 sm:px-4">
-          <p className="text-xs font-bold sm:text-sm">{te ? '2 సెషన్లు' : '2 meal sessions'}</p>
-          <p className="mt-1 text-[10px] leading-snug opacity-80 sm:text-xs">{te ? 'ఉదయం & సాయంత్రం' : 'Morning & evening'}</p>
+          <p className="text-xs font-bold sm:text-sm">{te ? '6 సాయంత్రం వంటకాలు' : '6 evening dishes'}</p>
+          <p className="mt-1 text-[10px] leading-snug opacity-80 sm:text-xs">{te ? 'సాయంత్రం మెనూ' : 'Evening menu only'}</p>
         </div>
       </div>
     </section>
